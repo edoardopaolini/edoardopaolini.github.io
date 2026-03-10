@@ -1,0 +1,10 @@
+<header class="site-header">
+    <div class="container header-container">
+        <a class="site-title" href="{{ '/' | relative_url }}">Edoardo Paolini</a>
+        <nav class="site-nav">
+            <a href="{{ '/' | relative_url }}" {% if page.url=='/' %}class="active" {% endif %}>Home</a>
+            <a href="{{ '/bio/' | relative_url }}" {% if page.url=='/bio/' %}class="active" {% endif %}>Biography</a>
+            <a href="{{ '/publications/' | relative_url }}" {% if page.url=='/publications/' %}class="active" {% endif %}>Publications</a>
+        </nav>
+    </div>
+</header>
