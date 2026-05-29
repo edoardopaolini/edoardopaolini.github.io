@@ -5,7 +5,7 @@ title: Home
 
 ## Welcome to my academic portfolio.
 
-I am Edoardo Paolini, currently a Ph.D. Student in Computer Science at the University of Verona (Italy). My research principally aims to develop EEG-TMS systems based on brain connectomics for the personalized treatment of epilepsy. 
+I am Edoardo Paolini, currently a Ph.D. Student in Computer Science at the University of Verona (Italy). My research principally aims to develop EEG and EEG-TMS systems based on brain connectomics for the personalized treatment of epilepsy.
 
 My interests span across **Computer Science**, **Biology**, and **Neuroscience**, focusing on computational models, brain connectivity, and signal source estimation.
 

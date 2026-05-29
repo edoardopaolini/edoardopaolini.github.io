@@ -13,7 +13,7 @@ permalink: /bio/
   <div class="card">
     <h3><i class="fa-solid fa-route" style="color: var(--color-primary); margin-right: 10px;"></i> Professional Summary</h3>
     <p>I received a B.Sc. in Computer Science from the University of Verona, Italy (2020), and a M.Sc. in Quantitative and Computational Biology from the University of Trento, Italy (2023). I am currently a Ph.D. Student in Computer Science at the University of Verona, Italy.</p>
-    <p>My doctoral program principally aims to develop EEG-TMS systems based on brain connectomics for the personalized treatment of epilepsy.</p>
+    <p>My doctoral program principally aims to develop EEG and EEG-TMS systems based on brain connectomics for the personalized treatment of epilepsy.</p>
   </div>
 
   <div class="card">
