@@ -28,9 +28,9 @@ permalink: /bio/
   <div class="card">
     <h3><i class="fa-solid fa-microscope" style="color: var(--color-tertiary); margin-right: 10px;"></i> Research Interests</h3>
     <ul>
-      <li><strong>Neuroscience:</strong> EEG and TMS-EEG data preprocessing, signal source estimation.</li>
+      <li><strong>Neurosignals:</strong> EEG and TMS-EEG data preprocessing, signal source estimation.</li>
       <li><strong>Brain Connectivity:</strong> Epileptogenic zone localization and surgical prediction.</li>
-      <li><strong>Biomarkers:</strong> Investigating the role of microstates and dynamic scalp potential topographies for neurological disorders.</li>
+      <li><strong>Microstates:</strong> Investigating the role of microstates and dynamic scalp potential topographies for neurological disorders.</li>
     </ul>
   </div>
 </div>
