@@ -1,22 +1,175 @@
 ---
 layout: default
 ---
-<section class="hero">
-    <div class="hero-content container">
-        <h1 class="hero-title">
-            Edoardo Paolini<br>
-            <span style="font-size: 0.5em; font-weight: 400; font-family: var(--font-body); letter-spacing: 2px; text-transform: uppercase; color: var(--color-text-light); text-shadow: none; display: block; margin-top: 5px;">Academic Portfolio</span>
-        </h1>
-        <p class="hero-subtitle">
-            <span class="tag-cs">Computer Science</span>
-            <span class="separator">///</span>
-            <span class="tag-bio">Biology</span>
-            <span class="separator">///</span>
-            <span class="tag-neuro">Neuroscience</span>
-        </p>
+{%- assign interests = site.data.interests -%}
+<section class="stage-section" id="stage-section">
+    <div class="container stage-grid">
+        <div class="stage-copy">
+            <div class="beat beat-hero is-active" data-stage-step="0">
+                <h1>Reading the brain as a network.</h1>
+                <p class="lede">Ph.D. student in Computer Science at the University of Verona. EEG, TMS-EEG and brain connectomics for personalized epilepsy treatment.</p>
+                <div class="cta-row">
+                    <a class="btn btn-primary" href="{{ '/publications/' | relative_url }}">Publications</a>
+                    <a class="btn btn-ghost" href="{{ '/bio/' | relative_url }}">Biography</a>
+                </div>
+            </div>
+            <div class="beat" data-stage-step="1">
+                <h2>Start with the signal.</h2>
+                <p>EEG records electrical potentials from electrodes on the scalp. Correlate the channels and the recording becomes a graph: electrodes are nodes, edges say how much two channels move together.</p>
+                <p>Press an electrode to deliver a pulse and watch it spread.</p>
+            </div>
+            <div class="beat" data-stage-step="2">
+                <h2>A cell is a graph too.</h2>
+                <p>Metabolism is a network: metabolites are nodes, reactions are edges, and flux flows through them. My master's thesis modeled flux dynamics in <i>Mycobacterium tuberculosis</i>.</p>
+                <p>Knock out a reaction: some have a bypass and the flux reroutes, some strand the carbon.</p>
+            </div>
+            <div class="beat" data-stage-step="3">
+                <h2>Underneath, it is a matrix.</h2>
+                <p>Every graph on this page is a 19 by 19 adjacency matrix. Same data, different question. This is where computer science does the work.</p>
+            </div>
+        </div>
+        <div class="stage-figure">
+            <div class="stage" id="stage" data-state="0">
+                <div class="stage-frame">
+                    <canvas id="stage-canvas" aria-hidden="true"></canvas>
+                    <p class="visually-hidden" id="stage-desc">Interactive figure. A top view of a head with the 19 electrodes of the 10-20 EEG montage and simulated EEG traces. Activating an electrode delivers a simulated pulse that spreads through the connectivity graph. As you scroll, the same nodes are rearranged as a metabolic network and then as an adjacency matrix.</p>
+                    <div id="stage-buttons" class="stage-buttons" role="group" aria-label="Figure controls" aria-describedby="stage-desc"></div>
+                </div>
+                <div class="stage-bar">
+                    <p id="stage-readout" class="stage-readout mono"></p>
+                    <div id="stage-controls" class="stage-controls"></div>
+                </div>
+                <p class="visually-hidden" id="stage-live" aria-live="polite"></p>
+                <p class="stage-caption mono">Simulated figures. No patient data.</p>
+            </div>
+        </div>
     </div>
 </section>
 
-<div class="container home-content">
-    {{ content }}
-</div>
+<section class="section sentence-section" id="sentence" aria-label="Doctoral work">
+    <div class="container">
+        {%- assign sentence = "My doctoral work aims to develop EEG and TMS-EEG systems, built on brain connectomics, for the personalized treatment of epilepsy." -%}
+        {%- assign words = sentence | split: ' ' -%}
+        <p class="sentence">{% for w in words %}<span class="w">{{ w }}{% unless forloop.last %}&#32;{% endunless %}</span>{% endfor %}</p>
+    </div>
+</section>
+
+<section class="section interests-section" id="interests">
+    <div class="container">
+        <div class="section-head">
+            <h2>What I work on.</h2>
+        </div>
+        <div class="bento">
+            <article class="cell cell-tall" id="bench">
+                <div class="cell-head">
+                    <h3>{{ interests[0].title }}</h3>
+                    <p>{{ interests[0].text }}</p>
+                </div>
+                <div class="bench-figure">
+                    <canvas id="bench-canvas" aria-hidden="true"></canvas>
+                    <canvas id="bench-spectrum" aria-hidden="true"></canvas>
+                    <p class="visually-hidden">Simulated single-channel EEG trace with a small amplitude spectrum. The switches apply real digital filters to the trace.</p>
+                </div>
+                <div class="bench-controls" role="group" aria-label="Filters">
+                    <label class="switch"><input type="checkbox" data-filter="notch"><span>Notch 50 Hz</span></label>
+                    <label class="switch"><input type="checkbox" data-filter="hp"><span>High-pass 1 Hz</span></label>
+                    <label class="switch"><input type="checkbox" data-filter="lp"><span>Low-pass 40 Hz</span></label>
+                </div>
+                <p class="mono bench-readout" id="bench-readout" aria-live="polite"></p>
+                <p class="cell-caption mono">Simulated signal, real filters.</p>
+            </article>
+            <article class="cell cell-graph" id="mini-graph">
+                <div class="cell-head">
+                    <h3>{{ interests[1].title }}</h3>
+                    <p>{{ interests[1].text }}</p>
+                </div>
+                <div class="mini-figure">
+                    <canvas aria-hidden="true"></canvas>
+                    <p class="visually-hidden">Simulated connectivity graph over the 19 electrodes with one cluster outlined as a candidate zone.</p>
+                </div>
+                <p class="cell-caption mono">Toy network. Select an electrode.</p>
+            </article>
+            <article class="cell cell-topo" id="mini-topo">
+                <div class="cell-head">
+                    <h3>{{ interests[2].title }}</h3>
+                    <p>{{ interests[2].text }}</p>
+                </div>
+                <div class="mini-figure topo-figure">
+                    <canvas aria-hidden="true"></canvas>
+                    <span class="topo-label mono" id="mini-topo-label" aria-hidden="true"></span>
+                    <p class="visually-hidden">Simulated scalp topography stepping through the four canonical microstate classes A, B, C and D.</p>
+                </div>
+                <div class="topo-bar" id="mini-topo-bar" aria-hidden="true"></div>
+                <p class="cell-caption mono">Four canonical classes, simulated.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="section path-section" id="path">
+    <div class="container">
+        <div class="section-head">
+            <h2>Verona, then Trento, then Verona again.</h2>
+            <p>Computer science first, then computational biology, and now both applied to the brain.</p>
+        </div>
+        <ol class="ledger">
+            {% for e in site.data.education %}
+            {%- assign y0 = e.start | split: ' ' | last -%}
+            {%- assign y1 = e.end | split: ' ' | last -%}
+            <li class="ledger-row reveal" style="--reveal-delay: {{ forloop.index0 | times: 80 }}ms">
+                <span class="ledger-year mono">{% if e.end == 'present' %}since {{ y0 }}{% else %}{{ y0 }}-{{ y1 }}{% endif %}</span>
+                <div class="ledger-body">
+                    <h3>{{ e.degree }}</h3>
+                    <p class="ledger-inst">{{ e.institution }}{% if e.honors %}, {{ e.honors }}{% endif %}</p>
+                    <p class="ledger-thesis">{% if e.thesis %}Thesis: {{ e.thesis }}.{% elsif e.focus %}{{ e.focus }}{% endif %}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+        <a class="text-link section-link" href="{{ '/bio/' | relative_url }}">Biography</a>
+    </div>
+</section>
+
+<section class="section pubs-section" id="publications">
+    <div class="container">
+        {%- assign pubs = site.data.publications -%}
+        {%- assign n = pubs | size -%}
+        {%- assign words = 'One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten,Eleven,Twelve' | split: ',' -%}
+        {%- assign i = n | minus: 1 -%}
+        {%- assign nw = words[i] | default: n -%}
+        <div class="section-head">
+            <h2>{{ nw }} papers, all about connections.</h2>
+        </div>
+        {%- assign featured = pubs | where: 'featured', true | first -%}
+        <article class="pub-featured reveal">
+            <h3 class="pub-featured-title"><a href="{{ featured.url }}" target="_blank" rel="noopener noreferrer">{{ featured.title }}</a></h3>
+            <p class="pub-authors">{% include authors.html authors=featured.authors %}</p>
+            <p class="pub-meta">{{ featured.venue }}, {{ featured.year }}. {% include pub-kind.html p=featured %}.</p>
+            <a class="text-link" href="{{ featured.url }}" target="_blank" rel="noopener noreferrer">Read the article</a>
+        </article>
+        <ul class="pub-index">
+            {%- assign rest = pubs | where_exp: 'p', 'p.title != featured.title' -%}
+            {% for p in rest %}
+            <li class="reveal" style="--reveal-delay: {{ forloop.index0 | times: 60 }}ms">
+                <span class="pub-index-venue mono">{{ p.venue_short }} {{ p.year }}</span>
+                <a class="pub-index-title" href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{{ p.title }}</a>
+                <span class="pub-index-kind">{% include pub-kind.html p=p %}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        <a class="text-link section-link" href="{{ '/publications/' | relative_url }}">Publications</a>
+    </div>
+</section>
+
+{% include beyond.html %}
+
+<section class="section real-section" id="real">
+    <div class="container">
+        <div class="measure">
+            <h2>What is real on this page.</h2>
+            <p>The figures are toy models written in plain JavaScript for this page. They show the kind of questions my research asks. They do not report results, and none of the signals come from patients.</p>
+            <p>The degrees, the theses and the papers are real, and every paper links to its source.</p>
+            <p>The site runs on Jekyll and vanilla JavaScript, with no framework or theme. The code is <a class="text-link" href="https://github.com/edoardopaolini/edoardopaolini.github.io" target="_blank" rel="noopener noreferrer">on GitHub</a>.</p>
+        </div>
+    </div>
+</section>

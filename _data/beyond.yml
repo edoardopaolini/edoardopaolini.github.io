@@ -1,0 +1,14 @@
+# "Outside the lab" section. It is INVISIBLE until this file has at least one item.
+# Fill it with whatever you actually do outside research. Nothing is invented for you.
+# Each item: title (required), note (one or two sentences), kind (short label, e.g. "music", "climbing", "side project"),
+# url (optional), link_label (optional, default "Open"), image (optional path such as /assets/img/beyond/photo.jpg), alt (image description).
+#
+# Example (remove the leading "# " to activate):
+# - title: "Trail running around Verona"
+#   kind: "sport"
+#   note: "Long runs on the Lessinia hills. The best ideas about signal processing arrive around kilometre twenty."
+# - title: "A tiny synthesizer in JavaScript"
+#   kind: "side project"
+#   note: "Oscillators, filters and envelopes in the browser. Built to understand the filters I use on EEG."
+#   url: "https://github.com/edoardopaolini"
+#   link_label: "Code"

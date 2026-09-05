@@ -1,7 +1,13 @@
 title: "Edoardo Paolini"
-author: "Edoardo Paolini"
-email: "edoardo.paolini@example.com"
 description: >-
-  Personal academic portfolio for Edoardo Paolini, researcher in Computer Science, Biology, and Neuroscience.
+  Edoardo Paolini, Ph.D. student in Computer Science at the University of Verona. EEG, TMS-EEG and brain connectomics for the personalized treatment of epilepsy.
 url: "https://edoardopaolini.github.io"
-# theme: "" # Custom design
+lang: en
+timezone: Europe/Rome
+exclude:
+  - README.md
+  - docs
+  - tests
+  - vendor
+  - Gemfile
+  - Gemfile.lock

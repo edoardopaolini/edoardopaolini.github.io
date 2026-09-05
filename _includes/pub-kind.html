@@ -1,0 +1,2 @@
+{%- comment -%} Human-readable kind of a publication: an explicit `kind` wins, otherwise it follows `type`. {%- endcomment -%}
+{%- if include.p.kind -%}{{ include.p.kind }}{%- elsif include.p.type == 'journal' -%}Journal article{%- elsif include.p.type == 'conference' -%}Conference paper{%- else -%}{{ include.p.type | capitalize }}{%- endif -%}

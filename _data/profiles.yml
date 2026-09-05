@@ -1,0 +1,14 @@
+# External profiles. Rendered in the footer of every page and under the title of /publications/.
+# `icon` names an SVG in _includes/icons/.
+- name: "Google Scholar"
+  url: "https://scholar.google.com/citations?user=LyUtdN4AAAAJ&hl=it&oi=ao"
+  icon: googlescholar
+- name: "Scopus"
+  url: "https://www.scopus.com/authid/detail.uri?authorId=57224196449"
+  icon: scopus
+- name: "ORCID"
+  url: "https://orcid.org/0009-0002-7944-2081"
+  icon: orcid
+- name: "GitHub"
+  url: "https://github.com/edoardopaolini"
+  icon: github

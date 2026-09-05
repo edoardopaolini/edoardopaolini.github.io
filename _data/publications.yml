@@ -1,0 +1,64 @@
+# Publications, newest first. Every entry is rendered on the home page (the first `featured: true` entry
+# is shown large, the others in the compact index) and on /publications/ (grouped by year, filterable).
+# The home headline reads "<count> papers, all about connections." with the count computed from this list:
+# if a paper that is not about connectivity is added, edit the headline in _layouts/home.html.
+#
+# Fields: title, authors (list, "Edoardo Paolini" is highlighted automatically), year, venue, venue_short,
+# type (journal | conference | report; the filter on /publications/ offers Journal and Conference),
+# kind (optional label that replaces the default "Journal article" / "Conference paper"),
+# url, source (label naming where the link goes), featured (true on the paper shown large on the home page).
+- title: "How artificial intelligence and brain connectivity can inform outcome prediction in drug-resistant epilepsy"
+  authors: ["Edoardo Paolini", "Gloria Menegaz", "Eleonora Tamilia", "Silvia Francesca Storti"]
+  year: 2026
+  venue: "IEEE Transactions on Artificial Intelligence"
+  venue_short: "IEEE TAI"
+  type: journal
+  url: "https://ieeexplore.ieee.org/abstract/document/11347037"
+  source: "IEEE Xplore"
+  featured: true
+
+- title: "Decoding the dorsal stream's role in object shape recognition: a tractography-driven ccPAS approach"
+  authors: ["Elena Bertacco", "Francesca Saviola", "Edoardo Paolini", "et al."]
+  year: 2025
+  venue: "Peer Community In Registered Reports"
+  venue_short: "PCI RR"
+  type: report
+  kind: "Stage 1 Registered Report"
+  url: "https://rr.peercommunityin.org/stream_pdf/t_recommendations.track_change.a4c4b2aa1e1e7ad1.QmVydGFjY28gZXQgYWxfUlJfU3RhZ2UgMV9SZXZpc2VkIE1hbnVzY3JpcHRfU2Vjb25kIHJvdW5kLnBkZg%3D%3D.pdf"
+  source: "PCI Registered Reports"
+
+- title: "Decoding asymmetric neural dynamics in visual processing via TMS-induced cortical effective connectivity"
+  authors: ["Edoardo Paolini", "Ilaria Siviero", "Davide Bonfanti", "Gloria Menegaz", "Silvia Savazzi", "Chiara Mazzi", "Silvia Francesca Storti"]
+  year: 2024
+  venue: "Annual International Conference of the IEEE Engineering in Medicine and Biology Society"
+  venue_short: "IEEE EMBC"
+  type: conference
+  url: "https://ieeexplore.ieee.org/abstract/document/10781937"
+  source: "IEEE Xplore"
+
+- title: "Decoding the interplay between brain structural and functional connectivity in Alzheimer's disease"
+  authors: ["Virginia Filippi", "Edoardo Paolini", "Federica Cruciani", "Lorenza Brusini", "Francesco Dal Santo", "Gloria Menegaz", "Ilaria Boscolo Galazzo", "Silvia Francesca Storti"]
+  year: 2023
+  venue: "VIII Congress of the National Group of Bioengineering"
+  venue_short: "GNB"
+  type: conference
+  url: "https://iris.univr.it/handle/11562/1098707"
+  source: "IRIS Verona"
+
+- title: "Reliability of functional connectivity measures in resting-state test-retest fMRI data"
+  authors: ["Ilaria Boscolo Galazzo", "Edoardo Paolini", "Walter Endrizzi", "Francesco Zumerle", "Gloria Menegaz", "Silvia Francesca Storti"]
+  year: 2021
+  venue: "IEEE 18th International Symposium on Biomedical Imaging"
+  venue_short: "IEEE ISBI"
+  type: conference
+  url: "https://ieeexplore.ieee.org/abstract/document/9433797"
+  source: "IEEE Xplore"
+
+- title: "Test-retest reliability of graph metrics in functional brain network"
+  authors: ["Ilaria Boscolo Galazzo", "Francesco Zumerle", "Edoardo Paolini", "Walter Endrizzi", "Gloria Menegaz", "Silvia Francesca Storti"]
+  year: 2021
+  venue: "IEEE 10th International EMBS Conference on Neural Engineering"
+  venue_short: "IEEE NER"
+  type: conference
+  url: "https://ieeexplore.ieee.org/abstract/document/9441287"
+  source: "IEEE Xplore"

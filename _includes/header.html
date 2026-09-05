@@ -1,10 +1,13 @@
 <header class="site-header">
-    <div class="container header-container">
-        <a class="site-title" href="{{ '/' | relative_url }}">Edoardo Paolini</a>
-        <nav class="site-nav">
-            <a href="{{ '/' | relative_url }}" {% if page.url=='/' %}class="active" {% endif %}>Home</a>
-            <a href="{{ '/bio/' | relative_url }}" {% if page.url=='/bio/' %}class="active" {% endif %}>Biography</a>
-            <a href="{{ '/publications/' | relative_url }}" {% if page.url=='/publications/' %}class="active" {% endif %}>Publications</a>
+    <div class="container header-inner">
+        <a class="wordmark" href="{{ '/' | relative_url }}" aria-label="Edoardo Paolini, home">Edoardo Paolini</a>
+        <nav class="site-nav" aria-label="Primary">
+            <a class="nav-home" href="{{ '/' | relative_url }}" {% if page.url == '/' %}aria-current="page"{% endif %}>Home</a>
+            <a href="{{ '/bio/' | relative_url }}" {% if page.url == '/bio/' %}aria-current="page"{% endif %}>Biography</a>
+            <a href="{{ '/publications/' | relative_url }}" {% if page.url == '/publications/' %}aria-current="page"{% endif %}>Publications</a>
+            <button class="theme-toggle" type="button" role="switch" aria-checked="false" data-theme-toggle aria-label="Dark theme" title="Dark theme">
+                <span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-knob"></span></span>
+            </button>
         </nav>
     </div>
 </header>

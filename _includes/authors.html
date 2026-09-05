@@ -1,0 +1,7 @@
+{%- for a in include.authors -%}
+{%- if a == 'Edoardo Paolini' %}<strong>{{ a }}</strong>{% else %}{{ a }}{% endif -%}
+{%- unless forloop.last -%}
+{%- assign nxt = include.authors[forloop.index] -%}
+{%- if nxt == 'et al.' %}, {% elsif forloop.rindex == 2 %} and {% else %}, {% endif -%}
+{%- endunless -%}
+{%- endfor -%}

@@ -1,0 +1,26 @@
+# Academic path, newest first. Rendered as the ledger on the home page and as the timeline on /bio/.
+# Fields: degree, institution, place, start, end ("present" for the current one), honors (optional),
+# supervisor (optional), thesis (optional, HTML allowed for species names), focus (optional, shown when there is no thesis).
+- degree: "Ph.D. student in Computer Science"
+  institution: "University of Verona"
+  place: "Verona, Italy"
+  start: "October 2023"
+  end: "present"
+  supervisor: "Prof. Silvia Francesca Storti"
+  focus: "EEG and TMS-EEG systems based on brain connectomics for the personalized treatment of epilepsy."
+
+- degree: "M.Sc. in Quantitative and Computational Biology"
+  honors: "110/110 cum laude"
+  institution: "University of Trento"
+  place: "Trento, Italy"
+  start: "September 2020"
+  end: "March 2023"
+  thesis: "A systems biology investigation of metabolic and flux dynamics in <i>Mycobacterium tuberculosis</i>"
+
+- degree: "B.Sc. in Computer Science"
+  honors: "110/110 cum laude"
+  institution: "University of Verona"
+  place: "Verona, Italy"
+  start: "September 2017"
+  end: "July 2020"
+  thesis: "Test-retest reliability analysis of functional and effective connectivity measures in resting state fMRI"
