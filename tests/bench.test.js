@@ -89,7 +89,7 @@ assert(narrow.stacked === true && wide.stacked === false, '699 px stacks, 700 px
 assert(M.layoutFor(360).stacked && M.layoutFor(390).stacked && !M.layoutFor(1200).stacked, 'phones stack, wide figures do not');
 assert(narrow.bars === 8 && wide.bars === 12, 'stacked layout has 8 bars, wide layout 12');
 assert(narrow.labelPx >= 12 && wide.labelPx >= 11, 'stacked labels are at least 12 px');
-assert(narrow.traceMin >= 180 && narrow.specHeight === 110, 'stacked trace at least 180 px tall, spectrum 110 px');
+assert(narrow.lineWidth > wide.lineWidth, 'the stacked trace is drawn thicker, for a phone screen');
 assert(M.layoutFor(360) === M.layoutFor(500), 'the layout objects are shared, so identity tells a change');
 assert(M.windowFor(278) === 2 && M.windowFor(308) === 2, 'a phone-wide trace shows 2 s');
 assert(M.windowFor(432) === 3 && M.windowFor(594) === 4 && M.windowFor(1400) === 4, 'wider traces show 3 s, then the 4 s maximum');

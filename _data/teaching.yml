@@ -1,4 +1,7 @@
-# Teaching (source: main_en.pdf in other/). Rendered on /bio/.
+# Teaching and the two short lists that sit beside it on /bio/ (source: main_en.pdf in other/):
+# `courses` (course and program bilingual, years and hours plain), `supervision` as one sentence per language,
+# and `grants` and `languages` as lists of bilingual one-liners. Course titles keep their original language,
+# so an Italian entry that repeats the English one is marked as English for screen readers.
 courses:
   - course: { en: "Advanced Methods for Biomedical Signal Processing", it: "Advanced Methods for Biomedical Signal Processing" }
     program: { en: "M.Sc. in Computer Engineering for Intelligent Systems, healthcare curriculum", it: "Laurea magistrale in Computer Engineering for Intelligent Systems, curriculum healthcare" }

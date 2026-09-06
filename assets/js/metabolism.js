@@ -406,7 +406,7 @@
       }
       for (m = 0; m < M; m++) strandedTotal += stranded[m];
       return {
-        key: key || null, flux: f, coFlux: coFlux, drains: dr, co2: co2, co2At: co2At, pool: stranded, inflow: inflow, accept: accept,
+        key: key || null, flux: f, coFlux: coFlux, drains: dr, co2: co2, co2At: co2At, pool: stranded, inflow: inflow,
         input: input, output: output + co2, stranded: strandedTotal, sweeps: sweep + 1, residual: residual,
         conservation: (output + co2 + strandedTotal) / input
       };
@@ -791,7 +791,8 @@
     var i;
     for (i = 0; i < lay.curves.length; i++) curveTarget[i] = fluxOf(lay.curves[i], res);
     /* Widths and speeds are read against the busiest edge of the wild type, so a perturbation that halves the
-       network visibly slows down instead of renormalising itself back to full width. */
+       network visibly slows down instead of renormalising itself back to full width. The reference is well
+       above 1 (the glucose input alone carries 6), so the initial 1 doubles as a "not measured yet" flag. */
     for (i = 0; i < M; i++) poolTarget[i] = res.pool[i];
     if (refFlux <= 1) {
       var wtMax = 0;
@@ -814,7 +815,7 @@
     var u = Math.min(1, fx / refFlux);
     return WIDTH_MIN + (WIDTH_MAX - WIDTH_MIN) * Math.sqrt(u);
   }
-  function strokeCurve(cv, width, color, dash) {
+  function strokeCurve(cv, width, color) {
     var xs = cv.xs, ys = cv.ys, i;
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
@@ -822,7 +823,6 @@
     ctx.moveTo(xs[0], ys[0]);
     for (i = 1; i < RESAMPLE; i++) ctx.lineTo(xs[i], ys[i]);
     ctx.stroke();
-    if (dash) return;
     /* Arrow head at the end, along the last segment. */
     var n = RESAMPLE - 1, dx = xs[n] - xs[n - 1], dy = ys[n] - ys[n - 1], len = Math.hypot(dx, dy) || 1;
     var ux = dx / len, uy = dy / len, hl = ARROW + width, hw = hl * 0.42;
@@ -911,6 +911,8 @@
       else col = t.muted;
       drawLabel(b, col);
     }
+    /* A render outside the loop (a click, a resize, the first frame) also moves the clock, so the next tick
+       measures its step from here and does not ease through the gap in one jump. */
     lastNow = now;
   }
 
@@ -964,6 +966,9 @@
   /* ---------------------------------------------------------------------
      Wiring
      --------------------------------------------------------------------- */
+  /* The window resize event, not a ResizeObserver: relayout() resizes the canvas bitmap, which an observer on
+     the canvas would see as another resize. The debounce also keeps the solver-free but label-heavy relayout
+     off every intermediate width while a window is dragged. */
   var resizeTimer = 0;
   function onResize() {
     if (resizeTimer) clearTimeout(resizeTimer);

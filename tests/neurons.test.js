@@ -12,7 +12,10 @@ assert(!!M && typeof window.__neurons === 'undefined', 'model exported, DOM part
 assert(M.MIN_SOMA_DISTANCE === 100 && M.MAX_HOPS === 3 && M.MAX_CASCADES === 4 && M.FIRE_PROBABILITY === 0.55 && M.SYNAPTIC_DELAY === 60,
   'contract constants: 100 px spacing, 3 hops, 4 cascades, p = 0.55, 60 ms delay');
 
-/* ---- count rule: one neuron per 90 000 px2, clamped 8 to 26, 6 on phones ---- */
+/* ---- count rule: one neuron per AREA_PER_NEURON px2, clamped MIN_COUNT to MAX_COUNT, PHONE_MIN_COUNT on
+   a phone-width viewport. The expected numbers below are worked out from those constants by hand. ---- */
+assert(M.AREA_PER_NEURON === 76000 && M.MIN_COUNT === 9 && M.MAX_COUNT === 30 && M.PHONE_MIN_COUNT === 6 && M.PHONE_WIDTH === 640,
+  'one neuron per 76 000 px2, clamped 9 to 30, at least 6 below 640 px');
 assert(M.countFor(1440, 900) === 17, '1440x900 gives 17 neurons');
 assert(M.countFor(1920, 1080) === 27, '1920x1080 gives 27 neurons');
 assert(M.countFor(1024, 768) === 10, '1024x768 gives 10 neurons');
@@ -40,7 +43,7 @@ assert(snapshot(a) !== snapshot(M.generate(7, 1366, 768)), 'a different size giv
     var d = Math.sqrt((ns[i].x - ns[j].x) * (ns[i].x - ns[j].x) + (ns[i].y - ns[j].y) * (ns[i].y - ns[j].y));
     if (d < minD) minD = d;
   }
-  assert(minD >= M.MIN_SOMA_DISTANCE, label + 'closest somas ' + minD.toFixed(1) + ' px apart (need >= 100)');
+  assert(minD >= M.MIN_SOMA_DISTANCE, label + 'closest somas ' + minD.toFixed(1) + ' px apart (need >= ' + M.MIN_SOMA_DISTANCE + ')');
   var inside = true, radii = true, dendrites = true, targets = true, lengths = true, counts = { 1: 0, 2: 0, 3: 0, 4: 0 };
   for (i = 0; i < ns.length; i++) {
     var n = ns[i];
@@ -49,7 +52,7 @@ assert(snapshot(a) !== snapshot(M.generate(7, 1366, 768)), 'a different size giv
     if (n.dendrites.length < M.DENDRITES_MIN || n.dendrites.length > M.DENDRITES_MAX) dendrites = false;
     for (j = 0; j < n.dendrites.length; j++) if (n.dendrites[j].children.length < 1 || n.dendrites[j].children.length > 2) dendrites = false;
     var t = n.axon.targets;
-    if (t.length < 1 || t.length > 4) targets = false; else counts[t.length]++;
+    if (t.length < 1 || t.length > 4) targets = false; else counts[t.length]++;   /* 1 target plus up to 3 extras */
     for (j = 0; j < t.length; j++) {
       if (t[j] !== Math.floor(t[j]) || t[j] < 0 || t[j] >= ns.length || t[j] === i) targets = false;
       if (t.indexOf(t[j]) !== j) targets = false;
@@ -57,9 +60,10 @@ assert(snapshot(a) !== snapshot(M.generate(7, 1366, 768)), 'a different size giv
     }
   }
   assert(inside, label + 'every soma lies inside the viewport');
-  assert(radii, label + 'soma radii within 5.2 to 9.6 px');
-  assert(dendrites, label + '3 to 5 dendrites per neuron, each with 1 or 2 branches');
-  assert(targets, label + 'every axon reaches 1 to 4 distinct existing neurons, never itself (' + counts[1] + '/' + counts[2] + '/' + counts[3] + '/' + counts[4] + ' with 1/2/3/4 targets)');
+  assert(radii, label + 'soma radii within ' + M.SOMA_R_MIN + ' to ' + M.SOMA_R_MAX + ' px');
+  assert(dendrites, label + M.DENDRITES_MIN + ' to ' + M.DENDRITES_MAX + ' dendrites per neuron, each with 1 or 2 branches');
+  assert(targets, label + 'every axon reaches 1 to 4 distinct existing neurons, never itself (' +
+    counts[1] + '/' + counts[2] + '/' + counts[3] + '/' + counts[4] + ' with 1/2/3/4 targets)');
   assert(lengths, label + 'every axon is at least as long as the gap between two somas');
 });
 

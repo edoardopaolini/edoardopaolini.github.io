@@ -80,6 +80,8 @@
   var HEAD_R = 1.7;
   var TAIL_SEGS = 8, TAIL_DECAY = 3.2, TAIL_W0 = 1.6, TAIL_W1 = 0.6;
   var HALO_SCALE = 7, HALO_ALPHA = 0.85;
+  /* Envelope of a soma flash over FLASH_MS: a linear rise over the first FLASH_RISE of it, then an exponential
+     fall at FLASH_DECAY, so the cell lights instantly and fades like an afterimage. */
   var FLASH_RISE = 0.12, FLASH_DECAY = 4.5;
 
   /* ======================================================================
@@ -260,7 +262,7 @@
     var neurons = [], i;
     for (i = 0; i < spots.xs.length; i++) {
       neurons.push({
-        index: i, x: spots.xs[i], y: spots.ys[i], px: spots.xs[i], py: spots.ys[i],
+        x: spots.xs[i], y: spots.ys[i], px: spots.xs[i], py: spots.ys[i],
         r: SOMA_R_MIN + rng() * (SOMA_R_MAX - SOMA_R_MIN),
         phase: [rng() * 2 * Math.PI, rng() * 2 * Math.PI, rng() * 2 * Math.PI, rng() * 2 * Math.PI],
         hillock: 0, dendrites: [], axon: null
@@ -652,6 +654,8 @@
     rebuildAll();
     if (!running) draw();
   }
+  /* The window resize event, not a ResizeObserver: the canvas is the viewport, and fit() resizes its bitmap,
+     which an observer on the canvas would see as another resize. */
   var resizeTimer = 0;
   window.addEventListener('resize', function () {
     clearTimeout(resizeTimer);

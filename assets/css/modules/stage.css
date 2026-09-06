@@ -1,5 +1,5 @@
 /* stage.css: the sticky stepper of the home page (owned by stage.js). Desktop: 5/12 copy, 7/12 figure, the
-   figure sticky under the 68 px header while the three beats scroll. Phones: the figure comes first and sticks
+   figure sticky under the header while the three beats scroll. Phones: the figure comes first and sticks
    under the header, the beats scroll beneath it. */
 
 .stage-section {
@@ -49,7 +49,7 @@
 
 .stage-figure {
     position: sticky;
-    top: calc(68px + 1.25rem);
+    top: calc(var(--header-h) + 1.25rem);
 }
 
 .stage {
@@ -60,7 +60,7 @@
 
 .stage-frame {
     position: relative;
-    height: min(calc(100dvh - 68px - 8.5rem), 640px);
+    height: min(calc(100dvh - var(--header-h) - 8.5rem), 640px);
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
@@ -95,7 +95,6 @@
 .stage-buttons button:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: -8px;
-    border-radius: 50%;
 }
 
 /* State 2 offers the electrodes: a soft ring breathes around every node until the first pulse (reason: the
@@ -200,7 +199,6 @@
     width: 90px;
 }
 
-
 .stage-caption {
     margin: 0;
 }
@@ -213,13 +211,12 @@
     }
 
     .stage-copy {
-        display: flex;
         padding-bottom: 0;
     }
 
     .stage-figure {
         order: -1;
-        top: 68px;
+        top: var(--header-h);
         z-index: 5;
         padding-block: 0.75rem 0.5rem;
         background: var(--bg);

@@ -15,14 +15,16 @@
    Normals come from the smoothed coarse mesh itself, which is what keeps the shading consistent with the shape.
    `zone` is the weight of the candidate epileptogenic patch, computed from the ANATOMICAL vertex positions of
    the unsmoothed template (MNI seed -52, -48, 26, radius 32 mm, left hemisphere): 77 vertices carry it,
-   centroid MNI (-51, -47, 24). `sources` are the 24 vertex indices of the network nodes, six inside the zone.
+   centroid MNI (-51, -47, 25). `sources` are the 24 vertex indices of the network nodes, six inside the zone.
 
    Packing, one big-endian blob, base64: uint16 vertexCount, uint16 faceCount, uint16 sourceCount, then
    vertices (3 x int16, model units x 30000), normals (3 x int8, x127), curv (uint8 mapping -1..1),
    zone (uint8 mapping 0..1), faces (3 x uint16), sources (uint16). Decoding is one pass at load.
 
-   Model units: the template centre is at the origin and the largest half-extent is 1. `centre` and `scale`
-   convert MNI millimetres to model units (u = (mni - centre) / scale). */
+   Model units: the template centre is at the origin, and `centre` and `scale` convert MNI millimetres to model
+   units (u = (mni - centre) / scale). The normalisation is taken from the ANATOMICAL template, whose largest
+   half-extent is exactly `scale` millimetres, so `scale` stays an anatomical constant and the conversion is
+   exact; the smoothing then pulls the stored mesh a little inside that box, to a half-extent of about 0.94. */
 window.CORTEX_DATA = {
   vertices: 1284,
   faces: 2560,

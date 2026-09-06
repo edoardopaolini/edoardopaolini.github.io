@@ -1,11 +1,18 @@
 ---
 layout: default
 ---
+{%- comment -%} Home page: hero, the stage stepper, the one sentence, the three interest cells, the metabolism
+  figure, the toolbox, the route, the publications and "Outside the lab". The canvases are empty frames here;
+  every figure is drawn by its module in assets/js/ and labelled from window.I18N.
+  In the toolbox, an item of skills.yml is either a plain string, when both languages say the same thing, or an
+  {en, it} map; indexing a plain string yields nothing, which is what the `default` fallback catches. {%- endcomment -%}
 {%- assign lang = page.lang | default: 'en' -%}
 {%- assign t = site.data.i18n[lang] -%}
+{%- comment -%} The Italian pages live one level down, so every in-page link is built from this prefix. {%- endcomment -%}
 {%- if lang == 'it' -%}{%- assign base = '/it' -%}{%- else -%}{%- assign base = '' -%}{%- endif -%}
 {%- assign bio_url = base | append: '/bio/' -%}
 {%- assign pubs_url = base | append: '/publications/' -%}
+{%- comment -%} The bento below is hand-built around exactly three interests, one figure each, in file order. {%- endcomment -%}
 {%- assign interests = site.data.interests -%}
 
 <section class="hero" id="hero">
@@ -58,6 +65,8 @@ layout: default
 
 <section class="section sentence-section" id="sentence">
     <div class="container">
+        {%- comment -%} One span per word: the words light up one at a time as the section scrolls past.
+          The separator is a numeric entity because a literal space between the tags would be swallowed here. {%- endcomment -%}
         {%- assign words = t.sentence | split: ' ' -%}
         <p class="sentence">{% for w in words %}<span class="w">{{ w }}</span>{% unless forloop.last %}&#32;{% endunless %}{% endfor %}</p>
     </div>
@@ -154,7 +163,7 @@ layout: default
                 <p class="tool-primary">{% for p in g.primary %}<span>{{ p }}</span>{% endfor %}</p>
                 {% if g.note %}<p class="tool-note mono">{{ g.note[lang] }}</p>{% endif %}
                 <ul class="tool-items">
-                    {% for item in g.items %}<li>{% if item.en %}{{ item[lang] }}{% else %}{{ item }}{% endif %}</li>{% endfor %}
+                    {% for item in g.items %}<li>{{ item[lang] | default: item }}</li>{% endfor %}
                 </ul>
             </div>
             {% endfor %}
@@ -200,6 +209,8 @@ layout: default
         </article>
         {% endif %}
         <ul class="pub-index">
+            {%- comment -%} Everything except the featured paper. With no featured entry `featured.title` is
+              nil, no title matches it, and the index simply lists them all. {%- endcomment -%}
             {%- assign rest = pubs | where_exp: 'p', 'p.title != featured.title' -%}
             {% for p in rest %}
             <li class="reveal" style="--reveal-delay: {{ forloop.index0 | times: 60 }}ms">

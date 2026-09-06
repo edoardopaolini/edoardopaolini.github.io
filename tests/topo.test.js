@@ -62,6 +62,8 @@ assert(durOk, 'every segment lasts 60-120 ms');
 var P = M.PALETTES;
 assert(P.light.blue === '#2456c7' && P.light.red === '#c8323a', 'light palette is #2456c7 to #c8323a');
 assert(P.dark.blue === '#4f7ee8' && P.dark.red === '#e05a5a', 'dark palette is #4f7ee8 to #e05a5a');
+/* The neutral is the --surface-2 token, which only a browser can resolve: these two stand in for its light
+   and dark values, since colormap() takes the three endpoints as arguments. */
 var neutral = [240, 242, 245], blue = Lab.rgb(P.light.blue), red = Lab.rgb(P.light.red);
 function same(a, b) { return near(a[0], b[0], 1e-9) && near(a[1], b[1], 1e-9) && near(a[2], b[2], 1e-9); }
 assert(same(M.colormap(-1, neutral, blue, red), blue), 'value -1 gives the blue endpoint');
@@ -73,7 +75,8 @@ assert(same(half, [(neutral[0] + red[0]) / 2, (neutral[1] + red[1]) / 2, (neutra
 var out = [0, 0, 0];
 assert(M.colormap(-0.3, neutral, blue, red, out) === out, 'colormap writes into the array it is given');
 var darkBlue = Lab.rgb(P.dark.blue), darkRed = Lab.rgb(P.dark.red), darkNeutral = [27, 31, 39];
-assert(same(M.colormap(-1, darkNeutral, darkBlue, darkRed), darkBlue) && same(M.colormap(1, darkNeutral, darkBlue, darkRed), darkRed), 'dark endpoints resolve the same way');
+assert(same(M.colormap(-1, darkNeutral, darkBlue, darkRed), darkBlue) && same(M.colormap(1, darkNeutral, darkBlue, darkRed), darkRed),
+  'dark endpoints resolve the same way');
 assert(!/[\u2013\u2014]/.test(JSON.stringify(P)), 'no en- or em-dashes in the palette');
 
 /* Topography: renormalised inside the head, mask covers the head circle only, sign preserved. */
@@ -87,7 +90,8 @@ function cellAt(x, y, g, span) {
   var gx = Math.floor((x + span) / (2 * span) * g), gy = Math.floor((span - y) / (2 * span) * g);
   return gy * g + gx;
 }
-assert(tp.field[cellAt(0.809, 0.588, 24, 1.05)] > 0.3 && tp.field[cellAt(-0.809, -0.588, 24, 1.05)] < -0.3, 'topography keeps the sign of the template (F8 positive, T5 negative in A)');
+assert(tp.field[cellAt(0.809, 0.588, 24, 1.05)] > 0.3 && tp.field[cellAt(-0.809, -0.588, 24, 1.05)] < -0.3,
+  'topography keeps the sign of the template (F8 positive, T5 negative in A)');
 var tpC = M.topography(T.C, 24, 1.05);
 assert(tpC.field[cellAt(0, 0.9, 24, 1.05)] > 0.5 && tpC.field[cellAt(0, -0.9, 24, 1.05)] < -0.5, 'C reads positive anterior and negative posterior on the grid');
 

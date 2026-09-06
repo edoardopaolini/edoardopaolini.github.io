@@ -44,7 +44,8 @@ assert(WT.stranded < 1e-3, 'nothing accumulates at wild type (stranded ' + n(WT.
   M.DRAINS.forEach(function (d, i) { if (WT.drains[i] <= 1e-6) dry.push(d.id); });
   assert(dry.length === 0, 'every exit carries carbon at wild type' + (dry.length ? ' (' + dry.join(', ') + ' do not)' : ''));
 })();
-assert(WT.residual < M.TOL && WT.sweeps < M.MAX_SWEEPS, 'the sweeps converge below the tolerance (' + WT.sweeps + ' sweeps, residual ' + WT.residual.toExponential(1) + ')');
+assert(WT.residual < M.TOL && WT.sweeps < M.MAX_SWEEPS,
+  'the sweeps converge below the tolerance (' + WT.sweeps + ' sweeps, residual ' + WT.residual.toExponential(1) + ')');
 (function () {
   /* Every pool balances: what comes in leaves as flux, co-substrate use, drains or accumulation. */
   var worst = 0;
@@ -79,7 +80,8 @@ assert(M.summary(sdh).key === 'sdh' && M.summary(WT).key === null, 'a summary ca
 assert(pool(sdh, 'SUC') > 0.05 * sdh.input, 'sdh accumulates succinate (' + n(pool(sdh, 'SUC')) + ')');
 assert(flux(sdh, 'FUM') < 0.1 * flux(WT, 'FUM'), 'sdh cuts the flux through fumarase: ' + n(flux(WT, 'FUM')) + ' to ' + n(flux(sdh, 'FUM')));
 assert(flux(sdh, 'ScAS') > 0 && flux(sdh, 'MCM') > 0, 'sdh leaves the methylmalonyl route feeding succinyl-CoA');
-assert(M.summary(pcl).pools.join(',') === 'PPC' && M.summary(sdh).pools.join(',') === 'SUC', 'the readout lists the pools above ' + M.POOL_LABEL * 100 + ' percent of the input: PPC for pcl, SUC for sdh');
+assert(M.summary(pcl).pools.join(',') === 'PPC' && M.summary(sdh).pools.join(',') === 'SUC',
+  'the readout lists the pools above ' + M.POOL_LABEL * 100 + ' percent of the input: PPC for pcl, SUC for sdh');
 
 var cs = M.solve('cs');
 assert(flux(cs, 'MCS') > flux(WT, 'MCS'), 'cs moves oxaloacetate into the methylcitrate cycle: MCS ' + n(flux(WT, 'MCS')) + ' to ' + n(flux(cs, 'MCS')));
@@ -144,7 +146,8 @@ assert(M.tier(1200) === 0 && M.tier(900) === 0 && M.tier(899) === 1 && M.tier(60
   assert(narrow.labels.every(function (b) { return b.px >= 11; }) && M.layout(599, 450).labels.every(function (b) { return b.px >= 11; }),
     'no label under 11 px on compact frames');
   var it = M.layout(1200, 750, null, function (path, fallback) { return path === 'names.OAA' ? 'Ossalacetato' : path === 'co2' ? 'CO2' : fallback; });
-  assert(it.nodes[M.INDEX.OAA].text === 'Ossalacetato' && it.nodes[M.INDEX.PYR].text === 'Pyruvate', 'the page language overrides a label, the model name is the fallback');
+  assert(it.nodes[M.INDEX.OAA].text === 'Ossalacetato' && it.nodes[M.INDEX.PYR].text === 'Pyruvate',
+    'the page language overrides a label, the model name is the fallback');
 })();
 (function () {
   var lay = M.layout(1200, 750), ok = true, i;

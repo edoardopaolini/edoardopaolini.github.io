@@ -24,7 +24,8 @@ assert(!!Lab, 'Lab exported on window.Lab');
 assert(Lab.format('Stimulate {name}', { name: 'C3' }) === 'Stimulate C3', 'format fills a placeholder');
 assert(Lab.format('{a}-{b}, r = {r}.', { a: 'O1', b: 'O2', r: (0.4).toFixed(2) }) === 'O1-O2, r = 0.40.', 'format fills several placeholders, numbers as given');
 assert(Lab.format('{reached} of {total}', { reached: 0, total: 19 }) === '0 of 19', 'format keeps a zero value');
-assert(Lab.format('Hello {who}', {}) === 'Hello {who}' && Lab.format('plain', null) === 'plain', 'a missing value leaves the placeholder visible; no values is fine');
+assert(Lab.format('Hello {who}', {}) === 'Hello {who}' && Lab.format('plain', null) === 'plain',
+  'a missing value leaves the placeholder visible; no values is fine');
 assert(Lab.format('{x} and {x}', { x: 1 }) === '1 and 1', 'a repeated placeholder is filled every time');
 
 /* ---- Strings: a getter over window.I18N[module], safe without the table ---- */
@@ -61,15 +62,16 @@ assert(Lab.rgba('#0a7f70', 0.5) === Lab.rgba('#0a7f70', 0.5), 'rgba is memoised 
   assert(onCircle, 'every electrode is inside the unit circle (coordinates rounded to 4 decimals)');
   assert(Object.keys(M[0]).join(',') === 'name,x,y', 'an entry is name, x, y and nothing else');
   assert(Lab.electrodeIndex('Cz') === 9 && Lab.electrodeIndex('cz') === 9 && Lab.electrodeIndex('Xx') === -1, 'electrodeIndex is case-insensitive, -1 when unknown');
-  assert(near(M[Lab.electrodeIndex('Cz')].x, 0, 1e-9) && M[Lab.electrodeIndex('Fp1')].y > 0.9 && M[Lab.electrodeIndex('O2')].y < -0.9, 'Cz at the vertex, Fp1 anterior, O2 posterior');
+  assert(near(M[Lab.electrodeIndex('Cz')].x, 0, 1e-9) && M[Lab.electrodeIndex('Fp1')].y > 0.9 && M[Lab.electrodeIndex('O2')].y < -0.9,
+    'Cz at the vertex, Fp1 anterior, O2 posterior');
   assert(M[Lab.electrodeIndex('T3')].x < 0 && M[Lab.electrodeIndex('T4')].x > 0, 'odd numbers on the left, even on the right');
 })();
 
 /* ---- Small numeric helpers ---- */
 assert(Lab.clamp(5, 0, 1) === 1 && Lab.clamp(-1, 0, 1) === 0 && Lab.clamp(0.5, 0, 1) === 0.5, 'clamp');
 assert(Lab.easeOut(0) === 0 && Lab.easeOut(1) === 1 && Lab.easeOut(0.5) > 0.9, 'easeOut starts fast and settles');
-assert(near(Lab.idw([1, 3], [{ x: 0, y: 0 }, { x: 2, y: 0 }], 1, 0), 2, 1e-12) && Lab.idw([1, 3], [{ x: 0, y: 0 }, { x: 2, y: 0 }], 0, 0) === 1, 'idw interpolates, exact at a sample');
+assert(near(Lab.idw([1, 3], [{ x: 0, y: 0 }, { x: 2, y: 0 }], 1, 0), 2, 1e-12) && Lab.idw([1, 3], [{ x: 0, y: 0 }, { x: 2, y: 0 }], 0, 0) === 1,
+  'idw interpolates, exact at a sample');
 assert(typeof Lab.now() === 'number' && Lab.now() >= 0, 'now returns milliseconds');
-assert(Lab.toScreen === undefined, 'no dead helpers exported');
 
 summary('lab');

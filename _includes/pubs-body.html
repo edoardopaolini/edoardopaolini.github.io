@@ -1,4 +1,7 @@
-{%- comment -%} Body of the publications page, shared by /publications/ and /it/publications/. {%- endcomment -%}
+{%- comment -%} Body of the publications page, shared by /publications/ and /it/publications/.
+  The filter is driven by site.js: it reads `data-type` and `data-first` on every .pub-entry, hides the
+  .pub-group sections that end up empty, shows .pub-empty when nothing matches, and writes the count into
+  #pub-count using the `data-count-template` sentence below. Keep those hooks if you restyle this. {%- endcomment -%}
 {%- assign lang = page.lang | default: 'en' -%}
 {%- assign t = site.data.i18n[lang] -%}
 <header class="page-head">

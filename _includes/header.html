@@ -1,3 +1,6 @@
+{%- comment -%} Site header: wordmark, primary navigation, language switch and theme toggle. Like every include
+  here it derives `lang` and `t` itself, so it does not depend on what the caller happens to have assigned.
+  The toggle carries no icon; site.js flips aria-checked and the label, the knob slides in CSS. {%- endcomment -%}
 {%- assign lang = page.lang | default: 'en' -%}
 {%- assign t = site.data.i18n[lang] -%}
 {%- if lang == 'it' -%}{%- assign base = '/it' -%}{%- else -%}{%- assign base = '' -%}{%- endif -%}
@@ -9,14 +12,14 @@
     <div class="container header-inner">
         <a class="wordmark" href="{{ home_url | relative_url }}" aria-label="Edoardo Paolini, {{ t.nav.home | downcase }}"><span class="wordmark-full">Edoardo Paolini</span><span class="wordmark-short" aria-hidden="true">EP</span></a>
         <nav class="site-nav" aria-label="{{ t.nav_label }}">
-            <a class="nav-home" href="{{ home_url | relative_url }}" {% if page.url == home_url %}aria-current="page"{% endif %}>{{ t.nav.home }}</a>
-            <a href="{{ bio_url | relative_url }}" {% if page.url == bio_url %}aria-current="page"{% endif %}>{{ t.nav.bio }}</a>
-            <a href="{{ pubs_url | relative_url }}" {% if page.url == pubs_url %}aria-current="page"{% endif %}>{{ t.nav.publications }}</a>
+            <a class="nav-home" href="{{ home_url | relative_url }}"{% if page.url == home_url %} aria-current="page"{% endif %}>{{ t.nav.home }}</a>
+            <a href="{{ bio_url | relative_url }}"{% if page.url == bio_url %} aria-current="page"{% endif %}>{{ t.nav.bio }}</a>
+            <a href="{{ pubs_url | relative_url }}"{% if page.url == pubs_url %} aria-current="page"{% endif %}>{{ t.nav.publications }}</a>
         </nav>
         <div class="header-tools">
             <div class="lang-switch" role="group" aria-label="{{ t.switch_label }}">
-                <a href="{{ url_en | relative_url }}" hreflang="en" lang="en" {% if lang == 'en' %}aria-current="true"{% endif %}>EN</a>
-                <a href="{{ url_it | relative_url }}" hreflang="it" lang="it" {% if lang == 'it' %}aria-current="true"{% endif %}>IT</a>
+                <a href="{{ url_en | relative_url }}" hreflang="en" lang="en"{% if lang == 'en' %} aria-current="true"{% endif %}>EN</a>
+                <a href="{{ url_it | relative_url }}" hreflang="it" lang="it"{% if lang == 'it' %} aria-current="true"{% endif %}>IT</a>
             </div>
             <button class="theme-toggle" type="button" role="switch" aria-checked="false" data-theme-toggle aria-label="{{ t.theme_dark }}" title="{{ t.theme_dark }}">
                 <span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-knob"></span></span>

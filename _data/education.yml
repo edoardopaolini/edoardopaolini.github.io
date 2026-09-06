@@ -1,6 +1,8 @@
-# Degrees, newest first (source: the two CVs in other/). Rendered on /bio/ (the supervisor fields are kept but not printed for now); the home route reads route.yml.
-# Bilingual fields are maps {en, it}. Dates are "YYYY-MM" (the template prints the month in the page language).
-# Thesis titles keep their original language. HTML is allowed in `thesis`.
+# Degrees, newest first (source: the two CVs in other/). Rendered on /bio/; the home route reads route.yml.
+# Fields: degree, institution, place, focus (all bilingual maps {en, it}), start and end as "YYYY-MM" strings
+# ("present" for the current one; the template prints the month in the page language), honors and thesis
+# (optional, in their original language; HTML is allowed in `thesis`), supervisor and cosupervisors, which are
+# kept here but deliberately not printed for now (see the comment at the top of _includes/bio-body.html).
 - degree: { en: "Ph.D. student in Computer Science", it: "Dottorando in Informatica" }
   institution: { en: "University of Verona", it: "Università di Verona" }
   place: { en: "Verona, Italy", it: "Verona" }

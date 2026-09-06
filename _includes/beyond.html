@@ -1,6 +1,8 @@
 {%- comment -%}
 "Outside the lab": a collage of the items in _data/beyond.yml (photo tiles and text tiles), with the photo credits
 that the Creative Commons licences require in a closed disclosure. Renders nothing when the file is empty.
+The collage sizes its tiles by position (see .tile-photo:nth-child in style.css), so reordering beyond.yml
+reshapes the mosaic. Used on the home page and on /bio/.
 {%- endcomment -%}
 {%- assign lang = page.lang | default: 'en' -%}
 {%- assign t = site.data.i18n[lang] -%}

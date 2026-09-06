@@ -102,8 +102,8 @@
     var groups = Array.prototype.slice.call(document.querySelectorAll('.pub-group'));
     var empty = document.querySelector('.pub-empty');
     var count = document.getElementById('pub-count');
-    /* announce: the count is a live region, so the initial pass (page load) does not write it. */
-    function apply(announce) {
+    /* live: the count is a live region, so the initial pass (page load) does not write it. */
+    var apply = function (live) {
       var checked = filter.querySelector('input:checked');
       var mode = checked ? checked.value : 'all';
       var shown = 0;
@@ -117,8 +117,8 @@
       });
       if (empty) empty.hidden = shown > 0;
       /* The sentence comes from the page language (data-count-template on the fieldset). */
-      if (count && announce) count.textContent = (filter.dataset.countTemplate || '{n} / {total}').replace('{n}', shown).replace('{total}', entries.length);
-    }
+      if (count && live) count.textContent = (filter.dataset.countTemplate || '{n} / {total}').replace('{n}', shown).replace('{total}', entries.length);
+    };
     filter.addEventListener('change', function () { apply(true); });
     apply(false);
   }

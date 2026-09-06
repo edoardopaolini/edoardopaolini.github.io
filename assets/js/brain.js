@@ -19,8 +19,9 @@
      ====================================================================== */
 
   /* The candidate zone was computed offline from the anatomical vertex positions (a unilateral focus in the
-     left supramarginal region) and arrives as a per-vertex weight; these two numbers only record where it
-     came from, so the figure and its tests can be read without opening the data file. */
+     left supramarginal region) and arrives as a per-vertex weight. ZONE_MNI records the seed the patch was
+     grown from, so the figure and its tests can be read without opening the data file; ZONE_MM is the radius
+     it was grown to, and is what sizes the glow on screen. */
   var ZONE_MNI = [-52, -48, 26];
   var ZONE_MM = 32;
   var ZONE_ON = 0.35;                         /* above this weight a vertex counts as inside the zone */
@@ -34,13 +35,14 @@
     var x = -0.42, y = -0.66, z = 0.62, l = Math.sqrt(x * x + y * y + z * z);
     return [x / l, y / l, z / l];
   })();
-  var AMBIENT = 0.10;                         /* tone of a face the light does not reach */
-  /* The curvature is smoothed before it is packed, so it darkens whole sulcal bands instead of single faces.
-     A strong sulcal factor on the raw field made the surface speckle, and a speckled surface reads as a
-     transparent one: the eye takes the dark faces for the far side showing through. */
-  var SUL_MIN = 0.78, SUL_SPAN = 0.22;        /* a sulcus keeps 78 percent of the tone of a gyral crown */
+  /* The cortex is deliberately matte: a high ambient floor and a short lambert range keep the whole silhouette
+     solidly filled, which is what makes it read as an opaque object. Deep shading did the opposite, because a
+     face that falls to the tone of the page looks like a window onto the far side. The curvature, smoothed
+     before it is packed, then only has to hint at the sulcal bands. */
+  var AMBIENT = 0.55;                         /* tone of a face the light does not reach */
+  var SUL_MIN = 0.88, SUL_SPAN = 0.12;        /* a sulcus keeps 88 percent of the tone of a gyral crown */
   var SUL_LO = -0.10, SUL_HI = 0.10;          /* curvature band over which the two are interpolated */
-  var DEPTH_FLOOR = 0.55;                     /* tone of the farthest face relative to the nearest */
+  var DEPTH_FLOOR = 0.85;                     /* tone of the farthest face relative to the nearest */
 
   /* ---- decoding ---------------------------------------------------------
      One big-endian blob (see the header of cortex-data.js): three uint16 counts, then the vertices, the
@@ -166,7 +168,7 @@
       degree[edges[i].a]++; degree[edges[i].b]++;
     }
     return {
-      matrix: W, edges: edges, degree: degree, maxWeight: maxW,
+      edges: edges, degree: degree,
       weight: function (a, b) { return a === b ? 0 : W[a * S + b]; }
     };
   })();
@@ -212,6 +214,7 @@
     LIGHT: LIGHT,
     AMBIENT: AMBIENT,
     SUL_MIN: SUL_MIN,
+    DEPTH_FLOOR: DEPTH_FLOOR,
     decodeCortex: decodeCortex,
     mniToModel: mniToModel,
     modelToMni: modelToMni,
@@ -282,12 +285,13 @@
   var counts = new Int32Array(GROUPS + 2), starts = new Int32Array(GROUPS + 2);
   var groupDepth = new Float64Array(GROUPS), groupOrder = new Int32Array(GROUPS);
   var groupFill = new Array(GROUPS);
-  var vSrc = new Float32Array(S * 3), srcFacing = new Float32Array(S);
+  var vSrc = new Float32Array(S * 3);
   var srcX = new Float32Array(S), srcY = new Float32Array(S);
   var srcShown = new Uint8Array(S), btnShown = new Uint8Array(S);
   var btnX = new Float32Array(S), btnY = new Float32Array(S);
   var neighbour = new Uint8Array(S);
   var edgeBack = new Uint8Array(E);
+  /* The zone centroid as three one-element arrays, so the same project() call transforms it. */
   var zoneCx = new Float32Array([ZONE.centre[0]]), zoneCy = new Float32Array([ZONE.centre[1]]);
   var zoneCz = new Float32Array([ZONE.centre[2]]), zoneProj = new Float32Array(3);
   var zoneInv = 1 / (Math.sqrt(ZONE.centre[0] * ZONE.centre[0] + ZONE.centre[1] * ZONE.centre[1] +
@@ -559,12 +563,17 @@
       if (bkt >= TONE_BUCKETS) bkt = TONE_BUCKETS - 1;
       if (bkt < 0) bkt = 0;
       var zw = (ZW[a] + ZW[b] + ZW[c]) / 3;
+      /* Level 0 is plain cortex; levels 1..ZONE_LEVELS-1 split the weight. The 0.999 keeps a face of weight
+         exactly 1 inside the last level instead of one past it. */
       var lvl = zw > ZONE_MIN ? 1 + Math.floor(zw * (ZONE_LEVELS - 1) * 0.999) : 0;
       g = lvl * TONE_BUCKETS + bkt;
       faceOf[i] = g;
       counts[g + 1]++;
       groupDepth[g] += depth;
     }
+    /* Counting sort of the faces into order[] by bucket: the prefix sums of counts give each bucket the slice
+       of order[] it owns, and starts[] keeps those bounds for fillGroup. Culled faces land in the last slice
+       and are never drawn. */
     starts[0] = 0;
     for (i = 1; i <= GROUPS + 1; i++) starts[i] = starts[i - 1] + counts[i];
     for (i = 0; i <= GROUPS + 1; i++) counts[i] = starts[i];
@@ -717,8 +726,8 @@
     for (k = 0; k < S; k++) {
       o = k * 3;
       srcX[k] = cx + vSrc[o] * scale; srcY[k] = cy + vSrc[o + 1] * scale;
-      srcFacing[k] = -vSrc[o + 2] * SOURCES.inv[k];
-      srcShown[k] = srcFacing[k] >= SOURCE_FACING ? 1 : 0;
+      /* The radial direction of a source against the camera: positive on the near side of the cortex. */
+      srcShown[k] = -vSrc[o + 2] * SOURCES.inv[k] >= SOURCE_FACING ? 1 : 0;
     }
     /* A highlight whose source has turned to the far side stops dimming the rest: otherwise pinning a source
        and letting the cortex turn would leave the whole network faded with nothing to look at. */

@@ -18,7 +18,6 @@
 
 #bench-canvas,
 #bench-spectrum {
-    display: block;
     width: 100%;
     height: 100%;
     min-width: 0;
@@ -99,7 +98,6 @@
 }
 
 .mini-figure canvas {
-    display: block;
     width: 100%;
     height: 220px;
     border-radius: var(--radius-sm);
@@ -150,17 +148,16 @@
     margin: -14px 0 0 -14px;
 }
 
-/* The cortex rotates under the pointer: horizontal drags turn it, vertical swipes still scroll the page. */
 /* The cortex is wide and low, so this cell gets more height than the other two: the surface fills the frame. */
 .brain-figure canvas {
     height: 286px;
 }
 
+/* The cortex rotates under the pointer: horizontal drags turn it, vertical swipes still scroll the page. */
 .brain-figure {
     cursor: grab;
     touch-action: pan-y pinch-zoom;
     user-select: none;
-    -webkit-user-select: none;
 }
 
 .brain-figure.is-dragging {
@@ -186,8 +183,9 @@
     height: 8px;
 }
 
+/* topo.js sets --seg per segment, its share of the cycle, so the bar keeps the true proportions. */
 .topo-bar span {
-    flex: var(--dur, 1) 0 0;
+    flex: var(--seg, 1) 0 0;
     border-radius: 4px;
     background: var(--line-strong);
     transition: background-color 0.2s ease;

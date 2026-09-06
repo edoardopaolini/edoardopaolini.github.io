@@ -1,5 +1,6 @@
 # Strings of the cortical surface figure (assets/js/brain.js), serialised into window.I18N.brain by the
-# default layout. Placeholders in braces are filled by the module. The two trees must have the same keys.
+# default layout. Placeholders in braces are filled by the module: {n} a count or a source number, {name} the
+# name of a source, {links} the singular or plural word for connections. The two trees must have the same keys.
 en:
   source: "Source {n}"
   select: "Select {name}"

@@ -1,5 +1,6 @@
 # Strings of the microstate topography (assets/js/topo.js), serialised into window.I18N.topo by the default layout.
-# Placeholders in braces are filled by the module. The two trees must have the same keys.
+# Placeholders in braces are filled by the module: {cls} the microstate class, {ms} its duration.
+# The two trees must have the same keys.
 en:
   segment: "Class {cls}, {ms} ms"
 it:

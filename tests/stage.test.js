@@ -20,7 +20,8 @@ assert(N === 19 && M.P === 171 && M.FS === 250 && BUF === 2500, '19 electrodes, 
   for (i = 0; i < n; i++) { num += (a[i] - ma) * (b[i] - mb); da += (a[i] - ma) * (a[i] - ma); db += (b[i] - mb) * (b[i] - mb); }
   assert(near(M.pearson(a, b), num / Math.sqrt(da * db), 1e-12), 'pearson matches the covariance formula');
 })();
-assert(near(M.pearson([1, 2, 3, 4, 5], [2, 4, 6, 8, 10]), 1, 1e-12) && near(M.pearson([1, 2, 3, 4, 5], [5, 4, 3, 2, 1]), -1, 1e-12), 'pearson is 1 for a scaled copy and -1 for a reversed one');
+assert(near(M.pearson([1, 2, 3, 4, 5], [2, 4, 6, 8, 10]), 1, 1e-12) && near(M.pearson([1, 2, 3, 4, 5], [5, 4, 3, 2, 1]), -1, 1e-12),
+  'pearson is 1 for a scaled copy and -1 for a reversed one');
 assert(M.pearson([1, 2, 3], [7, 7, 7]) === 0, 'pearson is 0 when a series has no variance');
 
 /* ---- Small-world coupling graph ---- */
@@ -36,7 +37,9 @@ assert(M.pearson([1, 2, 3], [7, 7, 7]) === 0, 'pearson is 0 when a series has no
   for (i = 0; i < N; i++) for (j = 1; j <= 2; j++) if (!cg.adj[cg.order[i] * N + cg.order[(i + j) % N]]) rewired++;
   assert(rewired > 0 && rewired < 20, 'some lattice edges were rewired (' + rewired + ')');
   var cg2 = M.buildCoupling(Lab.rng(M.TOPOLOGY_SEED), 1.6), doubled = true;
-  for (i = 0; i < cg.edges.length; i++) if (!near(cg2.edges[i].w / cg.edges[i].w, 2, 1e-4) || cg2.edges[i].a !== cg.edges[i].a || cg2.edges[i].b !== cg.edges[i].b) doubled = false;
+  for (i = 0; i < cg.edges.length; i++) {
+    if (!near(cg2.edges[i].w / cg.edges[i].w, 2, 1e-4) || cg2.edges[i].a !== cg.edges[i].a || cg2.edges[i].b !== cg.edges[i].b) doubled = false;
+  }
   assert(doubled, 'the same seed gives the same topology and weights scale linearly with the coupling');
   var wNear = 0, wFar = 0;
   cg.edges.forEach(function (e) {
@@ -83,7 +86,8 @@ assert(M.pearson([1, 2, 3], [7, 7, 7]) === 0, 'pearson is 0 when a series has no
     maxDiff = Math.max(maxDiff, Math.abs(M.pearson(xa, xb) - g.r[p]));
   }
   assert(maxDiff < 1e-3, 'running-sum r matches a direct Pearson over the high-passed window for all pairs (max diff ' + maxDiff.toExponential(1) + ')');
-  assert(M.pairIndex(3, 8) === M.pairIndex(8, 3) && M.PA[M.pairIndex(3, 8)] === 3 && M.PB[M.pairIndex(3, 8)] === 8 && M.pairIndex(4, 4) === -1, 'pairIndex is symmetric and maps back to PA and PB');
+  assert(M.pairIndex(3, 8) === M.pairIndex(8, 3) && M.PA[M.pairIndex(3, 8)] === 3 && M.PB[M.pairIndex(3, 8)] === 8 && M.pairIndex(4, 4) === -1,
+    'pairIndex is symmetric and maps back to PA and PB');
   var g2 = M.createGenerator(7, 0.8);
   g2.advance(2000); g2.correlate();
   assert(g2.r[0] === g.r[0] && g2.buf[100] === g.buf[100], 'the same seed reproduces the same traces and correlations');
@@ -143,7 +147,8 @@ assert(M.pearson([1, 2, 3], [7, 7, 7]) === 0, 'pearson is 0 when a series has no
   var gapClear = true;
   for (k = 3; k < hopSamples; k++) if (g.mark[one * BUF + s0 + k]) gapClear = false;
   assert(g.mark[Cz * BUF + s0] === 1 && g.mark[Cz * BUF + s0 + 20] === 1, 'static response marks the stimulated channel from the pulse on');
-  assert(g.mark[one * BUF + s0] === 1 && gapClear && g.mark[one * BUF + s0 + hopSamples] === 1, 'a one-hop neighbour shows the artifact at the pulse and its response one hop (' + hopSamples + ' samples) later');
+  assert(g.mark[one * BUF + s0] === 1 && gapClear && g.mark[one * BUF + s0 + hopSamples] === 1,
+    'a one-hop neighbour shows the artifact at the pulse and its response one hop (' + hopSamples + ' samples) later');
   assert(g.pulses[0] === s0, 'the static pulse is remembered for the page marker');
 })();
 
@@ -160,7 +165,8 @@ function headFits(w, h) {
 }
 var fitPhone = headFits(350, 280), fitDesk = headFits(595, 640), fitShort = headFits(595, 300);
 assert(fitPhone.ok && fitPhone.r >= 20, 'head layout fits a 350 x 280 frame (r ' + fitPhone.r.toFixed(1) + ', page ' + fitPhone.pageH.toFixed(0) + ' px)');
-assert(fitDesk.ok && fitDesk.r > 100 && fitDesk.pageH > 200, 'head layout fits a 595 x 640 frame (r ' + fitDesk.r.toFixed(1) + ', page ' + fitDesk.pageH.toFixed(0) + ' px)');
+assert(fitDesk.ok && fitDesk.r > 100 && fitDesk.pageH > 200,
+  'head layout fits a 595 x 640 frame (r ' + fitDesk.r.toFixed(1) + ', page ' + fitDesk.pageH.toFixed(0) + ' px)');
 assert(fitShort.ok, 'head layout fits a short 595 x 300 frame (r ' + fitShort.r.toFixed(1) + ')');
 
 summary('stage');

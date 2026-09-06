@@ -16,12 +16,13 @@
 
   var FS = 250; /* simulated sample rate, Hz */
 
-  /* Two layouts, chosen from the width of the figure container. The stacked one is for phones: the
-     spectrum moves under the trace, gets fewer and wider bars and larger labels. */
+  /* Two layouts, chosen from the width of the figure container. The stacked one is for phones: the spectrum
+     moves under the trace, gets fewer and wider bars and larger labels. Only what the canvases draw lives here;
+     the grid that puts the spectrum under the trace is the .is-stacked rule of assets/css/modules/cells.css. */
   var STACK_BELOW = 700;
   var LAYOUTS = {
-    wide: { stacked: false, bars: 12, labelPx: 11, traceMin: 220, specHeight: 0, lineWidth: 1.25 },
-    stacked: { stacked: true, bars: 8, labelPx: 12, traceMin: 180, specHeight: 110, lineWidth: 1.4 }
+    wide: { stacked: false, bars: 12, labelPx: 11, lineWidth: 1.25 },
+    stacked: { stacked: true, bars: 8, labelPx: 12, lineWidth: 1.4 }
   };
   function layoutFor(width) {
     return width < STACK_BELOW ? LAYOUTS.stacked : LAYOUTS.wide;
@@ -605,14 +606,19 @@
       windowLabel = Lab.format(str('window'), { s: winS });
     }
   }
+  function refit() { fit(); drawAll(); }
   if (typeof ResizeObserver !== 'undefined') {
-    var ro = new ResizeObserver(function () { fit(); drawAll(); });
+    /* Both canvases are observed as well as the figure: the layout class changes their boxes without the
+       figure itself changing size. */
+    var ro = new ResizeObserver(refit);
     ro.observe(figure);
     ro.observe(traceCanvas);
     ro.observe(specCanvas);
+  } else {
+    window.addEventListener('resize', refit);
   }
   Lab.onTheme(function () { readTokens(); drawAll(); });
-  Lab.fontsReady(function () { drawAll(); });
+  Lab.fontsReady(drawAll);
 
   /* ---- init: ?bench=notch,hp,lp turns filters on for screenshots; a restored checkbox state also counts ---- */
   var initial = flagsFromInputs();

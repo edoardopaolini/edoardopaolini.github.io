@@ -1,0 +1,8 @@
+{%- comment -%} A "Mon YYYY - Mon YYYY" range from two "YYYY-MM" strings, with the month names of the page
+  language; `end: present` prints the open-ended label instead of a second date. Used by both rails of /bio/.
+  Takes `start` and `end` as include parameters. {%- endcomment -%}
+{%- assign lang = page.lang | default: 'en' -%}
+{%- assign t = site.data.i18n[lang] -%}
+{%- assign from = include.start | split: '-' -%}
+{%- assign fm = from[1] | plus: 0 | minus: 1 -%}
+{{ t.months[fm] }} {{ from[0] }} - {% if include.end == 'present' %}{{ t.route.present }}{% else %}{%- assign to = include.end | split: '-' -%}{%- assign tm = to[1] | plus: 0 | minus: 1 -%}{{ t.months[tm] }} {{ to[0] }}{% endif -%}

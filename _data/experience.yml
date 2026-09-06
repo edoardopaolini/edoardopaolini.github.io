@@ -1,5 +1,7 @@
-# Positions, newest first (source: main_industry_en.pdf and main_en.pdf in other/). Rendered on /bio/ (the supervisor fields are kept but not printed for now).
-# Dates are "YYYY-MM" strings; the template prints the month in the page language. `end: present` for the current one.
+# Positions, newest first (source: main_industry_en.pdf and main_en.pdf in other/). Rendered on /bio/.
+# Fields: role, org, place, summary (all bilingual maps {en, it}), start and end as "YYYY-MM" strings
+# ("present" for the current one; the template prints the month in the page language), and supervisor, kept here
+# but deliberately not printed for now (see the comment at the top of _includes/bio-body.html).
 - role: { en: "Ph.D. student in Computer Science", it: "Dottorando in Informatica" }
   org: { en: "BraiNAVLab, University of Verona", it: "BraiNAVLab, Università di Verona" }
   place: { en: "Verona, Italy", it: "Verona" }

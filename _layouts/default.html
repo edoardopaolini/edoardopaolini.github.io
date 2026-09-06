@@ -1,6 +1,10 @@
 <!DOCTYPE html>
+{%- comment -%} The shell of every page. Front matter it reads: `lang` (en or it), `alt` (the URL of the same
+  page in the other language), `meta` (which description key of i18n.yml to use) and `scripts` (the figure
+  modules this page needs, loaded after the shared ones). {%- endcomment -%}
 {%- assign lang = page.lang | default: 'en' -%}
 {%- assign t = site.data.i18n[lang] -%}
+{%- comment -%} Each page knows its own URL and its counterpart; the hreflang links need them by language. {%- endcomment -%}
 {%- if lang == 'en' -%}{%- assign url_en = page.url -%}{%- assign url_it = page.alt -%}{%- else -%}{%- assign url_en = page.alt -%}{%- assign url_it = page.url -%}{%- endif -%}
 <html lang="{{ lang }}" data-theme="auto">
 
@@ -8,6 +12,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+    {%- comment -%} A page without its own `meta` key falls back to the site description. {%- endcomment -%}
     {%- assign desc = t.meta[page.meta] | default: t.meta.description -%}
     <meta name="description" content="{{ desc }}">
     <meta name="color-scheme" content="light dark">
@@ -29,6 +34,7 @@
     <link rel="preload" href="{{ '/assets/fonts/jetbrains-mono-latin.woff2' | relative_url }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
     <link rel="stylesheet" href="{{ '/assets/css/modules/neurons.css' | relative_url }}">
+    {%- comment -%} Only the home page carries the three figure stylesheets. {%- endcomment -%}
     {%- if page.layout == 'home' %}
     <link rel="stylesheet" href="{{ '/assets/css/modules/stage.css' | relative_url }}">
     <link rel="stylesheet" href="{{ '/assets/css/modules/cells.css' | relative_url }}">

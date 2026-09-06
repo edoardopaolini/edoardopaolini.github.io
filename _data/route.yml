@@ -1,24 +1,32 @@
-# The route on the home page: one station per place, in time order (left to right). Source: the CVs in other/.
+# The route on the home page: one station per place, in time order (left to right; the strip scrolls sideways).
+# Source: the CVs in other/. Fields: place, kept as the bare name of the city, and years, what and where as
+# bilingual maps {en, it}. This is the short version of experience.yml and education.yml, not a second copy:
+# one station stands for one place, not for one position.
 - years: { en: "2017-2020", it: "2017-2020" }
   place: "Verona"
   what: { en: "B.Sc. in Computer Science", it: "Laurea in Informatica" }
   where: { en: "University of Verona", it: "Università di Verona" }
+
 - years: { en: "2020-2023", it: "2020-2023" }
   place: "Trento"
   what: { en: "M.Sc. in Quantitative and Computational Biology", it: "Laurea magistrale in Quantitative and Computational Biology" }
   where: { en: "University of Trento", it: "Università di Trento" }
+
 - years: { en: "2022", it: "2022" }
   place: "Rovereto"
   what: { en: "Research intern, systems biology of tuberculosis", it: "Tirocinante di ricerca, biologia dei sistemi della tubercolosi" }
   where: { en: "COSBI, Microsoft Research and University of Trento", it: "COSBI, Microsoft Research e Università di Trento" }
+
 - years: { en: "since 2023", it: "dal 2023" }
   place: "Verona"
   what: { en: "Ph.D. student in Computer Science, BraiNAVLab", it: "Dottorando in Informatica, BraiNAVLab" }
   where: { en: "University of Verona", it: "Università di Verona" }
+
 - years: { en: "2024-2025", it: "2024-2025" }
   place: "Boston"
   what: { en: "Visiting Ph.D. student, pediatric epilepsy surgery", it: "Dottorando ospite, chirurgia dell'epilessia pediatrica" }
   where: { en: "Boston Children's Hospital", it: "Boston Children's Hospital" }
+
 - years: { en: "2026", it: "2026" }
   place: "Lyngby"
   what: { en: "Visiting Ph.D. student, portable EEG and AI", it: "Dottorando ospite, EEG portatile e IA" }

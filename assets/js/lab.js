@@ -1,5 +1,6 @@
-/* Lab: shared helpers for the canvas figures (seeded random numbers, tokens, the 10-20 montage, canvas sizing,
-   interpolation, colour parsing, label formatting and strings). Loaded after site.js, before the figure modules. */
+/* Lab: shared helpers for the canvas figures (seeded random numbers, theme tokens, the 10-20 montage, canvas
+   sizing, interpolation, colour parsing, easing, label formatting and strings). Loaded after site.js, before the
+   figure modules; the model tests load it first in a bare engine, so nothing here touches the DOM at load time. */
 (function () {
   'use strict';
   var Lab = {};
@@ -34,11 +35,15 @@
   Lab.onTheme = function (fn) {
     document.addEventListener('themechange', function (e) { fn(e && e.detail); });
   };
+  /* Run fn once the web fonts are in, so a figure can re-measure its labels. fn is called with no argument (the
+     promise resolves with the FontFaceSet), which lets a caller pass a redraw that takes a timestamp. */
   Lab.fontsReady = function (fn) {
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fn, fn); else fn();
+    function done() { fn(); }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(done, done); else done();
   };
 
-  /* Standard 10-20 montage, 19 electrodes, unit circle, nose up (y > 0 is anterior). */
+  /* Standard 10-20 montage, 19 electrodes, unit circle, nose up (y > 0 is anterior). An entry is
+     [name, radius (0 at the vertex, 1 at the rim), azimuth in degrees clockwise from the nose]. */
   Lab.MONTAGE = (function () {
     var defs = [
       ['Fp1', 1, -18], ['Fp2', 1, 18], ['F7', 1, -54], ['F3', 0.55, -39], ['Fz', 0.5, 0], ['F4', 0.55, 39], ['F8', 1, 54],
@@ -169,7 +174,8 @@
   /* site.js computes the flag (system preference or ?motion=reduce); fall back to the media query if it is absent. */
   Lab.reduceMotion = window.siteMotion ? window.siteMotion.reduce :
     !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  Lab.whenVisible = function (el, onVisible, onHidden) { return window.whenVisible(el, onVisible, onHidden); };
+  /* Forwarder to the site-wide helper, so a figure module only ever has to know about Lab. */
+  Lab.whenVisible = function (el, onVisible, onHidden) { window.whenVisible(el, onVisible, onHidden); };
 
   Lab.easeOut = function (t) { t = Math.max(0, Math.min(1, t)); return 1 - Math.pow(1 - t, 5); };
   Lab.clamp = function (v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; };

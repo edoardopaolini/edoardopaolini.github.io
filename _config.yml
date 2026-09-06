@@ -1,7 +1,12 @@
+# Jekyll configuration. No plugins and no build step: everything the site needs is in this repository.
+# `title` is the browser-tab suffix of every page, `url` makes absolute_url work for the canonical and
+# Open Graph tags, `timezone` fixes the year in the footer. The language of a page comes from its own
+# front matter (`lang: en` or `lang: it`), not from here.
 title: "Edoardo Paolini"
 url: "https://edoardopaolini.github.io"
 lang: en
 timezone: Europe/Rome
+# Reference material, notes and the test runner are not part of the published site.
 exclude:
   - README.md
   - docs

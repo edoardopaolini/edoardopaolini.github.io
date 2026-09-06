@@ -1,5 +1,6 @@
 # Strings of the signal bench (assets/js/bench.js), serialised into window.I18N.bench by the default layout.
-# Placeholders in braces are filled by the module. The two trees must have the same keys.
+# Placeholders in braces are filled by the module: {list} the filters that are on, {f} a frequency, {db} the
+# attenuation there, {s} the length of the window. The two trees must have the same keys.
 en:
   filters: "Filters: {list}."
   none: "none"

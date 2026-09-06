@@ -75,4 +75,11 @@ bundle install
 bundle exec jekyll serve
 ```
 
-The `other/` folder holds reference material (CVs, thesis) and is excluded from the build and from git.
+If that fails on a machine with two Ruby installations (the vendored gems are built for one of them), name the right one explicitly:
+
+```sh
+PATH="$HOME/.rubies/ruby-3.4.1/bin:$PATH" GEM_HOME="$HOME/.gem/ruby/3.4.1" \
+  "$HOME/.gem/ruby/3.4.1/bin/bundle" exec jekyll serve
+```
+
+The `other/` folder holds reference material (the CVs, the thesis, the cortical surface the brain figure was built from) and is excluded from the build and from git. The design decisions behind the site, and the contract each figure follows, are written down in `docs/superpowers/specs/`.

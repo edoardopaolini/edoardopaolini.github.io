@@ -356,16 +356,23 @@
     return g;
   }
 
-  /* Layout in CSS pixels for a w x h frame: the head in the upper 60 percent, the EEG page below. The head
-     radius leaves room for the nose (1.11 r) and the ring electrode labels. */
+  /* Layout in CSS pixels for a w x h frame: the head in the upper HEAD_SHARE of it, the EEG page below.
+     Vertically the radius has to fit the circle plus the nose, which sticks out by 0.11 r (NOSE_FACTOR keeps a
+     little more than that) and NOSE_ROOM px of air; horizontally it has to leave LABEL_ROOM px on each side for
+     the ring electrode labels. The head centre drops by HEAD_DROP for the same reason as the nose room. */
+  var HEAD_SHARE = 0.6, PAGE_GAP = 6, HEAD_DROP = 4;
+  var NOSE_FACTOR = 1.13, NOSE_ROOM = 16, LABEL_ROOM = 34, HEAD_R_MIN = 20;
   function headLayout(w, h, pad) {
     var iw = w - 2 * pad, ih = h - 2 * pad;
-    var headH = ih * 0.6, pageTop = pad + headH + 6, pageH = ih - headH - 6;
-    var cx = w / 2, cy = pad + headH / 2 + 4;
-    var R0 = Math.min((headH / 2 - 16) / 1.13, iw / 2 - 34);
+    var headH = ih * HEAD_SHARE, pageTop = pad + headH + PAGE_GAP, pageH = ih - headH - PAGE_GAP;
+    var cx = w / 2, cy = pad + headH / 2 + HEAD_DROP;
+    var R0 = Math.min((headH / 2 - NOSE_ROOM) / NOSE_FACTOR, iw / 2 - LABEL_ROOM);
     var x = new Float32Array(N), y = new Float32Array(N);
     for (var i = 0; i < N; i++) { x[i] = cx + MONTAGE[i].x * R0; y[i] = cy - MONTAGE[i].y * R0; }
-    return { x: x, y: y, cx: cx, cy: cy, r: Math.max(20, R0), pageX: pad, pageY: pageTop, pageW: iw, pageH: pageH };
+    return {
+      x: x, y: y, cx: cx, cy: cy, r: Math.max(HEAD_R_MIN, R0),
+      pageX: pad, pageY: pageTop, pageW: iw, pageH: pageH
+    };
   }
 
   var model = {
@@ -394,6 +401,9 @@
   var COUPLING_MIN = 0.2, COUPLING_MAX = 1.6, COUPLING_STEP = 0.05;
   var EDGE_FADE_MS = 700, STIM_GAP_MS = 400, STIM_MSG_MS = 4000;
   var WAVE_FADE_MS = 600, WAVE_EDGE_MS = 300, RING_MS = 200, RING_PX = 40, GLOW_PX = 7.5, NODE_R = 5;
+  /* CORR_EVERY: the 171 correlations are refreshed every fourth frame, which is far faster than the eye and a
+     quarter of the cost. MAX_FRAME_MS caps how much simulated time one frame may advance, so a tab that was
+     hidden or a long stall resumes instead of fast-forwarding through a page of traces. */
   var READOUT_MS = 1000, CORR_EVERY = 4, MAX_FRAME_MS = 67, FORCED_HOLD_MS = 2000, STIM_PARAM_DELAY_MS = 600;
   var LABEL_PX = 10;         /* floor for every canvas label */
   var LABELS_MIN_W = 420;    /* below this frame width the electrode labels are dropped */
@@ -401,8 +411,8 @@
   var GAP_PX = 8;            /* columns erased ahead of the write head */
   var TAG_GAP = 4;           /* distance between a pulse marker and its TMS tag */
   var STATES = 3;
-  var HEADER_PX = 68;        /* sticky header height: the reading area starts below it */
-  var PHONE_QUERY = '(max-width: 900px)'; /* the CSS breakpoint where the figure moves above the beats */
+  var HEADER_PX = 68;        /* sticky header height (--header-h in style.css): the reading area starts below it */
+  var PHONE_QUERY = '(max-width: 900px)'; /* the CSS breakpoint (stage.css) where the figure moves above the beats */
   var BEAT_SHARE = 0.5, BEAT_SHARE_PHONE = 0.35; /* share of a beat that has to be in view before it takes over */
   var BEAT_MARGIN = 0.1;     /* a beat takes over only when it shows this much more than the current one */
   var BEAT_THRESHOLDS = [0, 0.2, 0.35, 0.5, 0.65, 0.8, 1]; /* observer steps: the per-beat ratios stay fresh */
@@ -700,7 +710,8 @@
     gen.setCoupling(v);
     if (couplingInput.value !== String(v)) couplingInput.value = String(v);
     if (reduce) {
-      /* The frozen page is regenerated with the new coupling; a static evoked response is written again. */
+      /* The frozen page is regenerated with the new coupling; a static evoked response is written again.
+         stim carries the same dist array a BFS tree does, which is all injectStatic reads. */
       gen.reseed(gen.seed); gen.advance(BUF);
       if (stim.active) gen.injectStatic(stim, STATIC_STIM_AT);
       refreshCorrelation();
@@ -711,7 +722,8 @@
   }
 
   /* ---- Rendering ---- */
-  /* Ring electrodes: label pushed radially outward. Inner electrodes: label above and to the right. */
+  /* Ring electrodes: label pushed radially outward. Inner electrodes: label above and to the right.
+     One shared result object, rewritten per call, so labelling 19 electrodes every frame allocates nothing. */
   var lo = { dx: 0, dy: 0, align: 'left' };
   function labelOffset(i) {
     var dx = MONTAGE[i].x, dy = -MONTAGE[i].y, len = Math.hypot(dx, dy);

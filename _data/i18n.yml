@@ -1,6 +1,8 @@
-# User-interface strings, one tree per language. The two trees must have the same keys.
-# Layouts read them as `site.data.i18n[page.lang]`. Content (degrees, roles, hobbies) lives in the other data files
-# with bilingual fields; paper titles, thesis titles, venues and institutions keep their original language.
+# User-interface strings, one tree per language. The two trees must have the same keys; a missing one renders as
+# nothing, silently. Layouts read them as `site.data.i18n[page.lang]`, conventionally assigned to `t`.
+# Content (degrees, roles, hobbies) lives in the other data files with bilingual fields; paper titles, thesis
+# titles, venues and institutions keep their original language.
+# The strings the canvas figures need are not here: they live in _data/js/, one file per module.
 en:
   switch_label: "Language"
   months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]

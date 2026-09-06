@@ -1,5 +1,8 @@
-# The toolbox on the home page (source: main_industry_en.pdf in other/). Four groups; `primary` items are set large,
-# `items` as pills. `note` is an optional short line under the primaries.
+# The toolbox on the home page (source: main_industry_en.pdf in other/). One group per block: `primary` names are
+# set large, `items` become pills and `note` is an optional short line under the primaries. An item is either a
+# plain string, when both languages say the same thing, or a bilingual map {en, it}.
+# The first group is the widest: style.css gives it the full row and a larger type size, so put the strongest
+# skills there and keep the remaining groups to a multiple of the three columns that follow.
 - name: { en: "Programming", it: "Programmazione" }
   primary: ["Python", "MATLAB"]
   note: { en: "daily use", it: "uso quotidiano" }

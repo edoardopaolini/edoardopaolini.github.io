@@ -55,7 +55,7 @@
   /* The displayed microstate sequence. A segment is a maximal run of samples assigned to one class, so no
      two adjacent segments may share a label, and the sequence loops, so the last and first differ too.
      Durations are realistic segment lengths (60-120 ms); on screen every segment stays SEG_MS so the eye can
-     follow, and the bar keeps the true proportions through --dur. */
+     follow, and the bar keeps the true proportions through --seg. */
   var SEQUENCE = [
     { cls: 'A', dur: 80 }, { cls: 'B', dur: 60 }, { cls: 'D', dur: 110 }, { cls: 'C', dur: 95 },
     { cls: 'D', dur: 70 }, { cls: 'A', dur: 120 }, { cls: 'C', dur: 85 }, { cls: 'D', dur: 65 },
@@ -98,11 +98,14 @@
     }
   }
 
+  /* The mask is the head circle with a small margin, so the blurred edge of the map reaches under the head
+     outline instead of stopping short of it. A power of 3 keeps the interpolation local enough to read as a
+     scalp map; two blur passes take the electrode-centred bumps of the interpolation back out. */
+  var HEAD_MASK_R = 1.06, IDW_POWER = 3, BLUR_PASSES = 2;
+
   /* Interpolated topography of one template on a g x g grid spanning [-span, span]^2 (y up), blurred and
-     renormalised so the extreme inside the head circle is exactly 1. The mask is the head circle with a
-     small margin so the blurred edge of the map reaches under the head outline. Returns {field, mask}. */
+     renormalised so the extreme inside the head circle is exactly 1. Returns {field, mask}. */
   function topography(values, g, span) {
-    var HEAD_MASK_R = 1.06, IDW_POWER = 3, BLUR_PASSES = 2;
     var gn = g * g, field = new Float32Array(gn), mask = new Uint8Array(gn), scratch = new Float32Array(gn);
     var gx, gy, gi, mx = 0;
     for (gy = 0; gy < g; gy++) {
@@ -145,9 +148,10 @@
   var seqLen = SEQUENCE.length;
   var SEG_MS = 700, FADE_MS = 200;
   var LEGEND_W = 44, LEGEND_H = 5, LEGEND_PAD = 10;
-  /* Head geometry of the animated map: the outline with nose and ears spans HEAD_SPAN radii, so the radius is
-     what the frame leaves after the legend row (HEAD_PAD_Y) and the side margin (HEAD_PAD_X); the head sits
-     a little below the centre to make room for the nose. */
+  /* Head geometry of the animated map. The outline is 2.11 radii tall (the circle plus the nose, which sticks
+     out by 0.11 r), so the radius is what the frame leaves after the legend row (HEAD_PAD_Y) and the side
+     margin (HEAD_PAD_X), divided by HEAD_SPAN, which keeps a little air above the nose. The head sits a touch
+     below the centre for the same reason. */
   var HEAD_R_MIN = 30, HEAD_PAD_X = 24, HEAD_PAD_Y = 32, HEAD_SPAN = 2.22, HEAD_DROP = 0.05, DOT_R = 2.2;
   /* Reduced-motion grid: four heads in a row when each column gets STATIC_COL_MIN px, else two by two; the
      class letter sits above the nose (the nose tip is at NOSE_R radii). */
@@ -156,7 +160,8 @@
   var reduce = Lab.reduceMotion;
 
   /* Offscreen grid: G x G samples over [-SPAN, SPAN]^2, masked to the head circle at draw time. The four
-     fields are interpolated once at init; each frame only blends two of them into the image. */
+     fields are interpolated once at init; each frame only blends two of them into the image. The mask is the
+     same circle for every class, so keeping the one the last call returned is enough. */
   var G = 72, GN = G * G, SPAN = 1.05;
   var off = document.createElement('canvas');
   off.width = G; off.height = G;
@@ -173,7 +178,8 @@
 
   /* Colour endpoints, refreshed on theme change: the neutral is the surface-2 token, blue and red come from
      the palette of the current theme. The legend gradient is rebuilt here too, never inside the loop. */
-  var neutral = [0, 0, 0], blue = [0, 0, 0], red = [0, 0, 0], rgb = [0, 0, 0];
+  var neutral = [0, 0, 0], blue = [0, 0, 0], red = [0, 0, 0];
+  var rgb = [0, 0, 0];               /* scratch the per-pixel colormap writes into */
   var legendGradient = null;
   function readColors() {
     var pal = t.dark ? PALETTES.dark : PALETTES.light;
@@ -247,7 +253,7 @@
   var segmentTitle = str('segment');
   for (var i = 0; i < seqLen; i++) {
     var sp = document.createElement('span');
-    sp.style.setProperty('--dur', String(SEQUENCE[i].dur));
+    sp.style.setProperty('--seg', String(SEQUENCE[i].dur));
     sp.title = Lab.format(segmentTitle, { cls: SEQUENCE[i].cls, ms: SEQUENCE[i].dur });
     bar.appendChild(sp);
     spans.push(sp);

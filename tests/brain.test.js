@@ -92,7 +92,7 @@ for (i = 0; i < C.n; i++) {
   if (m[0] >= -4) zoneLeft = false;
 }
 assert(above0 === 77 && Z.count === 77, '77 vertices carry the candidate zone (' + above0 + ')');
-assert(aboveOn === 57, '57 of them are above the 0.35 weight that counts as inside (' + aboveOn + ')');
+assert(aboveOn === 57, '57 of them are above the ' + M.ZONE_ON + ' weight that counts as inside (' + aboveOn + ')');
 assert(zoneLeft, 'every zone vertex is on the left of the midline (MNI x below -4)');
 assert(near(Z.radius * DATA.scale, M.ZONE_MM, 1e-6), 'the zone radius is 32 mm in model units');
 var cen = [0, 0, 0];
@@ -251,10 +251,10 @@ for (i = 0; i <= 40; i++) {
 }
 assert(monotone, 'the tone never falls as the curvature rises from a sulcus to a gyral crown');
 assert(M.shade(0.7, -0.5, 0.8) < M.shade(0.7, 0.5, 0.8), 'a gyral crown is brighter than a sulcus');
-assert(near(M.shade(0.7, -0.2, 0.8), M.shade(0.7, -0.9, 0.8), 1e-9), 'the curvature term saturates below -0.10');
-assert(near(M.shade(0.7, 0.2, 0.8), M.shade(0.7, 0.9, 0.8), 1e-9), 'and above +0.10');
+assert(near(M.shade(0.7, -0.2, 0.8), M.shade(0.7, -0.9, 0.8), 1e-9), 'the curvature term saturates below the sulcal end of its band');
+assert(near(M.shade(0.7, 0.2, 0.8), M.shade(0.7, 0.9, 0.8), 1e-9), 'and above the gyral end of it');
 assert(near(M.shade(1, 1, 1), 1, 1e-9), 'a lit crown at the front of the mesh reaches the top of the range');
-assert(near(M.shade(0, -1, 0), M.AMBIENT * M.SUL_MIN * 0.55, 1e-9), 'an unlit sulcus at the back keeps the ambient floor');
+assert(near(M.shade(0, -1, 0), M.AMBIENT * M.SUL_MIN * M.DEPTH_FLOOR, 1e-9), 'an unlit sulcus at the back keeps the ambient floor');
 assert(M.shade(1, 1, 0) < M.shade(1, 1, 1), 'the far side of the cortex is dimmer than the near side');
 assert(M.shade(0.2, 0, 0.5) < M.shade(0.9, 0, 0.5), 'more light gives more tone');
 /* Clamping matters: the lambert term of a face can go negative near the silhouette. */
