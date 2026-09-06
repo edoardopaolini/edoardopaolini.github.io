@@ -67,7 +67,7 @@
     --glass: rgba(255, 255, 255, 0.62);
     --ink: #0f1420;
     --ink-2: #313a4b;
-    --muted: #5b687b;
+    --muted: #4e5a6b;
     --line: rgba(15, 20, 32, 0.10);
     --line-strong: rgba(15, 20, 32, 0.22);
     --accent: #0a7f70;
@@ -78,12 +78,12 @@
     --accent-glow: rgba(10, 127, 112, 0.30);
     --trace: #0f1420;
     --trace-2: rgba(15, 20, 32, 0.35);
-    --neuron-fibre: rgba(15, 20, 32, 0.11);
-    --neuron-soma: rgba(15, 20, 32, 0.16);
+    --neuron-fibre: rgba(15, 20, 32, 0.135);
+    --neuron-soma: rgba(15, 20, 32, 0.175);
     --tint-1: rgba(10, 127, 112, 0.11);
     --tint-2: rgba(10, 127, 112, 0.06);
     --header-bg: rgba(238, 241, 246, 0.70);
-    --toggle-track: #5b687b;
+    --toggle-track: #4e5a6b;
     color-scheme: light;
 }
 
@@ -98,7 +98,7 @@
         --glass: rgba(15, 22, 34, 0.58);
         --ink: #edf1f7;
         --ink-2: #c4ccd9;
-        --muted: #8e99ab;
+        --muted: #98a3b4;
         --line: rgba(237, 241, 247, 0.10);
         --line-strong: rgba(237, 241, 247, 0.22);
         --accent: #3ddcc0;
@@ -109,8 +109,8 @@
         --accent-glow: rgba(61, 220, 192, 0.35);
         --trace: #edf1f7;
         --trace-2: rgba(237, 241, 247, 0.32);
-        --neuron-fibre: rgba(61, 220, 192, 0.14);
-        --neuron-soma: rgba(61, 220, 192, 0.22);
+        --neuron-fibre: rgba(61, 220, 192, 0.175);
+        --neuron-soma: rgba(61, 220, 192, 0.25);
         --tint-1: rgba(61, 220, 192, 0.10);
         --tint-2: rgba(61, 220, 192, 0.06);
         --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 20px 50px -20px rgba(0, 0, 0, 0.7);
@@ -128,7 +128,7 @@
     --glass: rgba(15, 22, 34, 0.58);
     --ink: #edf1f7;
     --ink-2: #c4ccd9;
-    --muted: #8e99ab;
+    --muted: #98a3b4;
     --line: rgba(237, 241, 247, 0.10);
     --line-strong: rgba(237, 241, 247, 0.22);
     --accent: #3ddcc0;
@@ -139,8 +139,8 @@
     --accent-glow: rgba(61, 220, 192, 0.35);
     --trace: #edf1f7;
     --trace-2: rgba(237, 241, 247, 0.32);
-    --neuron-fibre: rgba(61, 220, 192, 0.14);
-    --neuron-soma: rgba(61, 220, 192, 0.22);
+    --neuron-fibre: rgba(61, 220, 192, 0.175);
+    --neuron-soma: rgba(61, 220, 192, 0.25);
     --tint-1: rgba(61, 220, 192, 0.10);
     --tint-2: rgba(61, 220, 192, 0.06);
     --header-bg: rgba(7, 11, 18, 0.62);
@@ -1135,6 +1135,7 @@ strong {
     color: #dfe5ee;
 }
 
+/* An item of beyond.yml without a photo: the title carries the tile. */
 .tile-text {
     display: flex;
     flex-direction: column;

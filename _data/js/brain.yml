@@ -1,20 +1,22 @@
-# Strings of the 3D brain figure (assets/js/brain.js), serialised into window.I18N.brain by the default layout.
-# Placeholders in braces are filled by the module. The two trees must have the same keys.
+# Strings of the cortical surface figure (assets/js/brain.js), serialised into window.I18N.brain by the
+# default layout. Placeholders in braces are filled by the module. The two trees must have the same keys.
 en:
+  source: "Source {n}"
   select: "Select {name}"
-  idle: "Drag to rotate. Arrow keys rotate the brain. Select an electrode to see its connections."
+  idle: "Drag to rotate. Arrow keys rotate the cortex. Select a source to see its connections."
   node: "{name}: {n} {links}."
-  node_zone: "{name}: {n} {links}, in the candidate zone."
+  node_zone: "{name}: {n} {links}, inside the candidate zone."
   link_one: "connection"
   link_many: "connections"
   pinned: "{name} pinned."
   released: "{name} released."
 it:
+  source: "Sorgente {n}"
   select: "Seleziona {name}"
-  idle: "Trascina per ruotare. Le frecce ruotano il cervello. Seleziona un elettrodo per vederne le connessioni."
+  idle: "Trascina per ruotare. Le frecce ruotano la corteccia. Seleziona una sorgente per vederne le connessioni."
   node: "{name}: {n} {links}."
   node_zone: "{name}: {n} {links}, nella zona candidata."
   link_one: "connessione"
   link_many: "connessioni"
-  pinned: "{name} fissato."
-  released: "{name} rilasciato."
+  pinned: "{name} fissata."
+  released: "{name} rilasciata."

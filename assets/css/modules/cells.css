@@ -114,7 +114,7 @@
     color: var(--muted);
 }
 
-/* Button layer over the electrodes; brain.js moves each button with a transform and hides the ones that
+/* Button layer over the figure; brain.js moves each button with a transform and hides the ones whose source
    turned to the far side. */
 .mini-buttons {
     position: absolute;
@@ -142,7 +142,20 @@
     outline-offset: -6px;
 }
 
-/* The brain rotates under the pointer: horizontal drags turn it, vertical swipes still scroll the page. */
+/* Twenty-four sources sit closer together than the nineteen electrodes did, so their hit areas are a little
+   smaller than the default ones; still above the 24 px minimum. */
+.brain-figure .mini-buttons button {
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+}
+
+/* The cortex rotates under the pointer: horizontal drags turn it, vertical swipes still scroll the page. */
+/* The cortex is wide and low, so this cell gets more height than the other two: the surface fills the frame. */
+.brain-figure canvas {
+    height: 286px;
+}
+
 .brain-figure {
     cursor: grab;
     touch-action: pan-y pinch-zoom;

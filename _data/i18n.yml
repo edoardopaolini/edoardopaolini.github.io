@@ -40,9 +40,9 @@ en:
     lp: "Low-pass 40 Hz"
     desc: "Simulated single-channel EEG trace with a small amplitude spectrum. The switches apply real digital filters to the trace."
   brain:
-    caption: "Toy network on a schematic brain."
-    desc: "Simulated connectivity graph drawn on a rotating schematic brain, with one cluster highlighted as the candidate epileptogenic zone."
-    controls_label: "Electrodes"
+    caption: "Toy network on the ICBM152 cortical surface."
+    desc: "Simulated connectivity graph drawn on a rotating cortical surface, the ICBM152 template, with a patch of the left temporo-parietal cortex highlighted as the candidate epileptogenic zone."
+    controls_label: "Cortical sources"
   topo:
     caption: "Four canonical classes, simulated. Blue is negative, red is positive."
     desc: "Simulated scalp voltage topography stepping through the four canonical microstate classes A, B, C and D."
@@ -146,9 +146,9 @@ it:
     lp: "Passa-basso 40 Hz"
     desc: "Traccia EEG simulata a canale singolo con un piccolo spettro di ampiezza. Gli interruttori applicano filtri digitali reali alla traccia."
   brain:
-    caption: "Rete giocattolo su un cervello schematico."
-    desc: "Grafo di connettività simulato disegnato su un cervello tridimensionale che ruota, con un gruppo di elettrodi evidenziato come zona epilettogena candidata."
-    controls_label: "Elettrodi"
+    caption: "Rete giocattolo sulla superficie corticale ICBM152."
+    desc: "Grafo di connettività simulato disegnato su una superficie corticale che ruota, il template ICBM152, con una porzione della corteccia temporo-parietale sinistra evidenziata come zona epilettogena candidata."
+    controls_label: "Sorgenti corticali"
   topo:
     caption: "Quattro classi canoniche, simulate. Blu negativo, rosso positivo."
     desc: "Topografia simulata del voltaggio sullo scalpo che alterna le quattro classi canoniche di microstati A, B, C e D."

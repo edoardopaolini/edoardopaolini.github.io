@@ -15,26 +15,26 @@
      ====================================================================== */
 
   /* field */
-  var AREA_PER_NEURON = 90000;          /* CSS px2 per neuron */
-  var MIN_COUNT = 8, MAX_COUNT = 26;
+  var AREA_PER_NEURON = 76000;          /* CSS px2 per neuron */
+  var MIN_COUNT = 9, MAX_COUNT = 30;
   var PHONE_WIDTH = 640, PHONE_MIN_COUNT = 6;
-  var MIN_SOMA_DISTANCE = 110;
+  var MIN_SOMA_DISTANCE = 100;
   var MARGIN = 28, PHONE_MARGIN = 20;   /* somas stay this far from the viewport edge */
   var PLACE_CANDIDATES = 14;            /* best-candidate sampling: candidates tried per placed soma */
   var PLACE_TRIES = 40;                 /* attempts per neuron before giving up on a crowded viewport */
-  var SOMA_R_MIN = 4, SOMA_R_MAX = 8;
+  var SOMA_R_MIN = 5.2, SOMA_R_MAX = 9.6;
   var SOMA_ATTACH = 0.9;                /* fibres start at this fraction of the radius so they merge into the disc */
   var DENDRITES_MIN = 3, DENDRITES_MAX = 5;
   var DENDRITE_SPREAD = 1.55 * Math.PI; /* the dendrites fan over this arc, centred opposite the axon */
-  var DENDRITE_LEN_MIN = 34, DENDRITE_LEN_MAX = 62;
+  var DENDRITE_LEN_MIN = 38, DENDRITE_LEN_MAX = 70;
   var BRANCH_LEN_MIN = 18, BRANCH_LEN_MAX = 38;
   var BRANCH_SECOND_P = 0.6;            /* probability of a second branch at a dendrite tip */
   var BRANCH_ANGLE_MIN = 0.35, BRANCH_ANGLE_MAX = 0.8;
   var CURVE_BEND_MIN = 0.1, CURVE_BEND_MAX = 0.3;   /* sideways control offset, fraction of the length */
   var END_JITTER = 0.5;                 /* random turn of a dendrite between its root and its tip, radians */
-  var AXON_REACH = 440;                 /* extra targets must lie within this distance */
-  var AXON_CONE = 2.4;                  /* and within this angle of the primary target, so the axon reads as one bundle */
-  var AXON_EXTRA_P1 = 0.7, AXON_EXTRA_P2 = 0.35;
+  var AXON_REACH = 540;                 /* extra targets must lie within this distance */
+  var AXON_CONE = 2.7;                  /* and within this angle of the primary target, so the axon reads as one bundle */
+  var AXON_EXTRA_P1 = 0.8, AXON_EXTRA_P2 = 0.5, AXON_EXTRA_P3 = 0.25;
   var AXON_BEND_MIN = 0.08, AXON_BEND_MAX = 0.22;
   var AXON_LEAVE = 0.35, AXON_ARRIVE = 0.3;         /* control handle lengths, fraction of the chord */
   var HILLOCK_JITTER = 0.5;
@@ -71,9 +71,9 @@
   var DRIFT_W1 = 2 * Math.PI / 18000, DRIFT_W2 = 2 * Math.PI / 31000;
   var POINTER_MS = 100, POINTER_RADIUS = 160;
   var SPIKE_INTERVAL = 600;             /* ?spike=1 cadence */
-  var DENDRITE_W0 = 1.4, DENDRITE_W1 = 0.8, BRANCH_W0 = 0.8, BRANCH_W1 = 0.6;
-  var AXON_W0 = 1.2, AXON_W1 = 0.7, TERMINAL_W0 = 0.7, TERMINAL_W1 = 0.6;
-  var BOUTON_R = 1.2;
+  var DENDRITE_W0 = 1.9, DENDRITE_W1 = 1.0, BRANCH_W0 = 1.1, BRANCH_W1 = 0.75;
+  var AXON_W0 = 1.7, AXON_W1 = 0.95, TERMINAL_W0 = 0.95, TERMINAL_W1 = 0.75;
+  var BOUTON_R = 1.5;
   var SOMA_SPRITE_PX = 20, SOMA_SPRITE_SCALE = 2.3;   /* the sprite is drawn at radius times this */
   var GLOW_SPRITE_PX = 64;
   var PULSE_GLOW_PX = 26, PULSE_GLOW_ALPHA = 0.95;
@@ -186,13 +186,13 @@
     }
   }
 
-  /* The nearest neighbour is always reached; one or two more may follow when they sit close and roughly in
+  /* The nearest neighbour is always reached; up to three more may follow when they sit close and roughly in
      the same direction. The axon hillock points at the mean direction of the targets. */
   function chooseTargets(neurons, i, rng) {
     var me = neurons[i], order = [], j;
     for (j = 0; j < neurons.length; j++) if (j !== i) order.push(j);
     order.sort(function (a, b) { return dist2(me, neurons[a]) - dist2(me, neurons[b]); });
-    var want = 1 + (rng() < AXON_EXTRA_P1 ? 1 : 0) + (rng() < AXON_EXTRA_P2 ? 1 : 0);
+    var want = 1 + (rng() < AXON_EXTRA_P1 ? 1 : 0) + (rng() < AXON_EXTRA_P2 ? 1 : 0) + (rng() < AXON_EXTRA_P3 ? 1 : 0);
     var targets = [order[0]];
     var a0 = Math.atan2(neurons[order[0]].y - me.y, neurons[order[0]].x - me.x);
     for (var k = 1; k < order.length && targets.length < want; k++) {

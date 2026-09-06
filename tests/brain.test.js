@@ -3,149 +3,213 @@
    (JavaScriptCore's jsc, or any engine with load() and print()). */
 var window = this;  /* bare engine: the modules attach to window */
 load('tests/harness.js');
-load('assets/js/lab.js'); load('assets/js/brain.js');
+load('assets/js/lab.js'); load('assets/js/cortex-data.js'); load('assets/js/brain.js');
 
-var Lab = window.Lab, MONTAGE = Lab.MONTAGE, N = MONTAGE.length, ix = Lab.electrodeIndex;
+var Lab = window.Lab, DATA = window.CORTEX_DATA;
 var M = window.__brainModel;
 assert(!!M, 'model exported on window.__brainModel');
 assert(typeof window.__brain === 'undefined', 'DOM part skipped without a document');
 
-/* ---- surface: star-shaped body, every direction meets it once, gyri displacement is small ---- */
-var dirs = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, -1], [-1, 0, 0], [0, -1, 0], [0.6, 0.6, 0.529]];
-var starOk = true, gyriOk = true;
-dirs.forEach(function (d) {
-  var r0 = M.shapeRadius(d[0], d[1], d[2]), r = M.surfaceRadius(d[0], d[1], d[2]);
-  if (!(r0 > 0.3 && r0 < 1)) starOk = false;
-  if (Math.abs(r / r0 - 1) > 0.05) gyriOk = false;
-});
-assert(starOk, 'smooth radius stays between 0.3 and 1 body units in every direction');
-assert(gyriOk, 'gyri displace the surface by less than 5 percent');
-assert(M.shapeRadius(0, 1, 0) > M.shapeRadius(1, 0, 0) && M.shapeRadius(1, 0, 0) > M.shapeRadius(0, 0, 1), 'the body is longer than wide and wider than tall');
-assert(M.shapeRadius(0, 0, -1) < M.shapeRadius(0, 0, 1), 'the lower half is flatter than the upper half');
-assert(M.shapeRadius(0.707, 0.707, 0) < M.shapeRadius(0.707, -0.707, 0), 'the frontal region is narrower than the parietal one');
-
-/* ---- sampling: deterministic, the requested count, no point inside the medial fissure ---- */
-var cloud = M.samplePoints(M.POINT_COUNT, M.POINT_SEED);
-var cloud2 = M.samplePoints(M.POINT_COUNT, M.POINT_SEED);
-assert(cloud.count === M.POINT_COUNT && cloud.pos.length === M.POINT_COUNT * 3, 'about 1 400 surface points sampled (' + cloud.count + ')');
-var sameCloud = true;
-for (var i = 0; i < cloud.pos.length; i++) if (cloud.pos[i] !== cloud2.pos[i]) sameCloud = false;
-assert(sameCloud, 'sampling is deterministic for a given seed');
-var onSurface = true, inFissure = 0, left = 0, right = 0, unitNormals = true, outward = true;
-for (i = 0; i < cloud.count; i++) {
-  var o = i * 3, x = cloud.pos[o], y = cloud.pos[o + 1], z = cloud.pos[o + 2];
-  var l = Math.sqrt(x * x + y * y + z * z);
-  if (!near(l, M.surfaceRadius(x / l, y / l, z / l), 1e-5)) onSurface = false;
-  if (Math.abs(x) < 0.035 && z > -0.15) inFissure++;
-  if (x < 0) left++; else right++;
-  var nx = cloud.nor[o], ny = cloud.nor[o + 1], nz = cloud.nor[o + 2];
-  if (!near(nx * nx + ny * ny + nz * nz, 1, 1e-4)) unitNormals = false;
-  if (nx * x + ny * y + nz * z <= 0) outward = false;
+/* ---- the packed ICBM152 surface decodes to the right count and range ---- */
+var C = M.CORTEX;
+assert(C.n === DATA.n && C.n === 9531, '9 531 surface points decoded (' + C.n + ')');
+assert(C.x.length === C.n && C.y.length === C.n && C.z.length === C.n && C.curv.length === C.n, 'one entry per point in every array');
+var lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+var cMin = Infinity, cMax = -Infinity, radMin = Infinity, radMax = -Infinity, unit = true, i, k;
+var axes = [C.x, C.y, C.z];
+for (i = 0; i < C.n; i++) {
+  for (k = 0; k < 3; k++) {
+    if (axes[k][i] < lo[k]) lo[k] = axes[k][i];
+    if (axes[k][i] > hi[k]) hi[k] = axes[k][i];
+  }
+  if (C.curv[i] < cMin) cMin = C.curv[i];
+  if (C.curv[i] > cMax) cMax = C.curv[i];
+  var r = Math.sqrt(C.x[i] * C.x[i] + C.y[i] * C.y[i] + C.z[i] * C.z[i]);
+  if (r < radMin) radMin = r;
+  if (r > radMax) radMax = r;
+  if (!near(r * C.inv[i], 1, 1e-4)) unit = false;
 }
-assert(onSurface, 'every sampled point lies on the displaced surface');
-assert(inFissure === 0, 'no sampled point inside the medial fissure');
-assert(left > 0.4 * cloud.count && right > 0.4 * cloud.count, 'both hemispheres are populated (' + left + ' left, ' + right + ' right)');
-assert(unitNormals && outward, 'normals are unit length and point outward');
-
-/* ---- montage placement: all 19 electrodes on the surface, azimuth kept, elevation from the radius ---- */
-var E = M.ELECTRODES.pos, allOn = true, roundTrip = true, dir = new Float64Array(3), mt = [0, 0];
-for (var k = 0; k < N; k++) {
-  var px = E[k * 3], py = E[k * 3 + 1], pz = E[k * 3 + 2];
-  var pl = Math.sqrt(px * px + py * py + pz * pz);
-  if (!near(pl, M.surfaceRadius(px / pl, py / pl, pz / pl), 1e-5)) allOn = false;
-  M.directionToMontage(px / pl, py / pl, pz / pl, mt);
-  if (!near(mt[0], MONTAGE[k].x, 1e-3) || !near(mt[1], MONTAGE[k].y, 1e-3)) roundTrip = false;
+var span = Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
+assert(near(span, 2, 0.03), 'the template is normalised: the largest extent is 2 model units (' + span.toFixed(3) + ')');
+assert(Math.max(Math.abs(lo[0]), Math.abs(hi[0]), Math.abs(lo[1]), Math.abs(hi[1]), Math.abs(lo[2]), Math.abs(hi[2])) <= 1.0001,
+  'no coordinate leaves the unit box');
+assert(near(cMin, -1, 1e-6) && near(cMax, 1, 1e-6), 'curvature covers the full -1 to +1 range');
+var deep = 0;
+for (i = 0; i < C.n; i++) {
+  var rr = Math.sqrt(C.x[i] * C.x[i] + C.y[i] * C.y[i] + C.z[i] * C.z[i]);
+  if (rr < 0.2) deep++;
 }
-assert(allOn, 'all 19 electrodes lie on the surface within 1e-5');
-assert(roundTrip, 'electrode directions map back to their montage coordinates');
-M.montageToDirection(0, 0, dir, 0);
-assert(near(dir[2], 1, 1e-9), 'montage radius 0 is the vertex');
-M.montageToDirection(0, 1, dir, 0);
-assert(near(Math.asin(dir[2]) * 180 / Math.PI, M.ELEVATION_RING, 1e-9) && dir[1] > 0.98, 'montage radius 1 sits 10 degrees above the widest part, azimuth kept');
-assert(E[ix('Cz') * 3 + 2] > E[ix('T3') * 3 + 2] && E[ix('C3') * 3 + 2] > E[ix('T3') * 3 + 2], 'Cz and C3 sit higher than T3');
-assert(E[ix('T3') * 3] < 0 && E[ix('T4') * 3] > 0 && near(E[ix('Fz') * 3], 0, 1e-6), 'T3 is left, T4 right, Fz on the midline');
-assert(E[ix('Fp1') * 3 + 1] > 0 && E[ix('O1') * 3 + 1] < 0, 'Fp1 is anterior, O1 posterior');
+assert(radMin > 0 && radMax < 1.3, 'no point sits exactly at the origin, none further than the diagonal of the unit box (' + radMax.toFixed(3) + ')');
+assert(deep < 0.02 * C.n, 'the cloud is a shell, not a solid: under 2 percent of it lies near the centre of the template (' + deep + ' points, the medial wall and the brain stem cut)');
+assert(unit, 'the stored inverse radius normalises every point to a unit radial normal');
+assert(hi[0] > 0.7 && lo[0] < -0.7 && hi[1] > 0.9 && lo[1] < -0.9, 'both hemispheres and both poles are present');
 
-/* ---- cluster hull membership ---- */
-assert(M.CLUSTER_NAMES.join(',') === 'T3,T5,C3,P3,F7', 'cluster is T3, T5, C3, P3, F7');
-var H = M.CLUSTER_HULL;
-assert(H.length === 5, 'all five cluster electrodes are hull vertices');
-var insideOk = M.CLUSTER_NAMES.every(function (n) { return M.hullDistance(H, MONTAGE[ix(n)].x, MONTAGE[ix(n)].y) === 0; });
-assert(insideOk, 'every cluster electrode is inside the hull (distance 0)');
-var zoneOk = M.CLUSTER_NAMES.every(function (n) { return M.zoneWeight(MONTAGE[ix(n)].x, MONTAGE[ix(n)].y) > 0; });
-assert(zoneOk, 'every cluster electrode has a positive zone weight');
-var outsideOk = ['Fp2', 'F8', 'C4', 'T4', 'T6', 'O2', 'P4', 'F4', 'Fz'].every(function (n) {
-  return M.hullDistance(H, MONTAGE[ix(n)].x, MONTAGE[ix(n)].y) > M.ZONE_PAD && M.zoneWeight(MONTAGE[ix(n)].x, MONTAGE[ix(n)].y) === 0;
-});
-assert(outsideOk, 'right-side and midline electrodes are outside the zone');
-assert(M.hullDistance(H, -0.6, 0) === 0 && M.hullDistance(H, 0.6, 0) > 0.5, 'a point between T3 and C3 is inside, its mirror is far outside');
-var centreW = M.zoneWeight(-0.7, 0), edgeW = M.zoneWeight(-0.35, -0.42);
-assert(centreW > edgeW && edgeW > 0, 'zone weight falls off from the centre of the cluster to its rim');
-var zoneCount = 0;
-for (i = 0; i < cloud.count; i++) if (cloud.zone[i] > 0) zoneCount++;
-assert(zoneCount > 60 && zoneCount < 400, 'the zone covers a patch of the point cloud (' + zoneCount + ' points)');
-var zoneLeft = true;
-for (i = 0; i < cloud.count; i++) if (cloud.zone[i] > 0 && cloud.pos[i * 3] > 0.05) zoneLeft = false;
-assert(zoneLeft, 'zone points are all on the left hemisphere');
-var sq = M.hull([{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 0, y: 1 }, { x: 0.5, y: 0.5 }]);
-assert(sq.length === 4 && M.hullDistance(sq, 0.5, 0.5) === 0 && near(M.hullDistance(sq, 1.5, 0.5), 0.5, 1e-9), 'hull and hull distance on a square');
+/* ---- decoding is deterministic ---- */
+var again = M.decodeCortex(DATA);
+var same = again.n === C.n;
+for (i = 0; i < C.n && same; i++) {
+  if (again.x[i] !== C.x[i] || again.y[i] !== C.y[i] || again.z[i] !== C.z[i] || again.curv[i] !== C.curv[i]) same = false;
+}
+assert(same, 'decoding the same packed string twice gives the same cloud');
 
-/* ---- graph: unchanged toy graph, symmetric weights ---- */
+/* ---- the MNI transform round-trips ---- */
+var u = [0, 0, 0], m = [0, 0, 0], trip = true;
+var probes = [[0, 0, 0], [-52, -48, 26], [60, -20, 10], [-4, 70, -30], [12, -100, 40]];
+for (i = 0; i < probes.length; i++) {
+  M.mniToModel(probes[i][0], probes[i][1], probes[i][2], u);
+  M.modelToMni(u[0], u[1], u[2], m);
+  for (k = 0; k < 3; k++) if (!near(m[k], probes[i][k], 1e-4)) trip = false;
+}
+assert(trip, 'MNI millimetres survive the round trip through model units');
+M.mniToModel(DATA.centre[0], DATA.centre[1], DATA.centre[2], u);
+assert(near(u[0], 0, 1e-9) && near(u[1], 0, 1e-9) && near(u[2], 0, 1e-9), 'the template centre maps to the origin');
+M.mniToModel(-52, -48, 26, u);
+M.mniToModel(-52 + DATA.scale, -48, 26, m);
+assert(near(m[0] - u[0], 1, 1e-9), 'one model unit is exactly `scale` millimetres');
+
+/* ---- the candidate zone ---- */
+var Z = M.ZONE;
+assert(Z.count > 500 && Z.count < 620, 'the zone covers about 555 points of the cortex (' + Z.count + ')');
+var zoneLeft = true, zoneInside = true, zoneOutside = true, maxW = 0;
+var seedMni = [0, 0, 0];
+M.modelToMni(Z.seed[0], Z.seed[1], Z.seed[2], seedMni);
+assert(near(seedMni[0], M.ZONE_MNI[0], 1e-3) && near(seedMni[1], M.ZONE_MNI[1], 1e-3) && near(seedMni[2], M.ZONE_MNI[2], 1e-3),
+  'the seed sits at MNI (-52, -48, 26)');
+assert(near(Z.radius * DATA.scale, M.ZONE_MM, 1e-6), 'the zone radius is 32 mm in model units');
+for (i = 0; i < C.n; i++) {
+  var w = Z.weight[i];
+  if (w > maxW) maxW = w;
+  if (w <= 0) continue;
+  M.modelToMni(C.x[i], C.y[i], C.z[i], m);
+  if (m[0] >= -4) zoneLeft = false;
+  var dx = C.x[i] - Z.seed[0], dy = C.y[i] - Z.seed[1], dz = C.z[i] - Z.seed[2];
+  var d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+  if (d > Z.radius + 1e-6) zoneOutside = false;
+  if (d <= 0.55 * Z.radius && !near(w, 1, 1e-6)) zoneInside = false;
+}
+assert(zoneLeft, 'every zone point is on the left of the midline (MNI x below -4)');
+assert(zoneOutside, 'no zone point lies further than 32 mm from the seed');
+assert(zoneInside && near(maxW, 1, 1e-6), 'the inner 55 percent of the zone has full weight, the rim fades');
+var cen = [0, 0, 0];
+M.modelToMni(Z.centre[0], Z.centre[1], Z.centre[2], cen);
+assert(cen[0] < -40 && cen[1] < -30 && cen[1] > -70 && cen[2] > 5 && cen[2] < 50,
+  'the zone centroid sits in the left temporo-parietal cortex, MNI (' + cen.map(function (v) { return v.toFixed(0); }).join(', ') + ')');
+
+/* ---- sources ---- */
+var Sr = M.SOURCES, S = Sr.count;
+assert(S === M.SOURCE_COUNT && S === 24, 'exactly 24 cortical sources (' + S + ')');
+var inZone = 0, onSurface = true;
+for (i = 0; i < S; i++) {
+  if (Sr.zone[i] > 0) inZone++;
+  var p = Sr.point[i];
+  if (Sr.x[i] !== C.x[p] || Sr.y[i] !== C.y[p] || Sr.z[i] !== C.z[p]) onSurface = false;
+}
+assert(inZone === M.ZONE_SOURCES && inZone === 6, 'six of them sit inside the candidate zone (' + inZone + ')');
+assert(onSurface, 'every source is one of the cortical surface points');
+var minGap = Infinity, j;
+for (i = 0; i < S; i++) {
+  for (j = i + 1; j < S; j++) {
+    var ax = Sr.x[i] - Sr.x[j], ay = Sr.y[i] - Sr.y[j], az = Sr.z[i] - Sr.z[j];
+    var g = Math.sqrt(ax * ax + ay * ay + az * az);
+    if (g < minGap) minGap = g;
+  }
+}
+assert(minGap >= M.SOURCE_MIN_GAP, 'no two sources are closer than 0.22 model units (' + minGap.toFixed(3) + ')');
+var nearestSeed = 0, bestD = Infinity;
+for (i = 0; i < S; i++) {
+  var sx = Sr.x[i] - Z.seed[0], sy = Sr.y[i] - Z.seed[1], sz = Sr.z[i] - Z.seed[2];
+  var dd = sx * sx + sy * sy + sz * sz;
+  if (dd < bestD) { bestD = dd; nearestSeed = i; }
+}
+assert(nearestSeed === 0, 'the first source is the point closest to the seed of the zone');
+var mostAnterior = 0;
+for (i = 1; i < S; i++) if (Sr.y[i] > Sr.y[mostAnterior]) mostAnterior = i;
+assert(mostAnterior === M.ZONE_SOURCES, 'the first source outside the zone is the most anterior point of the cortex');
+var right = 0;
+for (i = 0; i < S; i++) if (Sr.x[i] > 0) right++;
+assert(right > 5, 'the network is not confined to one hemisphere (' + right + ' sources on the right)');
+
+/* ---- weights and edges ---- */
 var G = M.GRAPH;
-var strong = G.edges.filter(function (e) { return e.strong; });
-var weak = G.edges.filter(function (e) { return !e.strong; });
-assert(strong.length === 10, 'all ten cluster pairs are edges');
-var minStrong = Math.min.apply(null, strong.map(function (e) { return e.w; }));
-var maxWeak = Math.max.apply(null, weak.map(function (e) { return e.w; }));
-assert(minStrong > maxWeak, 'weakest cluster edge (' + minStrong.toFixed(2) + ') beats the strongest other edge (' + maxWeak.toFixed(2) + ')');
-var symmetric = true, consistent = true, selfZero = true;
-for (i = 0; i < N; i++) {
+var symmetric = true, selfZero = true, positive = true;
+for (i = 0; i < S; i++) {
   if (G.weight(i, i) !== 0) selfZero = false;
-  for (var j = 0; j < N; j++) if (G.weight(i, j) !== G.weight(j, i)) symmetric = false;
+  for (j = 0; j < S; j++) {
+    if (G.weight(i, j) !== G.weight(j, i)) symmetric = false;
+    if (i !== j && !(G.weight(i, j) > 0)) positive = false;
+  }
 }
-G.edges.forEach(function (e) { if (!near(G.weight(e.a, e.b), e.w, 1e-6) || e.w <= 0 || e.w > 1) consistent = false; });
-assert(symmetric, 'weights are symmetric');
-assert(selfZero && consistent, 'no self weights, the matrix matches the edge list, weights in (0, 1]');
-assert(G.weight(ix('Fp1'), ix('O2')) === 0, 'no edge between Fp1 and O2');
-var degree = MONTAGE.map(function () { return 0; });
-G.edges.forEach(function (e) { degree[e.a]++; degree[e.b]++; });
-assert(degree.join(',') === G.degree.join(',') && G.degree.every(function (d) { return d > 0; }), 'degrees match the edge list, no isolated electrode');
+assert(symmetric, 'the weight matrix is symmetric');
+assert(selfZero, 'the diagonal of the weight matrix is zero');
+assert(positive, 'every off-diagonal weight is strictly positive');
+assert(G.edges.length === M.EDGE_COUNT && G.edges.length === 52, 'the 52 strongest pairs are kept (' + G.edges.length + ')');
+var sorted = true, keptMin = Infinity, dropMax = 0, seen = {};
+for (i = 0; i < G.edges.length; i++) {
+  var e = G.edges[i];
+  if (i && G.edges[i - 1].w < e.w) sorted = false;
+  if (e.w < keptMin) keptMin = e.w;
+  if (!near(G.weight(e.a, e.b), e.w, 1e-12)) sorted = false;
+  seen[e.a + ':' + e.b] = 1;
+}
+for (i = 0; i < S; i++) for (j = i + 1; j < S; j++) if (!seen[i + ':' + j] && G.weight(i, j) > dropMax) dropMax = G.weight(i, j);
+assert(sorted, 'the kept edges are the strongest ones, in order, and match the matrix');
+assert(keptMin >= dropMax, 'the weakest kept edge (' + keptMin.toFixed(3) + ') is at least the strongest dropped one (' + dropMax.toFixed(3) + ')');
+var degSum = 0, isolated = 0;
+for (i = 0; i < S; i++) { degSum += G.degree[i]; if (!G.degree[i]) isolated++; }
+assert(degSum === 2 * G.edges.length && isolated === 0, 'degrees match the edge list and no source is isolated');
+var zoneEdges = 0;
+for (i = 0; i < G.edges.length; i++) if (G.edges[i].zone) zoneEdges++;
+assert(zoneEdges === 15, 'all fifteen pairs inside the zone survive the cut (' + zoneEdges + ')');
 
-/* ---- edge arcs: start and end on the electrodes, midpoint lifted above the surface ---- */
-var K = M.EDGE_SEGMENTS, arcsOk = true, liftedOk = true;
-G.edges.forEach(function (e, idx) {
-  var o0 = idx * (K + 1) * 3, o1 = (idx * (K + 1) + K) * 3, om = (idx * (K + 1) + K / 2) * 3;
-  if (!near(M.EDGE_POINTS[o0], E[e.a * 3], 1e-5) || !near(M.EDGE_POINTS[o1 + 1], E[e.b * 3 + 1], 1e-5)) arcsOk = false;
-  var mx = M.EDGE_POINTS[om], my = M.EDGE_POINTS[om + 1], mz = M.EDGE_POINTS[om + 2];
-  var ml = Math.sqrt(mx * mx + my * my + mz * mz);
-  if (ml <= M.surfaceRadius(mx / ml, my / ml, mz / ml) * 1.04) liftedOk = false;
-});
-assert(arcsOk, 'every arc starts and ends on its electrodes');
-assert(liftedOk, 'every arc midpoint is lifted above the surface');
-
-/* ---- projection: deterministic, depth ordering consistent with the view ---- */
-var outA = new Float32Array(N * 3), outB = new Float32Array(N * 3);
-M.project(E, N, 37, M.PITCH, outA);
-M.project(E, N, 37, M.PITCH, outB);
+/* ---- projection ---- */
+var outA = new Float32Array(S * 3), outB = new Float32Array(S * 3);
+M.project(Sr.x, Sr.y, Sr.z, S, 37, 12, outA);
+M.project(Sr.x, Sr.y, Sr.z, S, 37, 12, outB);
 var sameProj = true;
 for (i = 0; i < outA.length; i++) if (outA[i] !== outB[i]) sameProj = false;
 assert(sameProj, 'projection is deterministic');
-M.project(E, N, 0, M.PITCH, outA);
-assert(outA[ix('T3') * 3 + 2] > outA[ix('T4') * 3 + 2], 'at yaw 0 the left hemisphere faces the viewer (T3 closer than T4)');
-assert(outA[ix('Fp1') * 3] < outA[ix('O1') * 3], 'at yaw 0 the frontal pole is on the left of the screen');
-assert(outA[ix('Cz') * 3 + 1] > outA[ix('T3') * 3 + 1], 'Cz projects above T3');
-M.project(E, N, 180, M.PITCH, outB);
-assert(outB[ix('T4') * 3 + 2] > outB[ix('T3') * 3 + 2], 'half a turn later T4 is the closer one');
-assert(near(outA[ix('T3') * 3 + 2], outB[ix('T4') * 3 + 2], 0.02), 'mirror electrodes swap depth across a half turn');
-M.project(E, N, 90, M.PITCH, outB);
-assert(outB[ix('Fp1') * 3 + 2] > outB[ix('O1') * 3 + 2], 'at yaw 90 the face is towards the viewer');
-var rot = new Float32Array(N * 3);
-M.rotate(M.ELECTRODES.nor, N, 0, M.PITCH, rot);
-assert(rot[ix('T3') * 3 + 2] > 0.8 && rot[ix('T4') * 3 + 2] < -0.5, 'at yaw 0 the T3 normal faces the viewer and the T4 normal faces away');
-var dz = 0;
-M.project(E, N, 0, 0, outA); M.project(E, N, 0, 30, outB);
-dz = outB[ix('Cz') * 3 + 2] - outA[ix('Cz') * 3 + 2];
-assert(dz > 0, 'raising the camera brings the vertex closer');
-assert(!/[\u2013\u2014]/.test(JSON.stringify(M.CLUSTER_NAMES)), 'no en- or em-dashes in the model strings');
+var one = new Float32Array(3);
+M.project([0, 0, 0], [1, 0, 0], [0, 0, 1], 1, 0, 0, one);
+assert(near(one[0], 0, 1e-6) && near(one[1], 0, 1e-6) && near(one[2], 1, 1e-6), 'at yaw 0 the anterior axis points into the screen');
+M.project([0], [0], [1], 1, M.YAW_DEFAULT, 0, one);
+assert(near(one[1], -1, 1e-6), 'the superior axis projects upwards (negative screen ordinate)');
+M.project([0], [1], [0], 1, M.YAW_DEFAULT, M.PITCH_DEFAULT, one);
+assert(one[0] < -0.99, 'at the default yaw the frontal pole is on the left of the screen');
+var pair = new Float32Array(6), half = new Float32Array(6);
+M.project([-1, 1], [0, 0], [0, 0], 2, M.YAW_DEFAULT, M.PITCH_DEFAULT, pair);
+assert(pair[2] < 0 && pair[5] > 0 && near(pair[2], -pair[5], 1e-6), 'the left hemisphere is nearer the camera than the right one');
+M.project([-1, 1], [0, 0], [0, 0], 2, M.YAW_DEFAULT + 180, M.PITCH_DEFAULT, half);
+assert(near(half[2], pair[5], 1e-5) && near(half[5], pair[2], 1e-5), 'half a turn later the two swap depth');
+var cloudA = new Float32Array(C.n * 3);
+M.project(C.x, C.y, C.z, C.n, M.YAW_DEFAULT, M.PITCH_DEFAULT, cloudA);
+var lateral = 0, medial = 0;
+for (i = 0; i < C.n; i++) {
+  if (C.x[i] < -0.55) lateral += cloudA[i * 3 + 2];
+  if (C.x[i] > 0.55) medial += cloudA[i * 3 + 2];
+}
+assert(lateral < 0 && medial > 0, 'the mean depth of the two lateral surfaces has the sign the camera implies');
+var rise = new Float32Array(3), flat = new Float32Array(3);
+M.project([0], [0], [1], 1, M.YAW_DEFAULT, 0, flat);
+M.project([0], [0], [1], 1, M.YAW_DEFAULT, 30, rise);
+assert(rise[2] < flat[2], 'raising the camera brings the vertex nearer');
+
+/* ---- shading ---- */
+var monotone = true, prev = -1;
+for (i = 0; i <= 40; i++) {
+  var curv = -1 + i * 0.05;
+  var v = M.shade(0.7, curv, 0.8);
+  if (v < prev - 1e-12) monotone = false;
+  prev = v;
+}
+assert(monotone, 'the tone never falls as the curvature rises from a sulcus to a gyral crown');
+assert(M.shade(0.7, -0.5, 0.8) < M.shade(0.7, 0.5, 0.8), 'a gyral crown is brighter than a sulcus');
+assert(near(M.shade(0.7, -0.2, 0.8), M.shade(0.7, -0.9, 0.8), 1e-9), 'the curvature term saturates below -0.10');
+assert(near(M.shade(0.7, 0.2, 0.8), M.shade(0.7, 0.9, 0.8), 1e-9), 'and above +0.10');
+assert(M.shade(0, 1, 1) > 0 && M.shade(1, 1, 1) <= 1, 'an unlit point keeps some ambient tone, a fully lit one stays in range');
+assert(M.shade(1, 1, 0) < M.shade(1, 1, 1), 'the far side of the cortex is dimmer than the near side');
+assert(M.shade(0.2, 0, 0.5) < M.shade(0.9, 0, 0.5), 'more light gives more tone');
+var lit = 0, unlitPoint = 0;
+for (i = 0; i < C.n; i++) if (C.curv[i] > 0) lit++; else unlitPoint++;
+assert(lit > 0.3 * C.n && unlitPoint > 0.3 * C.n, 'the surface carries both crowns and sulci in quantity');
 
 summary('brain');

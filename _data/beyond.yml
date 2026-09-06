@@ -34,6 +34,12 @@
   credit: "Guillaume de Germain, CC0"
   credit_url: "https://commons.wikimedia.org/wiki/File:Guy_jogging_by_sign_(Unsplash).jpg"
 - title: { en: "Volleyball", it: "Pallavolo" }
+  image: /assets/img/beyond/volleyball.jpg
+  width: 1000
+  height: 562
+  alt: { en: "A volleyball net on a beach court by the sea", it: "Una rete da pallavolo su un campo in spiaggia, davanti al mare" }
+  credit: "7beachbum, CC BY 2.0"
+  credit_url: "https://commons.wikimedia.org/wiki/File:Empty_beach_volleyball_court_in_Waikiki,_Honolulu.jpg"
 - title: { en: "Reading", it: "Lettura" }
   image: /assets/img/beyond/reading.jpg
   width: 1000
@@ -51,3 +57,9 @@
   credit_url: "https://commons.wikimedia.org/wiki/File:Vinyl_%2B_Grado_Headphones_(Unsplash).jpg"
 - title: { en: "Good company", it: "Buona compagnia" }
   note: { en: "Spending time with people, eating and drinking together.", it: "Stare con le persone, mangiare e bere insieme." }
+  image: /assets/img/beyond/company.jpg
+  width: 1000
+  height: 666
+  alt: { en: "A shared table with wine glasses and small plates", it: "Un tavolo condiviso con bicchieri di vino e piattini" }
+  credit: "Joel Aguilar, CC0"
+  credit_url: "https://commons.wikimedia.org/wiki/File:Table_of_wine_and_snacks_(Unsplash).jpg"
