@@ -34,8 +34,11 @@
     var x = -0.42, y = -0.66, z = 0.62, l = Math.sqrt(x * x + y * y + z * z);
     return [x / l, y / l, z / l];
   })();
-  var AMBIENT = 0.16;                         /* tone of a face the light does not reach */
-  var SUL_MIN = 0.62, SUL_SPAN = 0.38;        /* a sulcus keeps 62 percent of the tone of a gyral crown */
+  var AMBIENT = 0.10;                         /* tone of a face the light does not reach */
+  /* The curvature is smoothed before it is packed, so it darkens whole sulcal bands instead of single faces.
+     A strong sulcal factor on the raw field made the surface speckle, and a speckled surface reads as a
+     transparent one: the eye takes the dark faces for the far side showing through. */
+  var SUL_MIN = 0.78, SUL_SPAN = 0.22;        /* a sulcus keeps 78 percent of the tone of a gyral crown */
   var SUL_LO = -0.10, SUL_HI = 0.10;          /* curvature band over which the two are interpolated */
   var DEPTH_FLOOR = 0.55;                     /* tone of the farthest face relative to the nearest */
 
@@ -207,6 +210,8 @@
     YAW_DEFAULT: YAW_DEFAULT,
     PITCH_DEFAULT: PITCH_DEFAULT,
     LIGHT: LIGHT,
+    AMBIENT: AMBIENT,
+    SUL_MIN: SUL_MIN,
     decodeCortex: decodeCortex,
     mniToModel: mniToModel,
     modelToMni: modelToMni,

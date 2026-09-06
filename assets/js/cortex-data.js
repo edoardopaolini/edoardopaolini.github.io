@@ -9,7 +9,9 @@
 
    Per-vertex fields put the anatomy back on a geometry that is deliberately smooth:
    `curv` is the mean curvature of the FULL-resolution folded surface averaged over the cell each coarse vertex
-   owns (positive on gyral crowns, negative in sulci), so the sulci darken without the geometry carrying them.
+   owns, then smoothed over the coarse mesh and renormalised (positive on gyral crowns, negative in sulci), so
+   the sulci darken in bands without the geometry carrying them. Smoothing matters: the raw field alternates
+   from vertex to vertex at this spacing, which speckles the surface and makes a solid brain look transparent.
    Normals come from the smoothed coarse mesh itself, which is what keeps the shading consistent with the shape.
    `zone` is the weight of the candidate epileptogenic patch, computed from the ANATOMICAL vertex positions of
    the unsmoothed template (MNI seed -52, -48, 26, radius 32 mm, left hemisphere): 77 vertices carry it,
@@ -170,23 +172,23 @@ window.CORTEX_DATA = {
     'a70PbsH5N6dIP6A3PatJEZxNO5wzaLkUccoSU6cjXa4aZ7gRd9YPdNQbdtACe+EFe+MQb//CfQDnOc+aVM6vbeLHfwIHfAEcG9qKSdOiR8ul' +
     'C/SCSNWgaMnQccf0fOQHefwmasvRc8v2dM8Sd/QpdeQod+smQuCY4cGWC8mOIcuRCM6MldzFv8WkjjcMhBgMnOO4q+6kreKk39SN99uH0smY' +
     'u92bsfWe6O2FuwqWwwGR4QOF3A2HtvKalS/Pt+ebjwPFmxe3nBG0s/2bo826huXqhvHiprnKieDgiykakTUgnBGzugqXhBbziCn9iSnuvBmY' +
-    'oRyxwRaU2dGQodu0zs6Wz8+Wu9ChgQL9hfTlgggIgQAJgfgGnNW/qNCyjeLThenqg+v8nsvDitrnm8TQhnWDWLafnpmB7Fu7WFNfnWKUdZiF' +
-    'WZtfaKjCjGteVWFqzI5snnCWVF/KtKVyjZ3O2FrVf6Bfx0dRkNHPp2RUfqSwtKiAh3x0knu/0Htjbrx2npmYt7vbYmBSumtbjFipZFi4cL1n' +
-    'd0NdZJOHedaHjE3Hu7mjhJvAh4GFdqiSotBPz8qvv7OOt76dyGKqeH+ws7qcZtdf9GCHXVmzmoGYgYClaJNlb1twX6Rd06KvbNJZXXZlfIGy' +
-    '1XzQgV6IimN/oWd7W2CUe7LZppNcjNBXn4lWXZtT183dc+GVap+lxYuvsU6carG6gZzifHCAeOZyhlNxcH290sFuZGRirYWJgY2DgoGvs6V/' +
-    'hnubkIGOsahjn1+TgtCcbpZ9eKWvsYvBu6DFoKPCcsJsYWqmvn7BxoSero9ThdCA08GtsGfBu7GcrlrAp8iDpaVcya1vTWN75uW3Q6xEhDDh' +
-    'oubZXMCumtWciovRbHS7YMaSfMx7Vp+9l6BUvcB7bE9pt8GEZrK0i56Tv3RhgW3SwdJU5eg3tXCbX8DRXEm/2bHGZ8vUtKukn2Bvr2Fxyrme' +
-    'ylvo21+clkmtsbhRlG1zupnBe462n7ttia19q5ypaWqXbah9gou9iIZ1iWaNn7NkaIyTcau5msR7V4Nqzc+re32nbVFfW8iWbo3JWIF1s1OV' +
-    'oqSTbVXHes2DYpTUf6xrdre2W4B3rHC9mcG1tmV8sGuumbStYrhoir1vtLy8b1tjbMqEZbnDu1TMw4umZG26c1JaurrFhYOsmMWDe46Ly259' +
-    '3o6MWpS/wMungWCsqIpLglKkzcVuqFleaYVfjIajt8i9kXXDmJRwoX9/f4CAf4l3jYCIkXu4hnWDWLafnpmB7Fu7WFNfnWKUdZiFWZtfaKjC' +
-    'jGteVWFqzI5snnCWVF/KtKVyjZ3O2FrVf6Bfx0dRkNHPp2RUfqSwtKiAh3x0knu/0Htjbrx2npmYt7vbYmBSumtbjFipZFi4cL1nd0NdZJOH' +
-    'edaHjE3Hu7mjhJvAh4GFdqiSotBPz8qvv7OOt76dyGKqeH+ws7qcZtdf9GCHXVmzmoGYgYClaJNlb1twX6Rd06KvbNJZXXZlfIGy1XzQgV6I' +
-    'imN/oWd7W2CUe7LZppNcjNBXn4lWXZtT183dc+GVap+lxYuvsU6carG6gZzifHCAeOZyhlNxcH290sFuZGRirYWJgY2DgoGvs6V/hnubkIGO' +
-    'sahjn1+TgtCcbpZ9eKWvsYvBu6DFoKPCcsJsYWqmvn7BxoSero9ThdCA08GtsGfBu7GcrlrAp8iDpaVcya1vTWN75uW3Q6xEhDDhoubZXMCu' +
-    'mtWciovRbHS7YMaSfMx7Vp+9l6BUvcB7bE9pt8GEZrK0i56Tv3RhgW3SwdJU5eg3tXCbX8DRXEm/2bHGZ8vUtKukn2Bvr2Fxyrmeylvo21+c' +
-    'lkmtsbhRlG1zupnBe462n7ttia19q5ypaWqXbah9gou9iIZ1iWaNn7NkaIyTcau5msR7V4Nqzc+re32nbVFfW8iWbo3JWIF1s1OVoqSTbVXH' +
-    'es2DYpTUf6xrdre2W4B3rHC9mcG1tmV8sGuumbStYrhoir1vtLy8b1tjbMqEZbnDu1TMw4umZG26c1JaurrFhYOsmMWDe46Ly2593o6MWpS/' +
-    'wMungWCsqIpLglKkzcVuqFleaYVfjIajt8i9kXXDmJRwoX9/f4CAf4l3jYCIkXu4AAAA/wAAAAAAAAAAAADFAAAAAAAAAAAAAAC5QREAAAAA' +
+    'oRyxwRaU2dGQodu0zs6Wz8+Wu9ChgQL9hfTlgggIgQAJgfgGnNW/qNCyjeLThenqg+v8nsvDitrnm8TQYlhxHH1+L7e3kQDoOWEsmUtN4sos' +
+    'pLqJ4c3atUjQr+JjlTtYtoF9iltyAFEZs6i0vjqmTQC+e1FG/+P/mzBJAKj9wHYqc1MBkmTO//OH0pqX1bXUhZH2dm50jdmFrpOgX2Zns3Eb' +
+    'I52eiqzQvuh4hZus5+mDtG9xdyZdZ52Pp4IVtKWSrRpG2eTt1Zm2fXRl4N2QeK6U1bGRbTjTUmGvLRheIgFIAEoIATsGjaWZycmeh4N+rY+w' +
+    'wnuugEt3bSVdWxBiKQkAAMincY1/nH5IPAA5DRZTnLa03f///5T///v1TzWQgGqBPpfAXTAYddwUChkAPrLC/9/qsY2Dc6FxRFxII0KOWKpt' +
+    'PxsoIwAAc3WgcGugcf//o+j7xObc5uL/0ejrl8OxfZl4fZOHlpWdz6683tuinK7Hubyon6S6n36BqK6jsLV1u+vW/65jnlNdjonHqHJgcHOM' +
+    'h+eztta14v+VXjjCzduFT7vNl6RWY5OtbTsxSqTGNmeQmbpmO6KrqS9Df1AFABGbmX+DoKifbYJUT5q9xLLDqcLV49PN39+21Wh7qHxynbiz' +
+    'xo+blIbHi4Oq4/DW5M6s79Di1Nfrp8CXYnO0jNeQY15vYmtpV0B8c0hPIlRljmtNaXaJcoiWnJxzmKCsgp1PLah8Mj4ne6KGo8eSY73Hy4iF' +
+    'q4lvHRePT16MSbG4NX+ZecbOruDr69+63fvy3sbTx6bAroyRRYISTpiEcpCRlmZ5cVYv7eO2tePRr357faKlhXvKjK6jk2qJSOewxbST58hn' +
+    'zdKsgpWPmY5ljFBwg5IFimWoqNOjYDBzUxQfZ7t1tKytgLyiACkZIkoRHhsQH0RlKjNJeYKQYlhxHH1+L7e3kQDoOWEsmUtN4sospLqJ4c3a' +
+    'tUjQr+JjlTtYtoF9iltyAFEZs6i0vjqmTQC+e1FG/+P/mzBJAKj9wHYqc1MBkmTO//OH0pqX1bXUhZH2dm50jdmFrpOgX2Zns3EbI52eiqzQ' +
+    'vuh4hZus5+mDtG9xdyZdZ52Pp4IVtKWSrRpG2eTt1Zm2fXRl4N2QeK6U1bGRbTjTUmGvLRheIgFIAEoIATsGjaWZycmeh4N+rY+wwnuugEt3' +
+    'bSVdWxBiKQkAAMincY1/nH5IPAA5DRZTnLa03f///5T///v1TzWQgGqBPpfAXTAYddwUChkAPrLC/9/qsY2Dc6FxRFxII0KOWKptPxsoIwAA' +
+    'c3WgcGugcf//o+j7xObc5uL/0ejrl8OxfZl4fZOHlpWdz6683tuinK7Hubyon6S6n36BqK6jsLV1u+vW/65jnlNdjonHqHJgcHOMh+eztta1' +
+    '4v+VXjjCzduFT7vNl6RWY5OtbTsxSqTGNmeQmbpmO6KrqS9Df1AFABGbmX+DoKifbYJUT5q9xLLDqcLV49PN39+21Wh7qHxynbizxo+blIbH' +
+    'i4Oq4/DW5M6s79Di1Nfrp8CXYnO0jNeQY15vYmtpV0B8c0hPIlRljmtNaXaJcoiWnJxzmKCsgp1PLah8Mj4ne6KGo8eSY73Hy4iFq4lvHReP' +
+    'T16MSbG4NX+ZecbOruDr69+63fvy3sbTx6bAroyRRYISTpiEcpCRlmZ5cVYv7eO2tePRr357faKlhXvKjK6jk2qJSOewxbST58hnzdKsgpWP' +
+    'mY5ljFBwg5IFimWoqNOjYDBzUxQfZ7t1tKytgLyiACkZIkoRHhsQH0RlKjNJeYKQAAAA/wAAAAAAAAAAAADFAAAAAAAAAAAAAAC5QREAAAAA' +
     'AAAAAAAcAAAAAAAAAAAAAMjdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABtdD///4Rb/6QAIAAAAAAAAAAAAAAAA' +
     'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIbwAAAAAEoAAAAAAAAAAAAAAAAAAAAAAAAAAGAmAAAAAAAAAAAAAIUAAABs/1Ju6v//AAAA' +
     'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +

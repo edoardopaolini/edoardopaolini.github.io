@@ -254,7 +254,7 @@ assert(M.shade(0.7, -0.5, 0.8) < M.shade(0.7, 0.5, 0.8), 'a gyral crown is brigh
 assert(near(M.shade(0.7, -0.2, 0.8), M.shade(0.7, -0.9, 0.8), 1e-9), 'the curvature term saturates below -0.10');
 assert(near(M.shade(0.7, 0.2, 0.8), M.shade(0.7, 0.9, 0.8), 1e-9), 'and above +0.10');
 assert(near(M.shade(1, 1, 1), 1, 1e-9), 'a lit crown at the front of the mesh reaches the top of the range');
-assert(near(M.shade(0, -1, 0), 0.16 * 0.62 * 0.55, 1e-9), 'an unlit sulcus at the back keeps the ambient floor');
+assert(near(M.shade(0, -1, 0), M.AMBIENT * M.SUL_MIN * 0.55, 1e-9), 'an unlit sulcus at the back keeps the ambient floor');
 assert(M.shade(1, 1, 0) < M.shade(1, 1, 1), 'the far side of the cortex is dimmer than the near side');
 assert(M.shade(0.2, 0, 0.5) < M.shade(0.9, 0, 0.5), 'more light gives more tone');
 /* Clamping matters: the lambert term of a face can go negative near the silhouette. */
