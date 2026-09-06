@@ -42,11 +42,13 @@ for (i = 0; i < C.n; i++) {
   if (r > radMax) radMax = r;
 }
 var span = Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
-assert(near(span, 2, 0.06), 'the template is normalised: the largest extent is 2 model units (' + span.toFixed(3) + ')');
+/* The smoothed template is a little smaller than the folded one, and `scale` stays the anatomical scale so
+   that MNI conversion is exact, which is why the extent is under 2 rather than exactly 2. */
+assert(span > 1.7 && span < 2.0, 'the template is normalised close to the unit box (largest extent ' + span.toFixed(3) + ')');
 assert(Math.max(Math.abs(lo[0]), Math.abs(hi[0]), Math.abs(lo[1]), Math.abs(hi[1]), Math.abs(lo[2]), Math.abs(hi[2])) <= 1.0001,
   'no coordinate leaves the unit box');
 assert(radMax < 1.3, 'no vertex sits further than the diagonal of the unit box (' + radMax.toFixed(3) + ')');
-assert(hi[0] > 0.7 && lo[0] < -0.7 && hi[1] > 0.9 && lo[1] < -0.9, 'both hemispheres and both poles are present');
+assert(hi[0] > 0.6 && lo[0] < -0.6 && hi[1] > 0.8 && lo[1] < -0.9, 'both hemispheres and both poles are present');
 assert(near(nMin, 1, 0.01) && near(nMax, 1, 0.01),
   'every stored normal is a unit vector within the byte quantisation (' + nMin.toFixed(4) + ' to ' + nMax.toFixed(4) + ')');
 assert(cMin >= -1 && cMax <= 1 && cMin < -0.4 && cMax > 0.4,
@@ -123,7 +125,7 @@ for (i = 0; i < S; i++) {
     if (g < minGap) minGap = g;
   }
 }
-assert(minGap >= 0.27, 'no two sources are closer than 0.27 model units (' + minGap.toFixed(3) + ')');
+assert(minGap >= 0.25, 'no two sources are closer than 0.25 model units (' + minGap.toFixed(3) + ')');
 var right = 0;
 for (i = 0; i < S; i++) if (Sr.x[i] > 0) right++;
 assert(right > 5, 'the network is not confined to one hemisphere (' + right + ' sources on the right)');

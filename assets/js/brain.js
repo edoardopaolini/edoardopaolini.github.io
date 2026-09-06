@@ -1,5 +1,5 @@
 /* Brain: the "Brain connectivity" cell (#mini-brain). The cortical surface of the ICBM152 template
-   (BrainMesh_ICBM152 of BrainNet Viewer, surface by Prof. Alan C. Evans, MNI; packed in
+   (BrainMesh_ICBM152_smoothed of BrainNet Viewer, surface by Prof. Alan C. Evans, MNI; packed in
    assets/js/cortex-data.js) is drawn as a flat-shaded mesh of 2560 triangles that turns slowly. A candidate
    epileptogenic zone sits on the left temporo-parietal cortex, painted on the surface itself, and 24 cortical
    sources carry a seeded toy network of arcs lifted above the surface, with the zone as its hub.
@@ -244,9 +244,12 @@
   var WIDTH_REF = 320;                         /* figure width the line and node sizes are quoted at */
   var ZONE_MIN = 0.02;                         /* face zone weight under which the face is plain cortex */
   var ZONE_MIX = 0.9;                         /* how far a full-weight face travels towards the accent */
-  /* How far the tone travels from the surface token towards the ink one. The floor keeps the unlit side of
-     the cortex visible instead of dissolving into the page, the ceiling keeps the lit side off pure ink. */
+  /* How far the tone travels between the two ends of the shading ramp. On a dark ground the lit face goes
+     towards the ink token and the unlit one stays just off the ground, so it never dissolves into the page.
+     On a light ground the ramp runs the other way: the lit face is the palest, the unlit one the closest to
+     ink. Without that flip the light theme reads as a photographic negative, lit where it should be dark. */
   var INK_FLOOR = 0.16, INK_CEIL = 0.88;
+  var LIGHT_FLOOR = 0.20, LIGHT_CEIL = 0.86;
   var ZONE_U_FLOOR = 0.5;                      /* the accent never washes out where the zone is in shadow */
 
   var GLOW_SPRITE = 128, GLOW_A = 0.4, GLOW_SPREAD = 1.55, GLOW_GAIN = 1.6;
@@ -302,16 +305,18 @@
   function css(c) {
     return 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')';
   }
-  /* The tone v says how far a face travels from the surface towards the ink, which reads as a light cortex on
-     a dark ground in the dark theme and as a dark one on a light ground in the light theme from the same
-     formula. A face inside the zone is mixed towards the accent in proportion to its zone weight. */
+  /* The tone v of a face becomes a colour on a ramp between the two theme tokens: on a dark ground from the
+     ground towards the ink, on a light ground from the ink towards the ground, so the lit side is the palest
+     in both. A face inside the zone is mixed towards the accent in proportion to its zone weight. */
   function buildFills() {
     var surface = Lab.rgb(t.surface), ink = Lab.rgb(t.ink), accent = Lab.rgb(t.accent);
+    var dark = t.dark;
     for (var lvl = 0; lvl < ZONE_LEVELS; lvl++) {
       var z = lvl === 0 ? 0 : (lvl - 0.5) / (ZONE_LEVELS - 1);
       for (var b = 0; b < TONE_BUCKETS; b++) {
         var v = (b + 0.5) / TONE_BUCKETS;
-        var u = INK_FLOOR + (INK_CEIL - INK_FLOOR) * v;
+        var u = dark ? INK_FLOOR + (INK_CEIL - INK_FLOOR) * v
+                     : LIGHT_CEIL - (LIGHT_CEIL - LIGHT_FLOOR) * v;
         var base = mix(surface, ink, u);
         var tint = mix(surface, accent, Math.max(u, ZONE_U_FLOOR));
         groupFill[lvl * TONE_BUCKETS + b] = css(z > 0 ? mix(base, tint, ZONE_MIX * z) : base);

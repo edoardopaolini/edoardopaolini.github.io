@@ -30,7 +30,7 @@ The interactive figures are toy simulations written for this site, in `assets/js
 - `stage.js`: the home page stage. 10-20 EEG montage with simulated traces, live Pearson correlation edges and click-to-stimulate (TMS-evoked potentials spreading over the graph).
 - `bench.js`: the signal bench (synthetic EEG with real RBJ biquad filters and a spectrum).
 - `brain.js`: the connectivity graph on the rotating cortical surface of the ICBM152 template, with the candidate epileptogenic zone drawn on the cortex and the sources of the network placed on it.
-- `cortex-data.js`: the prepared surface `brain.js` draws, a 1 284-vertex mesh with its curvature, normals, zone weights and source indices packed into a base64 string. It comes from BrainMesh_ICBM152 of [BrainNet Viewer](https://www.nitrc.org/projects/bnv/), the ICBM152 surface provided by Prof. Alan C. Evans, Montreal Neurological Institute.
+- `cortex-data.js`: the prepared surface `brain.js` draws, a 1 284-vertex, 2 560-face mesh with its curvature, normals, zone weights and source indices packed into a base64 string. It comes from BrainMesh_ICBM152_smoothed of [BrainNet Viewer](https://www.nitrc.org/projects/bnv/), the ICBM152 surface provided by Prof. Alan C. Evans, Montreal Neurological Institute.
 - `topo.js`: the microstate topography (blue to red voltage map).
 - `metabolism.js`: the central carbon metabolism of *Mycobacterium tuberculosis* as a live flux network with perturbations taken from the master's thesis.
 - `lab.js`: shared helpers (seeded random numbers, tokens, montage coordinates, canvas sizing, interpolation, `Lab.format` for `{name}` placeholders, `Lab.strings` for the labels of a module).
