@@ -1,4 +1,7 @@
-{%- comment -%} Body of the biography page, shared by /bio/ and /it/bio/. {%- endcomment -%}
+{%- comment -%} Body of the biography page, shared by /bio/ and /it/bio/.
+  The `supervisor` and `cosupervisors` fields of experience.yml and education.yml are deliberately not printed:
+  the owner asked to omit the names for now. To show them again, print them here with t.bio.supervisor and
+  t.bio.cosupervisors, which are still defined in _data/i18n.yml. {%- endcomment -%}
 {%- assign lang = page.lang | default: 'en' -%}
 {%- assign t = site.data.i18n[lang] -%}
 {%- assign months = t.months -%}
@@ -26,7 +29,6 @@
             <span class="rail-year mono">{{ months[sm] }} {{ s[0] }} - {% if e.end == 'present' %}{{ t.route.present }}{% else %}{% assign en = e.end | split: '-' %}{% assign em = en[1] | plus: 0 | minus: 1 %}{{ months[em] }} {{ en[0] }}{% endif %}</span>
             <h3>{{ e.role[lang] }}</h3>
             <p class="rail-meta">{{ e.org[lang] }}, {{ e.place[lang] }}</p>
-            {% if e.supervisor %}<p class="rail-meta">{{ t.bio.supervisor }}: {{ e.supervisor }}</p>{% endif %}
             <p class="rail-thesis">{{ e.summary[lang] }}</p>
         </li>
         {% endfor %}
@@ -43,7 +45,6 @@
             <span class="rail-year mono">{{ months[sm] }} {{ s[0] }} - {% if e.end == 'present' %}{{ t.route.present }}{% else %}{% assign en = e.end | split: '-' %}{% assign em = en[1] | plus: 0 | minus: 1 %}{{ months[em] }} {{ en[0] }}{% endif %}</span>
             <h3>{{ e.degree[lang] }}{% if e.honors %}, {{ e.honors }}{% endif %}</h3>
             <p class="rail-meta">{{ e.institution[lang] }}, {{ e.place[lang] }}</p>
-            {% if e.supervisor %}<p class="rail-meta">{{ t.bio.supervisor }}: {{ e.supervisor }}{% if e.cosupervisors %}. {{ t.bio.cosupervisors }}: {{ e.cosupervisors }}{% endif %}</p>{% endif %}
             {% if e.thesis %}<p class="rail-thesis">{{ t.bio.thesis }}: {{ e.thesis }}.</p>{% endif %}
             {% if e.focus %}<p class="rail-thesis">{{ e.focus[lang] }}</p>{% endif %}
         </li>

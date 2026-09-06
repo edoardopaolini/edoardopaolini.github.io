@@ -30,7 +30,7 @@ The interactive figures are toy simulations written for this site, in `assets/js
 - `stage.js`: the home page stage. 10-20 EEG montage with simulated traces, live Pearson correlation edges and click-to-stimulate (TMS-evoked potentials spreading over the graph).
 - `bench.js`: the signal bench (synthetic EEG with real RBJ biquad filters and a spectrum).
 - `brain.js`: the connectivity graph on the rotating cortical surface of the ICBM152 template, with the candidate epileptogenic zone drawn on the cortex and the sources of the network placed on it.
-- `cortex-data.js`: the prepared surface `brain.js` draws, 9 531 points with their curvature packed into a base64 string. It comes from BrainMesh_ICBM152 of [BrainNet Viewer](https://www.nitrc.org/projects/bnv/), the ICBM152 surface provided by Prof. Alan C. Evans, Montreal Neurological Institute.
+- `cortex-data.js`: the prepared surface `brain.js` draws, a 1 284-vertex mesh with its curvature, normals, zone weights and source indices packed into a base64 string. It comes from BrainMesh_ICBM152 of [BrainNet Viewer](https://www.nitrc.org/projects/bnv/), the ICBM152 surface provided by Prof. Alan C. Evans, Montreal Neurological Institute.
 - `topo.js`: the microstate topography (blue to red voltage map).
 - `metabolism.js`: the central carbon metabolism of *Mycobacterium tuberculosis* as a live flux network with perturbations taken from the master's thesis.
 - `lab.js`: shared helpers (seeded random numbers, tokens, montage coordinates, canvas sizing, interpolation, `Lab.format` for `{name}` placeholders, `Lab.strings` for the labels of a module).
@@ -66,7 +66,7 @@ Handy when checking the page or taking screenshots:
 | `?topo=A` | Show one microstate class in the topography figure |
 | `?block=icl` (or pcl, sdh, cs, icd) | Apply one perturbation to the metabolic network |
 
-The figures also expose `window.__stage`, `window.__bench`, `window.__brain`, `window.__topo`, `window.__metabolism` and `window.__neurons` for scripted checks; `window.__neurons.frameMs()` returns the frame cost of the background since the last call (`{frames, avg, max}` in ms) for a quick performance check; `window.__brain.frameMs()` reports the same for the overlay of the cortical figure and `window.__brain.cortexMs()` forces one re-render of the cached point cloud and returns its cost.
+The figures also expose `window.__stage`, `window.__bench`, `window.__brain`, `window.__topo`, `window.__metabolism` and `window.__neurons` for scripted checks; `window.__neurons.frameMs()` returns the frame cost of the background since the last call (`{frames, avg, max}` in ms) for a quick performance check; `window.__brain.frameMs()` reports the same for the overlay of the cortical figure and `window.__brain.cortexMs()` forces one re-render of the cached cortical surface and returns its cost.
 
 ## Local preview
 

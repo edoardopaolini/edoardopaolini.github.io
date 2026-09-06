@@ -10,13 +10,21 @@ var M = window.__brainModel;
 assert(!!M, 'model exported on window.__brainModel');
 assert(typeof window.__brain === 'undefined', 'DOM part skipped without a document');
 
-/* ---- the packed ICBM152 surface decodes to the right count and range ---- */
-var C = M.CORTEX;
-assert(C.n === DATA.n && C.n === 9531, '9 531 surface points decoded (' + C.n + ')');
-assert(C.x.length === C.n && C.y.length === C.n && C.z.length === C.n && C.curv.length === C.n, 'one entry per point in every array');
+/* ---- the packed ICBM152 mesh decodes to the counts its header declares ---- */
+var C = M.CORTEX, i, j, k;
+assert(C.n === DATA.vertices && C.n === 1284, '1 284 vertices decoded (' + C.n + ')');
+assert(C.faceCount === DATA.faces && C.faceCount === 2560, '2 560 triangles decoded (' + C.faceCount + ')');
+assert(C.sources.length === DATA.sources && C.sources.length === 24, '24 source indices decoded (' + C.sources.length + ')');
+assert(C.x.length === C.n && C.y.length === C.n && C.z.length === C.n &&
+  C.nx.length === C.n && C.ny.length === C.n && C.nz.length === C.n &&
+  C.curv.length === C.n && C.zone.length === C.n, 'one entry per vertex in every array');
+assert(C.faces.length === 3 * C.faceCount, 'three vertex indices per triangle');
+
+/* ---- decoded ranges ---- */
 var lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
-var cMin = Infinity, cMax = -Infinity, radMin = Infinity, radMax = -Infinity, unit = true, i, k;
-var axes = [C.x, C.y, C.z];
+var cMin = Infinity, cMax = -Infinity, zMin = Infinity, zMax = -Infinity;
+var nMin = Infinity, nMax = -Infinity, radMax = -Infinity;
+var axes = [C.x, C.y, C.z], crowns = 0, sulci = 0;
 for (i = 0; i < C.n; i++) {
   for (k = 0; k < 3; k++) {
     if (axes[k][i] < lo[k]) lo[k] = axes[k][i];
@@ -24,33 +32,37 @@ for (i = 0; i < C.n; i++) {
   }
   if (C.curv[i] < cMin) cMin = C.curv[i];
   if (C.curv[i] > cMax) cMax = C.curv[i];
+  if (C.curv[i] > 0) crowns++; else sulci++;
+  if (C.zone[i] < zMin) zMin = C.zone[i];
+  if (C.zone[i] > zMax) zMax = C.zone[i];
+  var nl = Math.sqrt(C.nx[i] * C.nx[i] + C.ny[i] * C.ny[i] + C.nz[i] * C.nz[i]);
+  if (nl < nMin) nMin = nl;
+  if (nl > nMax) nMax = nl;
   var r = Math.sqrt(C.x[i] * C.x[i] + C.y[i] * C.y[i] + C.z[i] * C.z[i]);
-  if (r < radMin) radMin = r;
   if (r > radMax) radMax = r;
-  if (!near(r * C.inv[i], 1, 1e-4)) unit = false;
 }
 var span = Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]);
-assert(near(span, 2, 0.03), 'the template is normalised: the largest extent is 2 model units (' + span.toFixed(3) + ')');
+assert(near(span, 2, 0.06), 'the template is normalised: the largest extent is 2 model units (' + span.toFixed(3) + ')');
 assert(Math.max(Math.abs(lo[0]), Math.abs(hi[0]), Math.abs(lo[1]), Math.abs(hi[1]), Math.abs(lo[2]), Math.abs(hi[2])) <= 1.0001,
   'no coordinate leaves the unit box');
-assert(near(cMin, -1, 1e-6) && near(cMax, 1, 1e-6), 'curvature covers the full -1 to +1 range');
-var deep = 0;
-for (i = 0; i < C.n; i++) {
-  var rr = Math.sqrt(C.x[i] * C.x[i] + C.y[i] * C.y[i] + C.z[i] * C.z[i]);
-  if (rr < 0.2) deep++;
-}
-assert(radMin > 0 && radMax < 1.3, 'no point sits exactly at the origin, none further than the diagonal of the unit box (' + radMax.toFixed(3) + ')');
-assert(deep < 0.02 * C.n, 'the cloud is a shell, not a solid: under 2 percent of it lies near the centre of the template (' + deep + ' points, the medial wall and the brain stem cut)');
-assert(unit, 'the stored inverse radius normalises every point to a unit radial normal');
+assert(radMax < 1.3, 'no vertex sits further than the diagonal of the unit box (' + radMax.toFixed(3) + ')');
 assert(hi[0] > 0.7 && lo[0] < -0.7 && hi[1] > 0.9 && lo[1] < -0.9, 'both hemispheres and both poles are present');
+assert(near(nMin, 1, 0.01) && near(nMax, 1, 0.01),
+  'every stored normal is a unit vector within the byte quantisation (' + nMin.toFixed(4) + ' to ' + nMax.toFixed(4) + ')');
+assert(cMin >= -1 && cMax <= 1 && cMin < -0.4 && cMax > 0.4,
+  'curvature stays inside -1 to +1 and uses the band (' + cMin.toFixed(3) + ' to ' + cMax.toFixed(3) + ')');
+assert(crowns > 0.3 * C.n && sulci > 0.3 * C.n, 'the surface carries both crowns and sulci in quantity');
+assert(zMin === 0 && near(zMax, 1, 1e-6), 'the zone weight covers 0 to 1');
 
 /* ---- decoding is deterministic ---- */
 var again = M.decodeCortex(DATA);
-var same = again.n === C.n;
+var same = again.n === C.n && again.faceCount === C.faceCount;
 for (i = 0; i < C.n && same; i++) {
-  if (again.x[i] !== C.x[i] || again.y[i] !== C.y[i] || again.z[i] !== C.z[i] || again.curv[i] !== C.curv[i]) same = false;
+  if (again.x[i] !== C.x[i] || again.y[i] !== C.y[i] || again.z[i] !== C.z[i] ||
+    again.nx[i] !== C.nx[i] || again.curv[i] !== C.curv[i] || again.zone[i] !== C.zone[i]) same = false;
 }
-assert(same, 'decoding the same packed string twice gives the same cloud');
+for (i = 0; i < C.faces.length && same; i++) if (again.faces[i] !== C.faces[i]) same = false;
+assert(same, 'decoding the same packed string twice gives the same mesh');
 
 /* ---- the MNI transform round-trips ---- */
 var u = [0, 0, 0], m = [0, 0, 0], trip = true;
@@ -67,46 +79,43 @@ M.mniToModel(-52, -48, 26, u);
 M.mniToModel(-52 + DATA.scale, -48, 26, m);
 assert(near(m[0] - u[0], 1, 1e-9), 'one model unit is exactly `scale` millimetres');
 
-/* ---- the candidate zone ---- */
+/* ---- the candidate zone, packed with the mesh ---- */
 var Z = M.ZONE;
-assert(Z.count > 500 && Z.count < 620, 'the zone covers about 555 points of the cortex (' + Z.count + ')');
-var zoneLeft = true, zoneInside = true, zoneOutside = true, maxW = 0;
-var seedMni = [0, 0, 0];
-M.modelToMni(Z.seed[0], Z.seed[1], Z.seed[2], seedMni);
-assert(near(seedMni[0], M.ZONE_MNI[0], 1e-3) && near(seedMni[1], M.ZONE_MNI[1], 1e-3) && near(seedMni[2], M.ZONE_MNI[2], 1e-3),
-  'the seed sits at MNI (-52, -48, 26)');
-assert(near(Z.radius * DATA.scale, M.ZONE_MM, 1e-6), 'the zone radius is 32 mm in model units');
+var above0 = 0, aboveOn = 0, zoneLeft = true;
 for (i = 0; i < C.n; i++) {
-  var w = Z.weight[i];
-  if (w > maxW) maxW = w;
-  if (w <= 0) continue;
+  if (C.zone[i] <= 0) continue;
+  above0++;
+  if (C.zone[i] > M.ZONE_ON) aboveOn++;
   M.modelToMni(C.x[i], C.y[i], C.z[i], m);
   if (m[0] >= -4) zoneLeft = false;
-  var dx = C.x[i] - Z.seed[0], dy = C.y[i] - Z.seed[1], dz = C.z[i] - Z.seed[2];
-  var d = Math.sqrt(dx * dx + dy * dy + dz * dz);
-  if (d > Z.radius + 1e-6) zoneOutside = false;
-  if (d <= 0.55 * Z.radius && !near(w, 1, 1e-6)) zoneInside = false;
 }
-assert(zoneLeft, 'every zone point is on the left of the midline (MNI x below -4)');
-assert(zoneOutside, 'no zone point lies further than 32 mm from the seed');
-assert(zoneInside && near(maxW, 1, 1e-6), 'the inner 55 percent of the zone has full weight, the rim fades');
+assert(above0 === 77 && Z.count === 77, '77 vertices carry the candidate zone (' + above0 + ')');
+assert(aboveOn === 57, '57 of them are above the 0.35 weight that counts as inside (' + aboveOn + ')');
+assert(zoneLeft, 'every zone vertex is on the left of the midline (MNI x below -4)');
+assert(near(Z.radius * DATA.scale, M.ZONE_MM, 1e-6), 'the zone radius is 32 mm in model units');
 var cen = [0, 0, 0];
 M.modelToMni(Z.centre[0], Z.centre[1], Z.centre[2], cen);
 assert(cen[0] < -40 && cen[1] < -30 && cen[1] > -70 && cen[2] > 5 && cen[2] < 50,
   'the zone centroid sits in the left temporo-parietal cortex, MNI (' + cen.map(function (v) { return v.toFixed(0); }).join(', ') + ')');
+M.mniToModel(M.ZONE_MNI[0], M.ZONE_MNI[1], M.ZONE_MNI[2], u);
+var seedGap = Math.sqrt(Math.pow(Z.centre[0] - u[0], 2) + Math.pow(Z.centre[1] - u[1], 2) +
+  Math.pow(Z.centre[2] - u[2], 2)) * DATA.scale;
+assert(seedGap < 10, 'the centroid stays within 10 mm of the MNI seed the patch was grown from (' + seedGap.toFixed(1) + ' mm)');
 
 /* ---- sources ---- */
 var Sr = M.SOURCES, S = Sr.count;
-assert(S === M.SOURCE_COUNT && S === 24, 'exactly 24 cortical sources (' + S + ')');
-var inZone = 0, onSurface = true;
+assert(S === 24, 'exactly 24 cortical sources (' + S + ')');
+var inZone = 0, onSurface = true, indexOk = true;
 for (i = 0; i < S; i++) {
-  if (Sr.zone[i] > 0) inZone++;
+  if (Sr.inZone[i]) inZone++;
   var p = Sr.point[i];
-  if (Sr.x[i] !== C.x[p] || Sr.y[i] !== C.y[p] || Sr.z[i] !== C.z[p]) onSurface = false;
+  if (!(p >= 0 && p < C.n)) indexOk = false;
+  else if (Sr.x[i] !== C.x[p] || Sr.y[i] !== C.y[p] || Sr.z[i] !== C.z[p] || Sr.zone[i] !== C.zone[p]) onSurface = false;
 }
-assert(inZone === M.ZONE_SOURCES && inZone === 6, 'six of them sit inside the candidate zone (' + inZone + ')');
-assert(onSurface, 'every source is one of the cortical surface points');
-var minGap = Infinity, j;
+assert(indexOk, 'every source index addresses a vertex of the mesh');
+assert(inZone === 6, 'six of them sit inside the candidate zone (' + inZone + ')');
+assert(onSurface, 'a source carries the position and the zone weight of its vertex');
+var minGap = Infinity;
 for (i = 0; i < S; i++) {
   for (j = i + 1; j < S; j++) {
     var ax = Sr.x[i] - Sr.x[j], ay = Sr.y[i] - Sr.y[j], az = Sr.z[i] - Sr.z[j];
@@ -114,20 +123,33 @@ for (i = 0; i < S; i++) {
     if (g < minGap) minGap = g;
   }
 }
-assert(minGap >= M.SOURCE_MIN_GAP, 'no two sources are closer than 0.22 model units (' + minGap.toFixed(3) + ')');
-var nearestSeed = 0, bestD = Infinity;
-for (i = 0; i < S; i++) {
-  var sx = Sr.x[i] - Z.seed[0], sy = Sr.y[i] - Z.seed[1], sz = Sr.z[i] - Z.seed[2];
-  var dd = sx * sx + sy * sy + sz * sz;
-  if (dd < bestD) { bestD = dd; nearestSeed = i; }
-}
-assert(nearestSeed === 0, 'the first source is the point closest to the seed of the zone');
-var mostAnterior = 0;
-for (i = 1; i < S; i++) if (Sr.y[i] > Sr.y[mostAnterior]) mostAnterior = i;
-assert(mostAnterior === M.ZONE_SOURCES, 'the first source outside the zone is the most anterior point of the cortex');
+assert(minGap >= 0.27, 'no two sources are closer than 0.27 model units (' + minGap.toFixed(3) + ')');
 var right = 0;
 for (i = 0; i < S; i++) if (Sr.x[i] > 0) right++;
 assert(right > 5, 'the network is not confined to one hemisphere (' + right + ' sources on the right)');
+
+/* ---- the mesh is a pair of closed surfaces ---- */
+var faceOk = true, degenerate = 0;
+for (i = 0; i < C.faceCount; i++) {
+  var a = C.faces[i * 3], b = C.faces[i * 3 + 1], c = C.faces[i * 3 + 2];
+  if (!(a >= 0 && a < C.n && b >= 0 && b < C.n && c >= 0 && c < C.n)) faceOk = false;
+  if (a === b || b === c || a === c) degenerate++;
+}
+assert(faceOk, 'every face index addresses a vertex of the mesh');
+assert(degenerate === 0, 'no triangle repeats a vertex');
+var edgeUse = {}, edgeCount = 0, shared = 0, dangling = 0;
+for (i = 0; i < C.faceCount; i++) {
+  var t3 = i * 3, v = [C.faces[t3], C.faces[t3 + 1], C.faces[t3 + 2]];
+  for (k = 0; k < 3; k++) {
+    var p1 = v[k], p2 = v[(k + 1) % 3];
+    var key = (p1 < p2 ? p1 : p2) * C.n + (p1 < p2 ? p2 : p1);
+    if (edgeUse[key] === undefined) { edgeUse[key] = 1; edgeCount++; } else edgeUse[key]++;
+  }
+}
+for (var key in edgeUse) { if (edgeUse[key] === 2) shared++; else dangling++; }
+assert(dangling === 0 && shared === edgeCount, 'the mesh is closed: every one of the ' + edgeCount + ' edges is shared by exactly two faces');
+assert(C.n - edgeCount + C.faceCount === 4,
+  'Euler holds for two closed surfaces: V - E + F = ' + (C.n - edgeCount + C.faceCount));
 
 /* ---- weights and edges ---- */
 var G = M.GRAPH;
@@ -175,19 +197,43 @@ M.project([0], [0], [1], 1, M.YAW_DEFAULT, 0, one);
 assert(near(one[1], -1, 1e-6), 'the superior axis projects upwards (negative screen ordinate)');
 M.project([0], [1], [0], 1, M.YAW_DEFAULT, M.PITCH_DEFAULT, one);
 assert(one[0] < -0.99, 'at the default yaw the frontal pole is on the left of the screen');
+var norm = new Float32Array(3);
+M.project([0.6], [0], [0.8], 1, 143, 27, norm);
+assert(near(Math.sqrt(norm[0] * norm[0] + norm[1] * norm[1] + norm[2] * norm[2]), 1, 1e-6),
+  'the projection is a rotation, so it carries the normals without changing their length');
 var pair = new Float32Array(6), half = new Float32Array(6);
 M.project([-1, 1], [0, 0], [0, 0], 2, M.YAW_DEFAULT, M.PITCH_DEFAULT, pair);
 assert(pair[2] < 0 && pair[5] > 0 && near(pair[2], -pair[5], 1e-6), 'the left hemisphere is nearer the camera than the right one');
 M.project([-1, 1], [0, 0], [0, 0], 2, M.YAW_DEFAULT + 180, M.PITCH_DEFAULT, half);
 assert(near(half[2], pair[5], 1e-5) && near(half[5], pair[2], 1e-5), 'half a turn later the two swap depth');
-var cloudA = new Float32Array(C.n * 3);
-M.project(C.x, C.y, C.z, C.n, M.YAW_DEFAULT, M.PITCH_DEFAULT, cloudA);
+var mesh = new Float32Array(C.n * 3);
+M.project(C.x, C.y, C.z, C.n, M.YAW_DEFAULT, M.PITCH_DEFAULT, mesh);
 var lateral = 0, medial = 0;
 for (i = 0; i < C.n; i++) {
-  if (C.x[i] < -0.55) lateral += cloudA[i * 3 + 2];
-  if (C.x[i] > 0.55) medial += cloudA[i * 3 + 2];
+  if (C.x[i] < -0.55) lateral += mesh[i * 3 + 2];
+  if (C.x[i] > 0.55) medial += mesh[i * 3 + 2];
 }
 assert(lateral < 0 && medial > 0, 'the mean depth of the two lateral surfaces has the sign the camera implies');
+/* Culling reads the sign of the screen area of a triangle, which is only a backface test if every face is
+   wound outwards; the decoder turns the mirrored hemisphere round for that. */
+var outward = 0;
+for (i = 0; i < C.faceCount; i++) {
+  var f3 = i * 3, fa = C.faces[f3], fb = C.faces[f3 + 1], fc = C.faces[f3 + 2];
+  var ux = C.x[fb] - C.x[fa], uy = C.y[fb] - C.y[fa], uz = C.z[fb] - C.z[fa];
+  var wx = C.x[fc] - C.x[fa], wy = C.y[fc] - C.y[fa], wz = C.z[fc] - C.z[fa];
+  if ((uy * wz - uz * wy) * (C.nx[fa] + C.nx[fb] + C.nx[fc]) +
+    (uz * wx - ux * wz) * (C.ny[fa] + C.ny[fb] + C.ny[fc]) +
+    (ux * wy - uy * wx) * (C.nz[fa] + C.nz[fb] + C.nz[fc]) > 0) outward++;
+}
+assert(outward === C.faceCount, 'every triangle is wound outwards (' + outward + ' of ' + C.faceCount + ')');
+var facing = 0;
+for (i = 0; i < C.faceCount; i++) {
+  var g3 = i * 3, ga = C.faces[g3] * 3, gb = C.faces[g3 + 1] * 3, gc = C.faces[g3 + 2] * 3;
+  if ((mesh[gb] - mesh[ga]) * (mesh[gc + 1] - mesh[ga + 1]) -
+    (mesh[gb + 1] - mesh[ga + 1]) * (mesh[gc] - mesh[ga]) < 0) facing++;
+}
+assert(facing > 0.4 * C.faceCount && facing < 0.6 * C.faceCount,
+  'about half the triangles face the camera at the default view (' + facing + ' of ' + C.faceCount + ')');
 var rise = new Float32Array(3), flat = new Float32Array(3);
 M.project([0], [0], [1], 1, M.YAW_DEFAULT, 0, flat);
 M.project([0], [0], [1], 1, M.YAW_DEFAULT, 30, rise);
@@ -205,11 +251,11 @@ assert(monotone, 'the tone never falls as the curvature rises from a sulcus to a
 assert(M.shade(0.7, -0.5, 0.8) < M.shade(0.7, 0.5, 0.8), 'a gyral crown is brighter than a sulcus');
 assert(near(M.shade(0.7, -0.2, 0.8), M.shade(0.7, -0.9, 0.8), 1e-9), 'the curvature term saturates below -0.10');
 assert(near(M.shade(0.7, 0.2, 0.8), M.shade(0.7, 0.9, 0.8), 1e-9), 'and above +0.10');
-assert(M.shade(0, 1, 1) > 0 && M.shade(1, 1, 1) <= 1, 'an unlit point keeps some ambient tone, a fully lit one stays in range');
+assert(near(M.shade(1, 1, 1), 1, 1e-9), 'a lit crown at the front of the mesh reaches the top of the range');
+assert(near(M.shade(0, -1, 0), 0.16 * 0.62 * 0.55, 1e-9), 'an unlit sulcus at the back keeps the ambient floor');
 assert(M.shade(1, 1, 0) < M.shade(1, 1, 1), 'the far side of the cortex is dimmer than the near side');
 assert(M.shade(0.2, 0, 0.5) < M.shade(0.9, 0, 0.5), 'more light gives more tone');
-var lit = 0, unlitPoint = 0;
-for (i = 0; i < C.n; i++) if (C.curv[i] > 0) lit++; else unlitPoint++;
-assert(lit > 0.3 * C.n && unlitPoint > 0.3 * C.n, 'the surface carries both crowns and sulci in quantity');
+/* Clamping matters: the lambert term of a face can go negative near the silhouette. */
+assert(M.shade(-0.5, 0, 0.5) === M.shade(0, 0, 0.5), 'a face turned away from the light gets no negative tone');
 
 summary('brain');

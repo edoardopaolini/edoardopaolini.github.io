@@ -1,7 +1,7 @@
 /* Brain: the "Brain connectivity" cell (#mini-brain). The cortical surface of the ICBM152 template
    (BrainMesh_ICBM152 of BrainNet Viewer, surface by Prof. Alan C. Evans, MNI; packed in
-   assets/js/cortex-data.js) is drawn as a curvature-shaded point cloud that turns slowly. A candidate
-   epileptogenic zone sits on the left temporo-parietal cortex, drawn on the cortex itself, and 24 cortical
+   assets/js/cortex-data.js) is drawn as a flat-shaded mesh of 2560 triangles that turns slowly. A candidate
+   epileptogenic zone sits on the left temporo-parietal cortex, painted on the surface itself, and 24 cortical
    sources carry a seeded toy network of arcs lifted above the surface, with the zone as its hub.
    Part 1 is a pure model (decoding, the MNI transform, the zone, the sources, the graph, the projection and
    the shading) exported on window.__brainModel for tests/brain.test.js, which runs it in a bare engine after
@@ -18,15 +18,13 @@
      Part 1: model (no DOM access)
      ====================================================================== */
 
-  /* Candidate zone: a unilateral focus written in MNI millimetres so it stays anatomical (left supramarginal
-     region). The weight is flat over the inner 55 percent of the radius and falls to zero over the outer 45,
-     so the patch has a body and a soft rim instead of a hard disc edge. */
+  /* The candidate zone was computed offline from the anatomical vertex positions (a unilateral focus in the
+     left supramarginal region) and arrives as a per-vertex weight; these two numbers only record where it
+     came from, so the figure and its tests can be read without opening the data file. */
   var ZONE_MNI = [-52, -48, 26];
   var ZONE_MM = 32;
-  var ZONE_LEFT_MM = -4;
-  var ZONE_CORE = 0.55, ZONE_FADE = 0.45;
+  var ZONE_ON = 0.35;                         /* above this weight a vertex counts as inside the zone */
 
-  var SOURCE_COUNT = 24, ZONE_SOURCES = 6, SOURCE_MIN_GAP = 0.22;
   var EDGE_COUNT = 52, EDGE_SIGMA = 0.55, EDGE_FLOOR = 0.55, EDGE_JITTER = 0.45, EDGE_ZONE_GAIN = 2.5;
   var GRAPH_SEED = 20260906;
 
@@ -36,33 +34,59 @@
     var x = -0.42, y = -0.66, z = 0.62, l = Math.sqrt(x * x + y * y + z * z);
     return [x / l, y / l, z / l];
   })();
-  var AMBIENT = 0.13;                         /* tone of a point the light does not reach */
-  var SUL_MIN = 0.45, SUL_SPAN = 0.55;        /* a sulcus keeps 45 percent of the tone of a gyral crown */
+  var AMBIENT = 0.16;                         /* tone of a face the light does not reach */
+  var SUL_MIN = 0.62, SUL_SPAN = 0.38;        /* a sulcus keeps 62 percent of the tone of a gyral crown */
   var SUL_LO = -0.10, SUL_HI = 0.10;          /* curvature band over which the two are interpolated */
-  var DEPTH_FLOOR = 0.5;                      /* tone of the farthest point relative to the nearest */
-  var CULL_FACING = -0.02;                    /* keep a sliver past the silhouette so the rim stays solid */
+  var DEPTH_FLOOR = 0.55;                     /* tone of the farthest face relative to the nearest */
 
   /* ---- decoding ---------------------------------------------------------
-     One big-endian uint32 per point: x:9 y:9 z:9 curvature:5. Decoded once into preallocated arrays.
-     `inv` is 1 / |position|: the view normal of a point is its rotated position times `inv`, because the
-     radial direction is what shades the cloud. True mesh normals were tried and rejected: at 4.4 mm and this
-     figure size they read as noise, while the radial normal plus the curvature term gives clean folds. */
+     One big-endian blob (see the header of cortex-data.js): three uint16 counts, then the vertices, the
+     per-vertex normals, curvature and zone weight, the triangles and the source indices. Decoded once into
+     preallocated arrays. The normals are sampled from the full-resolution surface and are what carries the
+     shape: recomputing them from this coarse mesh shades visibly flatter. */
+  var POS_UNIT = 30000, NRM_UNIT = 127;
+  function u16at(bin, o) { return (bin.charCodeAt(o) << 8) | bin.charCodeAt(o + 1); }
+  function i16at(bin, o) { var v = u16at(bin, o); return v > 32767 ? v - 65536 : v; }
+  function i8at(bin, o) { var v = bin.charCodeAt(o); return v > 127 ? v - 256 : v; }
+
   function decodeCortex(d) {
-    var n = d.n, bin = atob(d.points), lo = d.lo, span = d.span;
+    var bin = atob(d.mesh);
+    var n = u16at(bin, 0), f = u16at(bin, 2), s = u16at(bin, 4);
+    var pos = 6, nrm = pos + n * 6, cur = nrm + n * 3, zon = cur + n, tri = zon + n, src = tri + f * 6;
     var x = new Float32Array(n), y = new Float32Array(n), z = new Float32Array(n);
-    var curv = new Float32Array(n), inv = new Float32Array(n);
-    for (var i = 0; i < n; i++) {
-      var o = i * 4;
-      var u = ((bin.charCodeAt(o) << 24) | (bin.charCodeAt(o + 1) << 16) |
-        (bin.charCodeAt(o + 2) << 8) | bin.charCodeAt(o + 3)) >>> 0;
-      var px = (u >>> 23) / 511 * span + lo[0];
-      var py = ((u >>> 14) & 511) / 511 * span + lo[1];
-      var pz = ((u >>> 5) & 511) / 511 * span + lo[2];
-      x[i] = px; y[i] = py; z[i] = pz;
-      curv[i] = (u & 31) / 31 * 2 - 1;
-      inv[i] = 1 / (Math.sqrt(px * px + py * py + pz * pz) || 1);
+    var nx = new Float32Array(n), ny = new Float32Array(n), nz = new Float32Array(n);
+    var curv = new Float32Array(n), zone = new Float32Array(n);
+    var faces = new Uint16Array(f * 3), sources = new Uint16Array(s), i, o;
+    for (i = 0; i < n; i++) {
+      o = pos + i * 6;
+      x[i] = i16at(bin, o) / POS_UNIT;
+      y[i] = i16at(bin, o + 2) / POS_UNIT;
+      z[i] = i16at(bin, o + 4) / POS_UNIT;
+      o = nrm + i * 3;
+      nx[i] = i8at(bin, o) / NRM_UNIT;
+      ny[i] = i8at(bin, o + 1) / NRM_UNIT;
+      nz[i] = i8at(bin, o + 2) / NRM_UNIT;
+      curv[i] = bin.charCodeAt(cur + i) / 255 * 2 - 1;
+      zone[i] = bin.charCodeAt(zon + i) / 255;
     }
-    return { n: n, x: x, y: y, z: z, curv: curv, inv: inv };
+    for (i = 0; i < f * 3; i++) faces[i] = u16at(bin, tri + i * 2);
+    for (i = 0; i < s; i++) sources[i] = u16at(bin, src + i * 2);
+    /* One hemisphere of the template is the mirror of the other, so half the triangles arrive wound the other
+       way round. Orienting every one of them outwards (against its own vertex normals) once, here, is what
+       lets the renderer cull back faces from the sign of the screen area of a triangle. */
+    for (i = 0; i < f; i++) {
+      o = i * 3;
+      var a = faces[o], b = faces[o + 1], c = faces[o + 2];
+      var ux = x[b] - x[a], uy = y[b] - y[a], uz = z[b] - z[a];
+      var wx = x[c] - x[a], wy = y[c] - y[a], wz = z[c] - z[a];
+      if ((uy * wz - uz * wy) * (nx[a] + nx[b] + nx[c]) +
+        (uz * wx - ux * wz) * (ny[a] + ny[b] + ny[c]) +
+        (ux * wy - uy * wx) * (nz[a] + nz[b] + nz[c]) < 0) { faces[o + 1] = c; faces[o + 2] = b; }
+    }
+    return {
+      n: n, faceCount: f, x: x, y: y, z: z, nx: nx, ny: ny, nz: nz,
+      curv: curv, zone: zone, faces: faces, sources: sources
+    };
   }
   var CORTEX = decodeCortex(DATA);
 
@@ -80,80 +104,36 @@
     return out;
   }
 
-  /* ---- candidate zone --------------------------------------------------- */
+  /* ---- candidate zone ---------------------------------------------------
+     The weights come from the data; the figure needs the weighted centroid (where the glow sits) and the
+     radius in model units (how wide it spreads). */
   var ZONE = (function () {
-    var seed = mniToModel(ZONE_MNI[0], ZONE_MNI[1], ZONE_MNI[2], [0, 0, 0]);
-    var radius = ZONE_MM / DATA.scale;
-    var leftX = (ZONE_LEFT_MM - DATA.centre[0]) / DATA.scale;
-    var n = CORTEX.n, weight = new Float32Array(n), index = new Int32Array(n);
-    var count = 0, sx = 0, sy = 0, sz = 0, sw = 0;
-    for (var i = 0; i < n; i++) {
-      if (CORTEX.x[i] >= leftX) continue;
-      var dx = CORTEX.x[i] - seed[0], dy = CORTEX.y[i] - seed[1], dz = CORTEX.z[i] - seed[2];
-      var d = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      var w = Lab.clamp(1 - (d - ZONE_CORE * radius) / (ZONE_FADE * radius), 0, 1);
+    var n = CORTEX.n, count = 0, sx = 0, sy = 0, sz = 0, sw = 0, i;
+    for (i = 0; i < n; i++) {
+      var w = CORTEX.zone[i];
       if (w <= 0) continue;
-      weight[i] = w; index[count++] = i;
+      count++;
       sx += CORTEX.x[i] * w; sy += CORTEX.y[i] * w; sz += CORTEX.z[i] * w; sw += w;
     }
-    return {
-      seed: seed, radius: radius, weight: weight, count: count,
-      index: index.subarray(0, count),
-      centre: [sx / sw, sy / sw, sz / sw]
-    };
+    return { count: count, radius: ZONE_MM / DATA.scale, centre: [sx / sw, sy / sw, sz / sw] };
   })();
 
   /* ---- sources ----------------------------------------------------------
-     Farthest-point sampling, no RNG: six inside the zone starting from the point nearest the seed, then the
-     rest over the whole cortex starting from the most anterior point. A candidate must stay SOURCE_MIN_GAP
-     from every source already taken, which is what keeps the buttons from piling up on each other. */
+     The 24 network nodes are mesh vertices chosen offline (six of them inside the zone). `inv` is 1 / |p|:
+     the radial direction says which side of the cortex a source is on, which is all the visibility test
+     needs, and it does not flinch on a vertex whose true normal points into a fold. */
   var SOURCES = (function () {
-    var n = CORTEX.n, X = CORTEX.x, Y = CORTEX.y, Z = CORTEX.z;
-    var mind = new Float64Array(n), idx = new Int32Array(SOURCE_COUNT), taken = 0, i;
-    for (i = 0; i < n; i++) mind[i] = Infinity;
-    function take(k) {
-      idx[taken++] = k;
-      for (var j = 0; j < n; j++) {
-        var dx = X[j] - X[k], dy = Y[j] - Y[k], dz = Z[j] - Z[k];
-        var d = dx * dx + dy * dy + dz * dz;
-        if (d < mind[j]) mind[j] = d;
-      }
-    }
-    var best = -1, bestD = Infinity;
-    for (i = 0; i < ZONE.count; i++) {
-      var k = ZONE.index[i];
-      var ax = X[k] - ZONE.seed[0], ay = Y[k] - ZONE.seed[1], az = Z[k] - ZONE.seed[2];
-      var d0 = ax * ax + ay * ay + az * az;
-      if (d0 < bestD) { bestD = d0; best = k; }
-    }
-    take(best);
-    var gap2 = SOURCE_MIN_GAP * SOURCE_MIN_GAP;
-    while (taken < ZONE_SOURCES) {
-      var bi = -1, bv = -1;
-      for (i = 0; i < ZONE.count; i++) {
-        var z = ZONE.index[i];
-        if (mind[z] > bv) { bv = mind[z]; bi = z; }
-      }
-      if (bi < 0 || bv < gap2) break;
-      take(bi);
-    }
-    var ant = 0;
-    for (i = 1; i < n; i++) if (Y[i] > Y[ant]) ant = i;
-    take(ant);
-    while (taken < SOURCE_COUNT) {
-      var ci = -1, cv = -1;
-      for (i = 0; i < n; i++) if (mind[i] > cv) { cv = mind[i]; ci = i; }
-      if (ci < 0 || cv < gap2) break;
-      take(ci);
-    }
-    var count = taken;
-    var x = new Float32Array(count), y = new Float32Array(count), zz = new Float32Array(count);
-    var inv = new Float32Array(count), zone = new Float32Array(count);
+    var idx = CORTEX.sources, count = idx.length, i;
+    var x = new Float32Array(count), y = new Float32Array(count), z = new Float32Array(count);
+    var inv = new Float32Array(count), zone = new Float32Array(count), inside = new Uint8Array(count);
     for (i = 0; i < count; i++) {
       var s = idx[i];
-      x[i] = X[s]; y[i] = Y[s]; zz[i] = Z[s]; inv[i] = CORTEX.inv[s]; zone[i] = ZONE.weight[s];
+      x[i] = CORTEX.x[s]; y[i] = CORTEX.y[s]; z[i] = CORTEX.z[s];
+      inv[i] = 1 / (Math.sqrt(x[i] * x[i] + y[i] * y[i] + z[i] * z[i]) || 1);
+      zone[i] = CORTEX.zone[s];
+      inside[i] = zone[i] > ZONE_ON ? 1 : 0;
     }
-    return { count: count, point: idx.subarray(0, count), x: x, y: y, z: zz, inv: inv, zone: zone };
+    return { count: count, point: idx, x: x, y: y, z: z, inv: inv, zone: zone, inZone: inside };
   })();
   var S = SOURCES.count;
 
@@ -168,7 +148,7 @@
         var dx = SOURCES.x[i] - SOURCES.x[j], dy = SOURCES.y[i] - SOURCES.y[j], dz = SOURCES.z[i] - SOURCES.z[j];
         var d = Math.sqrt(dx * dx + dy * dy + dz * dz) / EDGE_SIGMA;
         var w = Math.exp(-d * d) * (EDGE_FLOOR + EDGE_JITTER * rnd());
-        if (SOURCES.zone[i] > 0 && SOURCES.zone[j] > 0) w *= EDGE_ZONE_GAIN;
+        if (SOURCES.inZone[i] && SOURCES.inZone[j]) w *= EDGE_ZONE_GAIN;
         W[i * S + j] = w; W[j * S + i] = w;
         pairs.push({ a: i, b: j, w: w });
       }
@@ -179,7 +159,7 @@
     var degree = new Int32Array(S);
     for (i = 0; i < edges.length; i++) {
       edges[i].n = edges[i].w / maxW;
-      edges[i].zone = SOURCES.zone[edges[i].a] > 0 && SOURCES.zone[edges[i].b] > 0 ? 1 : 0;
+      edges[i].zone = SOURCES.inZone[edges[i].a] && SOURCES.inZone[edges[i].b] ? 1 : 0;
       degree[edges[i].a]++; degree[edges[i].b]++;
     }
     return {
@@ -191,7 +171,8 @@
 
   /* ---- projection -------------------------------------------------------
      R = Rpitch @ Ryaw: yaw about the vertical axis, then the camera elevation. Writes screen x, screen y and
-     depth per point, in model units; SMALLER depth is nearer the camera. Deterministic, no allocation. */
+     depth per point, in model units; SMALLER depth is nearer the camera. It is a pure rotation, so the same
+     call transforms the normals. Deterministic, no allocation. */
   function project(x, y, z, count, yawDeg, pitchDeg, out) {
     var yaw = yawDeg * Math.PI / 180, pitch = pitchDeg * Math.PI / 180;
     var cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
@@ -206,7 +187,7 @@
     return out;
   }
 
-  /* Tone of one point: ambient plus lambert on the radial normal, dimmed inside the sulci and with distance. */
+  /* Tone of one face: ambient plus lambert, dimmed inside the sulci and with distance. */
   function shade(lam, curv, zn) {
     var sul = SUL_MIN + SUL_SPAN * Lab.clamp((curv - SUL_LO) / (SUL_HI - SUL_LO), 0, 1);
     return (AMBIENT + (1 - AMBIENT) * Lab.clamp(lam, 0, 1)) * sul *
@@ -219,16 +200,13 @@
     ZONE: ZONE,
     ZONE_MNI: ZONE_MNI,
     ZONE_MM: ZONE_MM,
+    ZONE_ON: ZONE_ON,
     SOURCES: SOURCES,
-    SOURCE_COUNT: SOURCE_COUNT,
-    ZONE_SOURCES: ZONE_SOURCES,
-    SOURCE_MIN_GAP: SOURCE_MIN_GAP,
     GRAPH: GRAPH,
     EDGE_COUNT: EDGE_COUNT,
     YAW_DEFAULT: YAW_DEFAULT,
     PITCH_DEFAULT: PITCH_DEFAULT,
     LIGHT: LIGHT,
-    CULL_FACING: CULL_FACING,
     decodeCortex: decodeCortex,
     mniToModel: mniToModel,
     modelToMni: modelToMni,
@@ -258,21 +236,18 @@
   var PITCH_MIN = -25, PITCH_MAX = 55;
   var FIT_X = 0.41, FIT_Y = 0.44;      /* fraction of each half side the cortex may occupy */
   var SCALE_MIN = 10;
-  var CACHE_YAW_STEP = 1.0;            /* the cached cortex is redrawn only past this yaw change */
+  var CACHE_YAW_STEP = 0.5;            /* the cached cortex is redrawn only past this yaw change */
 
-  var TONE_BUCKETS = 24, ZONE_LEVELS = 5;      /* one fill per (tone, zone weight) bucket */
+  var TONE_BUCKETS = 24, ZONE_LEVELS = 5;      /* one path per (tone, zone weight) bucket */
   var GROUPS = TONE_BUCKETS * ZONE_LEVELS, CULLED = GROUPS;
-  /* Dot radius follows the projection, not the canvas: it is quoted in model units and then held inside a
-     band, so the cloud keeps its grain at every figure size. In the bento the band's floor is what applies. */
-  var POINT_R_K = 0.0142;
-  var POINT_R_MIN = 1.8, POINT_R_MAX = 3.2;
+  var FACE_SEAM = 0.4;                         /* screen pixels each triangle grows by, to close the seams */
   var WIDTH_REF = 320;                         /* figure width the line and node sizes are quoted at */
-  var POINT_R_BACK = 0.7;                      /* the farthest point keeps this fraction of the radius */
-  var ZONE_LIFT = 0.55;                        /* the zone carries more tone than the cortex around it */
+  var ZONE_MIN = 0.02;                         /* face zone weight under which the face is plain cortex */
+  var ZONE_MIX = 0.9;                         /* how far a full-weight face travels towards the accent */
   /* How far the tone travels from the surface token towards the ink one. The floor keeps the unlit side of
      the cortex visible instead of dissolving into the page, the ceiling keeps the lit side off pure ink. */
   var INK_FLOOR = 0.16, INK_CEIL = 0.88;
-  var ZONE_U_FLOOR = 0.4;                      /* the accent never washes out where the zone is in shadow */
+  var ZONE_U_FLOOR = 0.5;                      /* the accent never washes out where the zone is in shadow */
 
   var GLOW_SPRITE = 128, GLOW_A = 0.4, GLOW_SPREAD = 1.55, GLOW_GAIN = 1.6;
 
@@ -289,12 +264,13 @@
 
   var t = Lab.tokens();
   var reduce = Lab.reduceMotion;
-  var P = CORTEX.n;
+  var P = CORTEX.n, F = CORTEX.faceCount;
+  var FACES = CORTEX.faces, CURV = CORTEX.curv, ZW = CORTEX.zone;
 
   /* Per-frame and per-cache buffers, allocated once. */
-  var vCloud = new Float32Array(P * 3);
-  var groupOf = new Uint8Array(P);
-  var order = new Int32Array(P);
+  var vPos = new Float32Array(P * 3), vNrm = new Float32Array(P * 3);
+  var vLam = new Float32Array(P), vsx = new Float32Array(P), vsy = new Float32Array(P);
+  var faceOf = new Uint8Array(F), order = new Int32Array(F);
   var counts = new Int32Array(GROUPS + 2), starts = new Int32Array(GROUPS + 2);
   var groupDepth = new Float64Array(GROUPS), groupOrder = new Int32Array(GROUPS);
   var groupFill = new Array(GROUPS);
@@ -312,7 +288,7 @@
   glow.width = GLOW_SPRITE; glow.height = GLOW_SPRITE;
   var cortexLayer = document.createElement('canvas');
 
-  var cw = 0, ch = 0, dpr = 1, ctx = null, lctx = null, cx = 0, cy = 0, scale = 1, pointR = POINT_R_MIN;
+  var cw = 0, ch = 0, dpr = 1, ctx = null, lctx = null, cx = 0, cy = 0, scale = 1;
   var yaw = YAW_DEFAULT, pitch = PITCH_DEFAULT;
   var cacheYaw = NaN, cachePitch = NaN, cacheDirty = true;
   var hi = -1, activeHi = -1, hoverIdx = -1, focusIdx = -1, pinned = -1;
@@ -326,19 +302,19 @@
   function css(c) {
     return 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')';
   }
-  /* The tone v says how far a point travels from the surface towards the ink, which reads as light dots on a
-     dark ground in the dark theme and as dark dots on a light ground in the light one from the same formula.
-     Zone points travel towards the accent instead, in proportion to their zone weight. */
+  /* The tone v says how far a face travels from the surface towards the ink, which reads as a light cortex on
+     a dark ground in the dark theme and as a dark one on a light ground in the light theme from the same
+     formula. A face inside the zone is mixed towards the accent in proportion to its zone weight. */
   function buildFills() {
     var surface = Lab.rgb(t.surface), ink = Lab.rgb(t.ink), accent = Lab.rgb(t.accent);
     for (var lvl = 0; lvl < ZONE_LEVELS; lvl++) {
       var z = lvl === 0 ? 0 : (lvl - 0.5) / (ZONE_LEVELS - 1);
       for (var b = 0; b < TONE_BUCKETS; b++) {
-        var v = Lab.clamp((b + 0.5) / TONE_BUCKETS * (1 + ZONE_LIFT * z), 0, 1);
+        var v = (b + 0.5) / TONE_BUCKETS;
         var u = INK_FLOOR + (INK_CEIL - INK_FLOOR) * v;
         var base = mix(surface, ink, u);
-        var ua = Math.max(u, ZONE_U_FLOOR * z);
-        groupFill[lvl * TONE_BUCKETS + b] = css(z > 0 ? mix(base, mix(surface, accent, ua), z) : base);
+        var tint = mix(surface, accent, Math.max(u, ZONE_U_FLOOR));
+        groupFill[lvl * TONE_BUCKETS + b] = css(z > 0 ? mix(base, tint, ZONE_MIX * z) : base);
       }
     }
     var g = glow.getContext('2d'), h = GLOW_SPRITE / 2;
@@ -437,7 +413,6 @@
   }
   function setHighlight(idx) {
     if (idx === hi) return;
-    var wasZone = hi >= 0 && SOURCES.zone[hi] > 0, isZone = idx >= 0 && SOURCES.zone[idx] > 0;
     hi = idx;
     var k;
     for (k = 0; k < S; k++) neighbour[k] = 0;
@@ -447,13 +422,12 @@
         if (e.a === hi) neighbour[e.b] = 1; else if (e.b === hi) neighbour[e.a] = 1;
       }
     }
-    if (wasZone !== isZone) cacheDirty = true;
     if (readout) readout.textContent = hi >= 0 ? describe(hi) : str('idle', '');
     requestDraw();
   }
   function describe(k) {
     var n = GRAPH.degree[k];
-    return Lab.format(str(SOURCES.zone[k] > 0 ? 'node_zone' : 'node'), {
+    return Lab.format(str(SOURCES.inZone[k] ? 'node_zone' : 'node'), {
       name: NAMES[k], n: n, links: str(n === 1 ? 'link_one' : 'link_many', '')
     });
   }
@@ -493,7 +467,7 @@
 
   /* ---- layout ----
      Half-extent of the projection over EVERY yaw, so the figure keeps one size while it turns instead of
-     breathing: the screen abscissa of a point sweeps its distance from the vertical axis, and its ordinate
+     breathing: the screen abscissa of a vertex sweeps its distance from the vertical axis, and its ordinate
      sweeps sin(pitch) times that distance plus cos(pitch) times its height. The two axes are fitted
      separately because the cell is about twice as wide as it is tall and a square fit wastes half of it. */
   var rho = (function () {
@@ -517,7 +491,6 @@
   function fit() {
     if (pitch !== fitPitch) { fitReach = reachY(); fitPitch = pitch; }
     scale = Math.max(SCALE_MIN, Math.min(cw * FIT_X / rho.max, ch * FIT_Y / fitReach));
-    pointR = Lab.clamp(POINT_R_K * scale, POINT_R_MIN, POINT_R_MAX);
   }
 
   function layout() {
@@ -536,49 +509,58 @@
   }
 
   /* ---- the cached cortex ------------------------------------------------
-     One offscreen render per 1.5 degrees of yaw: 9 500 shaded dots are far too expensive for every frame,
-     while the network arcs on top are not. */
+     One offscreen render per half degree of yaw. Each triangle takes the mean of its three vertices for the
+     light, the curvature, the zone weight and the depth, so the surface reads as facets rather than as a
+     gradient; the faces are then bucketed by tone and each bucket is filled as one path, which is what keeps
+     2560 triangles cheap. */
   function renderCortex() {
     var t0 = Lab.now(), i, o, g;
     fit();
-    project(CORTEX.x, CORTEX.y, CORTEX.z, P, yaw, pitch, vCloud);
+    project(CORTEX.x, CORTEX.y, CORTEX.z, P, yaw, pitch, vPos);
+    project(CORTEX.nx, CORTEX.ny, CORTEX.nz, P, yaw, pitch, vNrm);
+    var lx = LIGHT[0], ly = LIGHT[1], lz = LIGHT[2];
     var dmin = Infinity, dmax = -Infinity;
     for (i = 0; i < P; i++) {
-      var d = vCloud[i * 3 + 2];
+      o = i * 3;
+      var d = vPos[o + 2];
       if (d < dmin) dmin = d;
       if (d > dmax) dmax = d;
+      vsx[i] = cx + vPos[o] * scale;
+      vsy[i] = cy + vPos[o + 1] * scale;
+      /* vNrm holds (right, -up, depth): -depth is the component facing the camera. */
+      vLam[i] = Lab.clamp(vNrm[o] * lx + vNrm[o + 2] * ly - vNrm[o + 1] * lz, 0, 1);
     }
     var dspan = (dmax - dmin) || 1;
-    var lx = LIGHT[0], ly = LIGHT[1], lz = LIGHT[2];
     for (i = 0; i <= GROUPS + 1; i++) counts[i] = 0;
     for (i = 0; i < GROUPS; i++) groupDepth[i] = 0;
-    for (i = 0; i < P; i++) {
-      o = i * 3;
-      /* View normal of a point is its rotated position over its model radius: vCloud holds
-         (view.x, -view.z, view.y), so nDepth is the component along the line of sight and -nDepth faces
-         the camera. Points past the silhouette are dropped before any shading work. */
-      var iv = CORTEX.inv[i];
-      var nRight = vCloud[o] * iv, nUp = -vCloud[o + 1] * iv, nDepth = vCloud[o + 2] * iv;
-      if (-nDepth <= CULL_FACING) { groupOf[i] = CULLED; counts[CULLED + 1]++; continue; }
-      var lam = nRight * lx + nDepth * ly + nUp * lz;
-      var zn = (dmax - vCloud[o + 2]) / dspan;
-      var v = shade(lam, CORTEX.curv[i], zn);
-      var b = Math.floor(v * TONE_BUCKETS);
-      if (b >= TONE_BUCKETS) b = TONE_BUCKETS - 1;
-      if (b < 0) b = 0;
-      var w = ZONE.weight[i];
-      var lvl = w > 0 ? 1 + Math.floor(w * (ZONE_LEVELS - 1) * 0.999) : 0;
-      g = lvl * TONE_BUCKETS + b;
-      groupOf[i] = g;
+    for (i = 0; i < F; i++) {
+      var k = i * 3, a = FACES[k], b = FACES[k + 1], c = FACES[k + 2];
+      /* Back faces go by the sign of the screen area of the triangle, not by its vertex normals: those come
+         from the folded full-resolution surface and differ from the plane of a coarse triangle by some 30
+         degrees, which culls one visible face in six and opens holes right through the cortex. */
+      var ax = vsx[a], ay = vsy[a];
+      if ((vsx[b] - ax) * (vsy[c] - ay) - (vsy[b] - ay) * (vsx[c] - ax) >= 0) {
+        faceOf[i] = CULLED; counts[CULLED + 1]++; continue;
+      }
+      var depth = (vPos[a * 3 + 2] + vPos[b * 3 + 2] + vPos[c * 3 + 2]) / 3;
+      var v = shade((vLam[a] + vLam[b] + vLam[c]) / 3, (CURV[a] + CURV[b] + CURV[c]) / 3,
+        (dmax - depth) / dspan);
+      var bkt = Math.floor(v * TONE_BUCKETS);
+      if (bkt >= TONE_BUCKETS) bkt = TONE_BUCKETS - 1;
+      if (bkt < 0) bkt = 0;
+      var zw = (ZW[a] + ZW[b] + ZW[c]) / 3;
+      var lvl = zw > ZONE_MIN ? 1 + Math.floor(zw * (ZONE_LEVELS - 1) * 0.999) : 0;
+      g = lvl * TONE_BUCKETS + bkt;
+      faceOf[i] = g;
       counts[g + 1]++;
-      groupDepth[g] += vCloud[o + 2];
+      groupDepth[g] += depth;
     }
     starts[0] = 0;
     for (i = 1; i <= GROUPS + 1; i++) starts[i] = starts[i - 1] + counts[i];
     for (i = 0; i <= GROUPS + 1; i++) counts[i] = starts[i];
-    for (i = 0; i < P; i++) order[counts[groupOf[i]]++] = i;
-    /* Back to front by the mean depth of each group: the dots are opaque, so this is the painter order.
-       Insertion sort over some 120 groups that are almost sorted from one render to the next. */
+    for (i = 0; i < F; i++) order[counts[faceOf[i]]++] = i;
+    /* Back to front by the mean depth of each bucket: the faces are opaque, so this is the painter order.
+       Insertion sort over some 100 buckets that are almost sorted from one render to the next. */
     var used = 0;
     for (i = 0; i < GROUPS; i++) {
       var cnt = starts[i + 1] - starts[i];
@@ -592,39 +574,56 @@
       groupOrder[j + 1] = key;
     }
     lctx.clearRect(0, 0, cw, ch);
-    for (i = 0; i < used; i++) fillGroup(groupOrder[i], dmax, dspan);
-    drawGlow();
-    /* The accent dots go back on top of the glow so the zone keeps its grain. */
-    for (i = 0; i < used; i++) if (groupOrder[i] >= TONE_BUCKETS) fillGroup(groupOrder[i], dmax, dspan);
+    for (i = 0; i < used; i++) fillGroup(groupOrder[i]);
+    /* The tinted faces go back on top of the glow so the zone keeps its facets. That second pass ignores the
+       painter order, so it runs only while the patch faces the camera: from behind it would paint the far
+       side of the zone over the near cortex. */
+    if (drawGlow()) {
+      for (i = 0; i < used; i++) if (groupOrder[i] >= TONE_BUCKETS) fillGroup(groupOrder[i]);
+    }
     cacheYaw = yaw; cachePitch = pitch; cacheDirty = false;
     cortexMs = Lab.now() - t0;
   }
 
-  function fillGroup(g, dmax, dspan) {
-    var from = starts[g], to = starts[g + 1];
+  /* Adjacent triangles of two different buckets are two different fills, so the shared edge is antialiased
+     twice and the ground shows through as a hairline. Each triangle is therefore grown by FACE_SEAM pixels
+     away from its own centroid, which overlaps its neighbours and closes the seam. Stroking the path in its
+     own fill colour reads the same, but the canvas then builds a stroke outline for every triangle, which
+     measured three times the cost of the whole render. */
+  function fillGroup(g) {
+    var from = starts[g], to = starts[g + 1], p, k, v, x, y, mx, my, dx, dy, s;
     lctx.fillStyle = groupFill[g];
     lctx.beginPath();
-    for (var p = from; p < to; p++) {
-      var o = order[p] * 3;
-      var x = cx + vCloud[o] * scale, y = cy + vCloud[o + 1] * scale;
-      var r = pointR * (POINT_R_BACK + (1 - POINT_R_BACK) * ((dmax - vCloud[o + 2]) / dspan));
-      lctx.moveTo(x + r, y);
-      lctx.arc(x, y, r, 0, Math.PI * 2);
+    for (p = from; p < to; p++) {
+      k = order[p] * 3;
+      mx = (vsx[FACES[k]] + vsx[FACES[k + 1]] + vsx[FACES[k + 2]]) / 3;
+      my = (vsy[FACES[k]] + vsy[FACES[k + 1]] + vsy[FACES[k + 2]]) / 3;
+      for (v = 0; v < 3; v++) {
+        x = vsx[FACES[k + v]]; y = vsy[FACES[k + v]];
+        dx = x - mx; dy = y - my;
+        s = Math.sqrt(dx * dx + dy * dy);
+        s = s > 0.01 ? (s + FACE_SEAM) / s : 1;
+        if (v === 0) lctx.moveTo(mx + dx * s, my + dy * s);
+        else lctx.lineTo(mx + dx * s, my + dy * s);
+      }
+      lctx.closePath();
     }
     lctx.fill();
   }
 
-  /* The patch fades out as the zone turns away, so it reads as a piece of cortex and not as a sticker. */
+  /* The patch fades out as the zone turns away, so it reads as a piece of cortex and not as a sticker.
+     Returns whether the zone is on the near side at all. */
   function drawGlow() {
     project(zoneCx, zoneCy, zoneCz, 1, yaw, pitch, zoneProj);
     var facing = -zoneProj[2] * zoneInv;
-    if (facing <= 0) return;
+    if (facing <= 0) return false;
     var a = Lab.clamp(facing * GLOW_GAIN, 0, 1);
     var r = ZONE.radius * scale * GLOW_SPREAD;
     var gx = cx + zoneProj[0] * scale, gy = cy + zoneProj[1] * scale;
     lctx.globalAlpha = a;
     lctx.drawImage(glow, gx - r, gy - r, 2 * r, 2 * r);
     lctx.globalAlpha = 1;
+    return true;
   }
 
   /* ---- the network ---- */
@@ -660,7 +659,7 @@
       var r = (NODE_R + GRAPH.degree[k] * NODE_R_PER_DEGREE) * ws + (isHi ? NODE_HI_GROW : 0);
       ctx.beginPath();
       ctx.arc(srcX[k], srcY[k], r, 0, Math.PI * 2);
-      ctx.fillStyle = Lab.rgba(SOURCES.zone[k] > 0 || isHi ? t.accent : t.ink, dim ? NODE_A_DIM : NODE_A);
+      ctx.fillStyle = Lab.rgba(SOURCES.inZone[k] || isHi ? t.accent : t.ink, dim ? NODE_A_DIM : NODE_A);
       ctx.fill();
       ctx.lineWidth = NODE_STROKE;
       ctx.strokeStyle = Lab.rgba(t.surface, dim ? 0.5 : 1);

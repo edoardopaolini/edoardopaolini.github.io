@@ -88,6 +88,7 @@ en:
     languages: "Languages"
     presentations: "Conference presentations"
     interests: "Research interests"
+    # Not printed right now: see the comment at the top of _includes/bio-body.html.
     supervisor: "Supervision"
     cosupervisors: "Co-supervision"
     thesis: "Thesis"
@@ -194,6 +195,7 @@ it:
     languages: "Lingue"
     presentations: "Presentazioni a congressi"
     interests: "Interessi di ricerca"
+    # Not printed right now: see the comment at the top of _includes/bio-body.html.
     supervisor: "Supervisione"
     cosupervisors: "Co-supervisione"
     thesis: "Tesi"

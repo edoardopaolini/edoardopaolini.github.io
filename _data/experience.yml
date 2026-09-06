@@ -1,4 +1,4 @@
-# Positions, newest first (source: main_industry_en.pdf and main_en.pdf in other/). Rendered on /bio/.
+# Positions, newest first (source: main_industry_en.pdf and main_en.pdf in other/). Rendered on /bio/ (the supervisor fields are kept but not printed for now).
 # Dates are "YYYY-MM" strings; the template prints the month in the page language. `end: present` for the current one.
 - role: { en: "Ph.D. student in Computer Science", it: "Dottorando in Informatica" }
   org: { en: "BraiNAVLab, University of Verona", it: "BraiNAVLab, Università di Verona" }
