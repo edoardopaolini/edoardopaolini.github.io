@@ -43,7 +43,9 @@
   if (/[?&]shot=1/.test(window.location.search)) root.classList.add('shot');
   window.siteTheme = { isDark: currentIsDark };
   window.siteMotion = { reduce: reduce };
-  toggles.forEach(function (btn) { btn.setAttribute('aria-checked', currentIsDark() ? 'true' : 'false'); });
+  /* Initial aria-checked (the markup says false); the figure modules load after this script, so nothing hears
+     the themechange this dispatches. */
+  announce();
 
   /* ---- Scroll reveal: adds .is-in once when an element enters the viewport ---- */
   var targets = document.querySelectorAll('.reveal');
@@ -93,22 +95,20 @@
     }
   }
 
-  /* ---- Publications filter (native radio group) ---- */
+  /* ---- Publications filter (native radio group; the value of a radio is a publication type or "first") ---- */
   var filter = document.getElementById('pub-filter');
   if (filter) {
     var entries = Array.prototype.slice.call(document.querySelectorAll('.pub-entry'));
     var groups = Array.prototype.slice.call(document.querySelectorAll('.pub-group'));
     var empty = document.querySelector('.pub-empty');
     var count = document.getElementById('pub-count');
-    function apply() {
+    /* announce: the count is a live region, so the initial pass (page load) does not write it. */
+    function apply(announce) {
       var checked = filter.querySelector('input:checked');
       var mode = checked ? checked.value : 'all';
       var shown = 0;
       entries.forEach(function (li) {
-        var ok = mode === 'all' ||
-          (mode === 'journal' && li.dataset.type === 'journal') ||
-          (mode === 'conference' && li.dataset.type === 'conference') ||
-          (mode === 'first' && li.dataset.first === 'true');
+        var ok = mode === 'all' || (mode === 'first' ? li.dataset.first === 'true' : li.dataset.type === mode);
         li.hidden = !ok;
         if (ok) shown++;
       });
@@ -116,9 +116,10 @@
         g.hidden = !g.querySelector('.pub-entry:not([hidden])');
       });
       if (empty) empty.hidden = shown > 0;
-      if (count) count.textContent = 'Showing ' + shown + ' of ' + entries.length + ' publications.';
+      /* The sentence comes from the page language (data-count-template on the fieldset). */
+      if (count && announce) count.textContent = (filter.dataset.countTemplate || '{n} / {total}').replace('{n}', shown).replace('{total}', entries.length);
     }
-    filter.addEventListener('change', apply);
-    apply();
+    filter.addEventListener('change', function () { apply(true); });
+    apply(false);
   }
 })();

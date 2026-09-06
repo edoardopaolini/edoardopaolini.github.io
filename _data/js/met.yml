@@ -1,0 +1,202 @@
+# Strings for assets/js/metabolism.js (the metabolic flux figure of the home page). The two trees must have the
+# same keys. The readouts are filled with the numbers the model measures: {shunt} glyoxylate shunt flux, {co2}
+# carbon dioxide released, {lipids} PDIM and SL-1 produced, {icd} isocitrate dehydrogenase flux, {mcs}
+# methylcitrate synthase flux, each a signed whole percent against the wild type ("+41%", "-100%") that the
+# templates keep inside parentheses after a plain verb. {pool} names the metabolites that pile up; when none does,
+# the whole sentence holding {pool} is replaced by the nopool sentence. canvas.names are the metabolite labels of
+# the figure at wide widths (a newline breaks the three longest); the narrower tiers use the thesis abbreviations.
+en:
+  buttons:
+    icl: "Add 3-nitropropionate"
+    pcl: "Inhibit PCL"
+    sdh: "Inhibit SDH"
+    cs: "Downregulate CS"
+    icd: "Phosphorylate ICD"
+    restore: "Restore"
+  aria:
+    icl: "Block isocitrate lyase and methylisocitrate lyase with 3-nitropropionate"
+    pcl: "Inhibit propionyl-CoA carboxylase"
+    sdh: "Inhibit succinate dehydrogenase"
+    cs: "Downregulate citrate synthase"
+    icd: "Phosphorylate isocitrate dehydrogenase"
+  readouts:
+    wild: >-
+      Unperturbed. Glucose, fatty acids and cholesterol feed the cycle, and the carbon leaves as carbon dioxide,
+      biomass, released succinate and the virulence lipids PDIM and SL-1.
+    icl: >-
+      3-nitropropionate blocks both isocitrate lyases and methylisocitrate lyase, so the glyoxylate shunt closes
+      ({shunt}) and the methylcitrate cycle stops with it. The carbon returns to the decarboxylating branch:
+      isocitrate dehydrogenase carries more ({icd}) and more carbon dioxide leaves ({co2}). The shunt was what
+      kept those carbons in the cell.
+    pcl: >-
+      With propionyl-CoA carboxylase inhibited, the methylmalonyl pathway is shut and the virulence lipids PDIM
+      and SL-1 are no longer made ({lipids}). Propionyl-CoA has nowhere left to go except the methylcitrate cycle,
+      which speeds up ({mcs}), and the rest piles up: {pool}.
+    sdh: >-
+      Inhibiting succinate dehydrogenase cuts the cycle in two: succinate can no longer reach fumarate, the far
+      side of the cycle runs only on what the glyoxylate shunt still delivers, and carbon dioxide falls ({co2}).
+      What piles up: {pool}.
+    cs: >-
+      With citrate synthase downregulated, less acetyl-CoA becomes citrate, the whole cycle slows and carbon
+      dioxide falls ({co2}). The oxaloacetate that citrate synthase no longer uses goes to the methylcitrate cycle
+      instead, which picks up ({mcs}).
+    icd: >-
+      Phosphorylated isocitrate dehydrogenase is inactive: that is how the cell switches it off under stress.
+      Isocitrate takes the glyoxylate shunt instead ({shunt}), the two decarboxylation steps are bypassed and less
+      carbon dioxide leaves ({co2}). The carbon is kept for biosynthesis.
+    nopool: "Nothing piles up."
+  canvas:
+    co2: "CO2"
+    inputs:
+      glucose: "Glucose"
+      fatty: "Fatty acids"
+      chol: "Cholesterol"
+    pathways:
+      glucose: "glycolysis"
+      fatty: "beta-oxidation"
+      chol: "cholesterol catabolism"
+    drains:
+      bioA: "Biomass"
+      bioO: "Biomass"
+      bioK: "Biomass"
+      sucOut: "Succinate out"
+      lipids: "PDIM and SL-1"
+    drainsShort:
+      sucOut: "SUC out"
+      lipids: "PDIM, SL-1"
+    names:
+      PYR: "Pyruvate"
+      ACA: "Acetyl-CoA"
+      PPC: "Propionyl-CoA"
+      CIT: "Citrate"
+      ICIT: "Isocitrate"
+      AKG: "alpha-\nketoglutarate"
+      SSA: "Succinic\nsemialdehyde"
+      SCA: "Succinyl-CoA"
+      SUC: "Succinate"
+      FA: "Fumarate"
+      MAL: "Malate"
+      OAA: "Oxaloacetate"
+      GLY: "Glyoxylate"
+      MCT: "Methylcitrate"
+      MCA: "Methyl-cis-\naconitate"
+      MIC: "Methylisocitrate"
+      SMC: "(S)-methylmalonyl-CoA"
+      RMC: "(R)-methylmalonyl-CoA"
+  metabolites:
+    PYR: "pyruvate"
+    ACA: "acetyl-CoA"
+    PPC: "propionyl-CoA"
+    CIT: "citrate"
+    ICIT: "isocitrate"
+    AKG: "alpha-ketoglutarate"
+    SSA: "succinic semialdehyde"
+    SCA: "succinyl-CoA"
+    SUC: "succinate"
+    FA: "fumarate"
+    MAL: "malate"
+    OAA: "oxaloacetate"
+    GLY: "glyoxylate"
+    MCT: "methylcitrate"
+    MCA: "methyl-cis-aconitate"
+    MIC: "methylisocitrate"
+    SMC: "(S)-methylmalonyl-CoA"
+    RMC: "(R)-methylmalonyl-CoA"
+
+it:
+  buttons:
+    icl: "Aggiungi 3-nitropropionato"
+    pcl: "Inibisci PCL"
+    sdh: "Inibisci SDH"
+    cs: "Riduci CS"
+    icd: "Fosforila ICD"
+    restore: "Ripristina"
+  aria:
+    icl: "Blocca le isocitrato liasi e la metilisocitrato liasi con il 3-nitropropionato"
+    pcl: "Inibisci la propionil-CoA carbossilasi"
+    sdh: "Inibisci la succinato deidrogenasi"
+    cs: "Riduci l'espressione della citrato sintasi"
+    icd: "Fosforila l'isocitrato deidrogenasi"
+  readouts:
+    wild: >-
+      Senza perturbazioni. Glucosio, acidi grassi e colesterolo alimentano il ciclo, e il carbonio esce come
+      anidride carbonica, biomassa, succinato rilasciato e lipidi di virulenza PDIM e SL-1.
+    icl: >-
+      Il 3-nitropropionato blocca entrambe le isocitrato liasi e la metilisocitrato liasi: lo shunt del
+      gliossilato si chiude ({shunt}) e con esso si ferma il ciclo del metilcitrato. Il carbonio torna sul ramo
+      che decarbossila: l'isocitrato deidrogenasi ne porta di più ({icd}) ed esce più anidride carbonica ({co2}).
+      Era lo shunt a tenere quei carboni nella cellula.
+    pcl: >-
+      Con la propionil-CoA carbossilasi inibita, la via del metilmalonile si chiude e i lipidi di virulenza PDIM
+      e SL-1 non vengono più prodotti ({lipids}). Al propionil-CoA resta solo il ciclo del metilcitrato, che
+      accelera ({mcs}), e il resto si accumula: {pool}.
+    sdh: >-
+      Inibire la succinato deidrogenasi taglia il ciclo in due: il succinato non arriva più al fumarato, la metà
+      a valle vive solo di quello che porta lo shunt del gliossilato e l'anidride carbonica scende ({co2}). Si
+      accumula: {pool}.
+    cs: >-
+      Con la citrato sintasi ridotta, meno acetil-CoA diventa citrato, tutto il ciclo rallenta e l'anidride
+      carbonica scende ({co2}). L'ossalacetato che la citrato sintasi non usa più va al ciclo del metilcitrato,
+      che ne guadagna ({mcs}).
+    icd: >-
+      L'isocitrato deidrogenasi fosforilata è inattiva: è così che la cellula la spegne sotto stress. L'isocitrato
+      prende invece lo shunt del gliossilato ({shunt}), i due passaggi di decarbossilazione vengono aggirati ed
+      esce meno anidride carbonica ({co2}). Il carbonio resta per la biosintesi.
+    nopool: "Non si accumula niente."
+  canvas:
+    co2: "CO2"
+    inputs:
+      glucose: "Glucosio"
+      fatty: "Acidi grassi"
+      chol: "Colesterolo"
+    pathways:
+      glucose: "glicolisi"
+      fatty: "beta-ossidazione"
+      chol: "catabolismo"
+    drains:
+      bioA: "Biomassa"
+      bioO: "Biomassa"
+      bioK: "Biomassa"
+      sucOut: "Succinato rilasciato"
+      lipids: "PDIM e SL-1"
+    drainsShort:
+      sucOut: "SUC fuori"
+      lipids: "PDIM, SL-1"
+    names:
+      PYR: "Piruvato"
+      ACA: "Acetil-CoA"
+      PPC: "Propionil-CoA"
+      CIT: "Citrato"
+      ICIT: "Isocitrato"
+      AKG: "alfa-\nchetoglutarato"
+      SSA: "Semialdeide\nsuccinica"
+      SCA: "Succinil-CoA"
+      SUC: "Succinato"
+      FA: "Fumarato"
+      MAL: "Malato"
+      OAA: "Ossalacetato"
+      GLY: "Gliossilato"
+      MCT: "Metilcitrato"
+      MCA: "Metil-cis-\naconitato"
+      MIC: "Metilisocitrato"
+      SMC: "(S)-metilmalonil-CoA"
+      RMC: "(R)-metilmalonil-CoA"
+  metabolites:
+    PYR: "piruvato"
+    ACA: "acetil-CoA"
+    PPC: "propionil-CoA"
+    CIT: "citrato"
+    ICIT: "isocitrato"
+    AKG: "alfa-chetoglutarato"
+    SSA: "semialdeide succinica"
+    SCA: "succinil-CoA"
+    SUC: "succinato"
+    FA: "fumarato"
+    MAL: "malato"
+    OAA: "ossalacetato"
+    GLY: "gliossilato"
+    MCT: "metilcitrato"
+    MCA: "metil-cis-aconitato"
+    MIC: "metilisocitrato"
+    SMC: "(S)-metilmalonil-CoA"
+    RMC: "(R)-metilmalonil-CoA"

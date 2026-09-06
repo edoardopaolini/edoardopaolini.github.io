@@ -1,31 +1,16 @@
 /* Model tests for assets/js/stage.js. Run from the repository root:
      jsc tests/stage.test.js
    (JavaScriptCore's jsc, or any engine with load() and print()). */
-var window = this;  // bare engine: the modules attach to window
+var window = this;  /* bare engine: the modules attach to window */
+load('tests/harness.js');
 load('assets/js/lab.js'); load('assets/js/stage.js');
 
 var M = window.__stageModel, Lab = window.Lab;
 var N = M.N, BUF = M.BUF, CORR_N = M.CORR_N;
-var failed = 0;
-function assert(cond, msg) {
-  print((cond ? 'PASS ' : 'FAIL ') + msg);
-  if (!cond) failed++;
-}
-function near(a, b, tol) { return Math.abs(a - b) <= tol; }
-function reactionIndex(from, to) {
-  for (var i = 0; i < M.REACTIONS.length; i++) if (M.REACTIONS[i].label === from + ' to ' + to) return i;
-  return -1;
-}
-function mask(knocked) {
-  var m = [];
-  for (var i = 0; i < M.REACTIONS.length; i++) m.push(knocked.indexOf(i) < 0 ? 1 : 0);
-  return m;
-}
 
 /* ---- module shape ---- */
 assert(!!M && typeof window.__stage === 'undefined', 'model exported, DOM part skipped without document');
-assert(N === 19 && M.P === 171 && M.METABOLITES.length === 19 && M.REACTIONS.length === 23, '19 electrodes, 171 pairs, 19 metabolites, 23 reactions');
-assert(M.METABOLITES[0] === 'glucose' && M.METABOLITES[18] === 'OAA', 'metabolite order starts at glucose and ends at OAA');
+assert(N === 19 && M.P === 171 && M.FS === 250 && BUF === 2500, '19 electrodes, 171 pairs, 250 Hz, a 10 s page');
 
 /* ---- Pearson correlation against the textbook formula ---- */
 (function () {
@@ -40,7 +25,7 @@ assert(M.pearson([1, 2, 3], [7, 7, 7]) === 0, 'pearson is 0 when a series has no
 
 /* ---- Small-world coupling graph ---- */
 (function () {
-  var cg = M.buildCoupling(Lab.rng(20260905), 0.8), edges = 0, symmetric = true, i, j;
+  var cg = M.buildCoupling(Lab.rng(M.TOPOLOGY_SEED), 0.8), edges = 0, symmetric = true, i, j;
   for (i = 0; i < N; i++) for (j = 0; j < N; j++) {
     if (cg.W[i * N + j] !== cg.W[j * N + i] || (i === j && cg.W[i * N + j] !== 0)) symmetric = false;
     if (j > i && cg.adj[i * N + j]) edges++;
@@ -50,7 +35,7 @@ assert(M.pearson([1, 2, 3], [7, 7, 7]) === 0, 'pearson is 0 when a series has no
   var rewired = 0;
   for (i = 0; i < N; i++) for (j = 1; j <= 2; j++) if (!cg.adj[cg.order[i] * N + cg.order[(i + j) % N]]) rewired++;
   assert(rewired > 0 && rewired < 20, 'some lattice edges were rewired (' + rewired + ')');
-  var cg2 = M.buildCoupling(Lab.rng(20260905), 1.6), doubled = true;
+  var cg2 = M.buildCoupling(Lab.rng(M.TOPOLOGY_SEED), 1.6), doubled = true;
   for (i = 0; i < cg.edges.length; i++) if (!near(cg2.edges[i].w / cg.edges[i].w, 2, 1e-4) || cg2.edges[i].a !== cg.edges[i].a || cg2.edges[i].b !== cg.edges[i].b) doubled = false;
   assert(doubled, 'the same seed gives the same topology and weights scale linearly with the coupling');
   var wNear = 0, wFar = 0;
@@ -84,7 +69,7 @@ assert(M.pearson([1, 2, 3], [7, 7, 7]) === 0, 'pearson is 0 when a series has no
   assert(signsOk, 'TEP components N15 P30 N45 P60 N100 P180 have the right signs');
   assert(peaksOk, 'each component is a local extremum at its latency');
   assert(decreasing, 'component amplitudes decrease with latency');
-  assert(M.tepSample(-1) === 0 && M.tepSample(301) === 0, 'TEP is zero outside the 300 ms window');
+  assert(M.tepSample(-1) === 0 && M.tepSample(M.TEP_MS + 1) === 0, 'TEP is zero outside the ' + M.TEP_MS + ' ms window');
 })();
 
 /* ---- Generator: running-sum correlations, determinism, threshold ---- */
@@ -105,13 +90,23 @@ assert(M.pearson([1, 2, 3], [7, 7, 7]) === 0, 'pearson is 0 when a series has no
   var lo = 1e9, hi = -1e9, finite = true;
   for (k = 0; k < g.buf.length; k++) { if (!isFinite(g.buf[k])) finite = false; lo = Math.min(lo, g.buf[k]); hi = Math.max(hi, g.buf[k]); }
   assert(finite && lo > -8 && hi < 8, 'traces finite and bounded (' + lo.toFixed(2) + ' .. ' + hi.toFixed(2) + ')');
+  var s = g.summary(), best = 0;
+  for (p = 0; p < M.P; p++) if (g.absr[p] > g.absr[best]) best = p;
+  assert(s.a === M.PA[best] && s.b === M.PB[best] && s.r === g.r[best] && s.a < s.b, 'summary returns the strongest pair with its signed r');
   var weak = M.createGenerator(7, 0.2), strong = M.createGenerator(7, 1.6), meanWeak = 0, meanStrong = 0;
   weak.advance(2000); weak.correlate(); strong.advance(2000); strong.correlate();
   for (p = 0; p < M.P; p++) { meanWeak += weak.absr[p] / M.P; meanStrong += strong.absr[p] / M.P; }
   assert(meanStrong > meanWeak, 'stronger coupling raises the mean |r| (' + meanWeak.toFixed(3) + ' -> ' + meanStrong.toFixed(3) + ')');
+  assert(g.coupling === 0.8 && strong.coupling === 1.6, 'the generator remembers its coupling');
   var thr = weak.threshold(0.35), above = 0;
   for (p = 0; p < M.P; p++) if (weak.absr[p] > thr) above++;
   assert(above >= 1, 'the adaptive threshold never leaves the graph empty (' + above + ' edges at ' + thr.toFixed(2) + ')');
+  var adj = weak.adjacency(thr), listed = 0;
+  for (k = 0; k < N; k++) listed += adj[k].length;
+  assert(adj.edgeCount === above && listed === 2 * above, 'adjacency lists hold every thresholded edge twice');
+  var full = strong.threshold(0.35), any = false;
+  for (p = 0; p < M.P; p++) if (strong.absr[p] > 0.35) any = true;
+  assert(!any || full === 0.35, 'the base threshold is kept whenever some pair passes it');
 })();
 
 /* ---- Stimulation written into the traces ---- */
@@ -120,8 +115,10 @@ assert(M.pearson([1, 2, 3], [7, 7, 7]) === 0, 'pearson is 0 when a series has no
   g.advance(500);
   var tree = M.bfsTree(g.hiddenAdjacency(), C3), s0 = g.n, pre = g.buf[C3 * BUF + s0 - 1];
   g.stimulate(C3, tree);
-  g.advance(400);
-  var k, jump = 0, marks = 0;
+  g.advance(50);
+  var active = 0, q, k, jump = 0, marks = 0;
+  for (q = 0; q < g.stims.length; q++) if (g.stims[q].active) active++;
+  g.advance(350);
   for (k = 1; k < 10; k++) jump = Math.max(jump, Math.abs(g.buf[C3 * BUF + s0 + k] - g.buf[C3 * BUF + s0 + k - 1]));
   for (k = 0; k < 100; k++) marks += g.mark[C3 * BUF + s0 + k];
   assert(near(g.buf[C3 * BUF + s0], pre, 1e-4) && jump < 4, 'the stimulated trace starts at its pre-pulse value with no step at the artifact edge');
@@ -131,6 +128,9 @@ assert(M.pearson([1, 2, 3], [7, 7, 7]) === 0, 'pearson is 0 when a series has no
   for (k = 0; k < 400; k++) farMarks += g.mark[far * BUF + s0 + k];
   assert(tree.maxHop >= 2 && farMarks > 0, 'the farthest electrode (' + M.MONTAGE[far].name + ', ' + tree.maxHop + ' hops) is reached too');
   assert(g.pulses.length === 1 && g.pulses[0] === s0, 'the pulse sample is remembered for the page marker');
+  var done = 0, windowSamples = Math.ceil((tree.maxHop * M.HOP_MS + M.TEP_MS) * M.FS / 1000);
+  for (q = 0; q < g.stims.length; q++) if (g.stims[q].active) done++;
+  assert(active === 1 && done === 0 && windowSamples < 400, 'the stimulation slot is busy 200 ms in and free after the ' + windowSamples + '-sample window');
 })();
 
 /* ---- Reduced motion: the static response honours the hop delay ---- */
@@ -147,62 +147,20 @@ assert(M.pearson([1, 2, 3], [7, 7, 7]) === 0, 'pearson is 0 when a series has no
   assert(g.pulses[0] === s0, 'the static pulse is remembered for the page marker');
 })();
 
-/* ---- Flux: conservation, rerouting, dead ends ---- */
-(function () {
-  var wt = M.flux(null), tca = reactionIndex('isocitrate', '2-OG'), shunt = reactionIndex('isocitrate', 'succinate'), shunt2 = reactionIndex('isocitrate', 'malate');
-  assert(near(wt.biomassFraction, 1, 1e-9) && wt.carrying === 23, 'wild type: fraction 1, all 23 reactions carry flux');
-  assert(near(wt.conservation, 1, 1e-6) && wt.stranded < 1e-6, 'wild type conserves carbon (biomass + CO2 = uptake) with nothing stranded');
-  assert(near(wt.fluxes[0], M.UPTAKE, 1e-9), 'the whole uptake enters glycolysis');
-  assert(wt.fluxes[tca] > wt.fluxes[shunt] + wt.fluxes[shunt2], 'the TCA route carries more than the glyoxylate shunt when intact');
-  var ogdh = reactionIndex('2-OG', 'succinyl-CoA'), ko = M.flux(mask([ogdh]));
-  var starved = reactionIndex('succinyl-CoA', 'succinate');
-  assert(ko.fluxes[ogdh] === 0 && ko.fluxes[starved] === 0 && ko.carrying === 21, 'knocked-out 2-OG to succinyl-CoA carries nothing and starves succinyl-CoA to succinate: 21 of 23 carry flux');
-  assert(ko.fluxes[shunt] > 1.3 * wt.fluxes[shunt] && ko.fluxes[shunt2] > 1.3 * wt.fluxes[shunt2], 'the flux reroutes through the glyoxylate shunt (' + wt.fluxes[shunt].toFixed(2) + ' -> ' + ko.fluxes[shunt].toFixed(2) + ')');
-  assert(ko.biomassFraction > 0.3 && ko.biomassFraction < 1 && near(ko.conservation, 1, 1e-4), 'the knockout keeps part of the biomass (' + Math.round(ko.biomassFraction * 100) + '%) and conserves carbon');
-  var uptake = M.flux(mask([0]));
-  assert(uptake.biomassFraction === 0 && near(uptake.stranded, M.UPTAKE, 1e-9) && uptake.carrying === 0, 'knocking out glucose uptake strands all the carbon');
-  var worstResidual = 0, worstConservation = 0, sane = true, k, q;
-  for (k = 0; k < M.REACTIONS.length; k++) {
-    var r = M.flux(mask([k]));
-    worstResidual = Math.max(worstResidual, r.residual);
-    worstConservation = Math.max(worstConservation, Math.abs(r.conservation - 1));
-    if (r.fluxes[k] !== 0) sane = false;
-    for (q = 0; q < M.REACTIONS.length; q++) if (!(r.fluxes[q] >= 0)) sane = false;
-  }
-  assert(worstResidual < 1e-4 && worstConservation < 1e-4 && sane, 'every single knockout converges, conserves carbon and keeps fluxes non-negative');
-})();
-
-/* ---- Adjacency matrix ---- */
-(function () {
-  var Mn = M.METABOLITES.length, complete = true;
-  M.REACTIONS.forEach(function (r) { if (M.ADJ[r.from * Mn + r.to] !== 1) complete = false; });
-  assert(M.ADJ_ONES === 23 && complete, 'the 19 by 19 adjacency has one 1 per directed reaction, 23 in all');
-  var iso = M.METABOLITES.indexOf('isocitrate'), og = M.METABOLITES.indexOf('2-OG');
-  assert(M.ADJ[iso * Mn + og] === 1 && M.ADJ[og * Mn + iso] === 0, 'the matrix is directed: isocitrate to 2-OG only');
-})();
-
-/* ---- Layouts fit their frames, labels included ---- */
-function labelsFit(w, h) {
-  var L = M.metabolicLayout(w, h, 16), pad = 16, ok = true, i, minDist = 1e9, j;
+/* ---- Head layout fits its frame: electrodes, nose and ears inside, the page below the head ---- */
+function headFits(w, h) {
+  var L = M.headLayout(w, h, 16), ok = true, i, maxY = -1e9;
   for (i = 0; i < N; i++) {
-    if (L.x[i] < pad || L.x[i] > w - pad || L.y[i] < pad || L.y[i] > h - pad) ok = false;
-    var an = L.anchors[i], off = 5 + 7, width = M.METABOLITES[i].length * L.labelPx * 0.62;
-    var ax = L.x[i] + an.dx * off, ay = L.y[i] + an.dy * off;
-    var x0 = an.align === 'left' ? ax : an.align === 'right' ? ax - width : ax - width / 2;
-    if (x0 < 0 || x0 + width > w || ay - L.labelPx / 2 < 0 || ay + L.labelPx / 2 > h) ok = false;
-    for (j = i + 1; j < N; j++) minDist = Math.min(minDist, Math.hypot(L.x[i] - L.x[j], L.y[i] - L.y[j]));
+    if (L.x[i] < 16 || L.x[i] > w - 16 || L.y[i] < 16 || L.y[i] > h - 16) ok = false;
+    maxY = Math.max(maxY, L.y[i]);
   }
-  return { ok: ok, minDist: minDist, labelPx: L.labelPx, compact: L.compact };
+  var noseOk = L.cy - L.r * 1.11 >= 15, earsOk = L.cx - L.r * 1.09 >= 16 && L.cx + L.r * 1.09 <= w - 16;
+  var pageOk = L.pageY > maxY && L.pageH > 40 && L.pageY + L.pageH <= h - 16 + 1e-6 && L.pageX === 16 && L.pageW === w - 32;
+  return { ok: ok && noseOk && earsOk && pageOk, r: L.r, pageH: L.pageH };
 }
-var fitMobile = labelsFit(350, 337), fitDesktop = labelsFit(595, 640);
-assert(fitMobile.ok && fitMobile.compact && fitMobile.labelPx === 10 && fitMobile.minDist > 18, 'metabolic layout with labels fits a 350 x 337 frame (compact, nodes ' + fitMobile.minDist.toFixed(1) + ' px apart)');
-assert(fitDesktop.ok && !fitDesktop.compact && fitDesktop.labelPx === 11 && fitDesktop.minDist > 30, 'metabolic layout with labels fits a 595 x 640 frame (nodes ' + fitDesktop.minDist.toFixed(1) + ' px apart)');
-(function () {
-  var full = M.matrixLayout(350, 337, 16, 10), short = M.matrixLayout(350, 270, 16, 10), desk = M.matrixLayout(595, 640, 16, 10);
-  assert(full.colLabels && full.cs >= 10 && full.gx + full.gw <= 334 && full.gy + full.gw <= 321, 'matrix layout at 350 x 337 keeps the column labels (cells ' + full.cs.toFixed(1) + ' px)');
-  assert(!short.colLabels && short.cs >= 10 && short.gy + short.gw <= 254, 'a 350 x 270 frame drops the column labels so the rows stay as tall as their labels (cells ' + short.cs.toFixed(1) + ' px)');
-  assert(desk.colLabels && desk.cs > 20 && desk.gx + desk.gw <= 579 && desk.gy + desk.gw <= 624, 'matrix layout fits a 595 x 640 frame (cells ' + desk.cs.toFixed(1) + ' px)');
-})();
+var fitPhone = headFits(350, 280), fitDesk = headFits(595, 640), fitShort = headFits(595, 300);
+assert(fitPhone.ok && fitPhone.r >= 20, 'head layout fits a 350 x 280 frame (r ' + fitPhone.r.toFixed(1) + ', page ' + fitPhone.pageH.toFixed(0) + ' px)');
+assert(fitDesk.ok && fitDesk.r > 100 && fitDesk.pageH > 200, 'head layout fits a 595 x 640 frame (r ' + fitDesk.r.toFixed(1) + ', page ' + fitDesk.pageH.toFixed(0) + ' px)');
+assert(fitShort.ok, 'head layout fits a short 595 x 300 frame (r ' + fitShort.r.toFixed(1) + ')');
 
-print(failed ? failed + ' FAILED' : 'ALL PASS');
-if (failed) throw new Error(failed + ' stage model test(s) failed');
+summary('stage');

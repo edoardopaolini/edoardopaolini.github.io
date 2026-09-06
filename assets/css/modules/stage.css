@@ -1,0 +1,291 @@
+/* stage.css: the sticky stepper of the home page (owned by stage.js). Desktop: 5/12 copy, 7/12 figure, the
+   figure sticky under the 68 px header while the three beats scroll. Phones: the figure comes first and sticks
+   under the header, the beats scroll beneath it. */
+
+.stage-section {
+    padding-bottom: clamp(2rem, 6vw, 4rem);
+}
+
+.stage-grid {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: start;
+}
+
+/* The bottom padding keeps the grid tall enough for the sticky figure to stay whole below the header while the
+   last beat is centred (the frame is capped at 640 px, so on 844 to 1000 px tall viewports the grid would end
+   about 80 px too early). */
+.stage-copy {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 6rem;
+}
+
+.beat {
+    min-height: 72vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: 3rem;
+    transition: opacity 0.5s ease;
+}
+
+.beat h2 {
+    font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+    margin-bottom: 1rem;
+}
+
+.beat p {
+    font-size: 1.1rem;
+    max-width: 40ch;
+    color: var(--ink-2);
+}
+
+/* Inactive beats are dimmed, but not below 4.5:1 against the background in the light theme. */
+.stage-ready .beat:not(.is-active) {
+    opacity: 0.78;
+}
+
+.stage-figure {
+    position: sticky;
+    top: calc(68px + 1.25rem);
+}
+
+.stage {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.stage-frame {
+    position: relative;
+    height: min(calc(100dvh - 68px - 8.5rem), 640px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+    touch-action: pan-y;
+}
+
+#stage-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* Electrode targets: real buttons over the canvas, placed and sized from JS. */
+.stage-buttons {
+    position: absolute;
+    inset: 0;
+}
+
+.stage-buttons button {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    margin: -22px 0 0 -22px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+}
+
+.stage-buttons button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -8px;
+    border-radius: 50%;
+}
+
+/* State 2 offers the electrodes: a soft ring breathes around every node until the first pulse (reason: the
+   beat asks for a press and a canvas has no affordance of its own). Reduced motion keeps a still ring. */
+.stage-buttons button::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    margin: -9px 0 0 -9px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.stage.is-prompting .stage-buttons button::before {
+    animation: stage-ring 2.4s ease-out infinite;
+}
+
+.stage.is-prompting.stage-reduce .stage-buttons button::before {
+    animation: none;
+    opacity: 0.55;
+}
+
+@keyframes stage-ring {
+    0% {
+        transform: scale(0.7);
+        opacity: 0.75;
+    }
+
+    70%,
+    100% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+}
+
+/* Between 901 and 1100 px the one-row bar leaves the readout about 200 px wide, so it may need a third line. */
+@media (min-width: 901px) and (max-width: 1100px) {
+    .stage-readout {
+        -webkit-line-clamp: 3;
+        min-height: 4.2em;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stage.is-prompting .stage-buttons button::before {
+        animation: none;
+        opacity: 0.55;
+    }
+}
+
+.stage-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    min-height: 2.4rem;
+}
+
+/* The readout is clamped to two lines so a long sentence never moves the caption. Its basis is what keeps the
+   bar one row in both languages in the desktop figure column (611 px at 1440, 521 px at 1024, where the Italian
+   controls take 312 px): the readout grows into the rest of the row, and only below that do the controls wrap
+   under it instead of clipping it. */
+.stage-readout {
+    flex: 1 1 11rem;
+    min-width: 0;
+    margin: 0;
+    line-height: 1.4;
+    min-height: 2.8em;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+}
+
+.stage-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.stage-controls:empty {
+    display: none;
+}
+
+.stage-controls label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.stage-controls input[type="range"] {
+    accent-color: var(--accent);
+    width: 90px;
+}
+
+
+.stage-caption {
+    margin: 0;
+}
+
+/* ---------- Phones and narrow tablets: figure first, sticky; beats beneath ---------- */
+@media (max-width: 900px) {
+    .stage-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .stage-copy {
+        display: flex;
+        padding-bottom: 0;
+    }
+
+    .stage-figure {
+        order: -1;
+        top: 68px;
+        z-index: 5;
+        padding-block: 0.75rem 0.5rem;
+        background: var(--bg);
+    }
+
+    /* The beats scroll under the sticky figure: a short fade below it instead of a hard edge on the headings. */
+    .stage-figure::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        height: 18px;
+        background: linear-gradient(var(--bg), transparent);
+        pointer-events: none;
+    }
+
+    .stage-frame {
+        height: min(34vh, 300px);
+    }
+
+    .beat {
+        min-height: auto;
+        justify-content: flex-start;
+        padding-block: 1.5rem 4rem;
+    }
+
+    .stage-bar {
+        gap: 0.35rem 0.75rem;
+        min-height: 2rem;
+    }
+
+    .stage-controls input[type="range"] {
+        width: 80px;
+    }
+
+    .stage-caption {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stage-frame {
+        height: min(32vh, 280px);
+    }
+
+    /* The readout gets the full width; the controls sit under it, so long readouts are never clipped. */
+    .stage-readout {
+        flex-basis: 100%;
+    }
+}
+
+/* ---------- Screenshot mode (debug only, ?shot=1): no viewport heights, no sticky ---------- */
+.shot .beat {
+    min-height: auto !important;
+    padding-block: 3rem !important;
+}
+
+.shot .stage-figure {
+    position: static !important;
+}
+
+.shot .stage-figure::after {
+    display: none;
+}
+
+.shot .stage-frame {
+    height: 560px !important;
+}

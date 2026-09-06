@@ -1,0 +1,69 @@
+# Positions, newest first (source: main_industry_en.pdf and main_en.pdf in other/). Rendered on /bio/.
+# Dates are "YYYY-MM" strings; the template prints the month in the page language. `end: present` for the current one.
+- role: { en: "Ph.D. student in Computer Science", it: "Dottorando in Informatica" }
+  org: { en: "BraiNAVLab, University of Verona", it: "BraiNAVLab, Università di Verona" }
+  place: { en: "Verona, Italy", it: "Verona" }
+  start: "2023-10"
+  end: present
+  supervisor: "Prof. Silvia Francesca Storti"
+  summary:
+    en: "Analysis pipelines for EEG and TMS-EEG data, from preprocessing and Bayesian estimation of TMS-evoked potentials to source reconstruction, time-varying effective connectivity and microstate analysis, applied to the classification of neurological patients. Teaching assistant for four B.Sc. and M.Sc. courses and co-supervisor of thesis and internship students."
+    it: "Pipeline di analisi per dati EEG e TMS-EEG, dal preprocessing e dalla stima bayesiana dei potenziali evocati da TMS alla ricostruzione delle sorgenti, alla connettività effettiva tempo-variante e all'analisi dei microstati, applicate alla classificazione di pazienti neurologici. Assistente alla didattica in quattro insegnamenti di laurea triennale e magistrale e co-supervisore di tesisti e tirocinanti."
+
+- role: { en: "Graduate student intern (visiting Ph.D. student)", it: "Dottorando ospite (graduate student intern)" }
+  org: { en: "BrainCapture ApS", it: "BrainCapture ApS" }
+  place: { en: "Kongens Lyngby, Denmark", it: "Kongens Lyngby, Danimarca" }
+  start: "2026-06"
+  end: "2026-07"
+  summary:
+    en: "Medtech start-up developing portable EEG with AI-assisted analysis for epilepsy diagnostics. Machine learning for EEG analysis in an industrial R&D setting, bringing research pipelines closer to a clinical product."
+    it: "Start-up medtech che sviluppa EEG portatili con analisi assistita dall'intelligenza artificiale per la diagnosi dell'epilessia. Machine learning per l'analisi EEG in un contesto di ricerca e sviluppo industriale, avvicinando le pipeline di ricerca a un prodotto clinico."
+
+- role: { en: "Graduate student intern (visiting Ph.D. student)", it: "Dottorando ospite (graduate student intern)" }
+  org: { en: "Fetal-Neonatal Neuroimaging and Developmental Science Center, Boston Children's Hospital", it: "Fetal-Neonatal Neuroimaging and Developmental Science Center, Boston Children's Hospital" }
+  place: { en: "Boston, MA, USA", it: "Boston, Stati Uniti" }
+  start: "2024-11"
+  end: "2025-03"
+  supervisor: "Dr. Eleonora Tamilia"
+  summary:
+    en: "EEG-based connectome analysis pipeline for pediatric drug-resistant epilepsy: source-level connectivity, network analysis and virtual resection of the planned surgical target, with machine learning models that predict post-surgical seizure outcome from connectome features on retrospective clinical data."
+    it: "Pipeline di analisi del connettoma da EEG per l'epilessia pediatrica farmacoresistente: connettività a livello di sorgente, analisi di rete e resezione virtuale del bersaglio chirurgico pianificato, con modelli di machine learning che predicono l'esito post-chirurgico delle crisi dalle feature del connettoma su dati clinici retrospettivi."
+
+- role: { en: "Post-graduate research fellow", it: "Borsista di ricerca post-laurea" }
+  org: { en: "BraiNAVLab, University of Verona", it: "BraiNAVLab, Università di Verona" }
+  place: { en: "Verona, Italy", it: "Verona" }
+  start: "2023-04"
+  end: "2023-09"
+  supervisor: "Prof. Silvia Francesca Storti"
+  summary:
+    en: "Machine learning architectures for monitoring and predicting biomedical time series, within a funded project on workplace safety in Industry 4.0 with brain-computer interface applications."
+    it: "Architetture di machine learning per il monitoraggio e la predizione di serie temporali biomediche, in un progetto finanziato sulla sicurezza sul lavoro nell'Industria 4.0 con applicazioni di interfaccia cervello-computer."
+
+- role: { en: "Research assistant", it: "Assistente di ricerca" }
+  org: { en: "BraiNAVLab, University of Verona", it: "BraiNAVLab, Università di Verona" }
+  place: { en: "Verona, Italy", it: "Verona" }
+  start: "2023-01"
+  end: "2023-03"
+  summary:
+    en: "Relationship between structural and functional brain connectivity across Alzheimer's disease stages, using Partial Least Squares on diffusion and functional MRI data from the ADNI-3 cohort."
+    it: "Relazione tra connettività cerebrale strutturale e funzionale negli stadi della malattia di Alzheimer, con Partial Least Squares su dati di risonanza magnetica di diffusione e funzionale della coorte ADNI-3."
+
+- role: { en: "Research intern (M.Sc. thesis)", it: "Tirocinante di ricerca (tesi magistrale)" }
+  org: { en: "COSBI, Microsoft Research and University of Trento Centre for Computational and Systems Biology", it: "COSBI, Centro Microsoft Research e Università di Trento per la biologia computazionale e dei sistemi" }
+  place: { en: "Rovereto, Italy", it: "Rovereto" }
+  start: "2022-03"
+  end: "2022-09"
+  supervisor: "Dr. Luca Marchetti, Dr. Federico Reali"
+  summary:
+    en: "Dynamic systems-biology model of Mycobacterium tuberculosis central metabolism in MATLAB, built from a literature review of its metabolic pathways and used to simulate gene-expression perturbations and drug action on target enzymes in a quantitative systems pharmacology setting."
+    it: "Modello dinamico di biologia dei sistemi del metabolismo centrale di Mycobacterium tuberculosis in MATLAB, costruito a partire da una revisione della letteratura sulle sue vie metaboliche e usato per simulare perturbazioni dell'espressione genica e l'azione di farmaci su enzimi bersaglio in un contesto di farmacologia quantitativa dei sistemi."
+
+- role: { en: "Research intern (B.Sc. thesis)", it: "Tirocinante di ricerca (tesi triennale)" }
+  org: { en: "BraiNAVLab, University of Verona", it: "BraiNAVLab, Università di Verona" }
+  place: { en: "Verona, Italy", it: "Verona" }
+  start: "2019-12"
+  end: "2020-03"
+  supervisor: "Prof. Silvia Francesca Storti"
+  summary:
+    en: "Functional connectivity estimators for resting-state fMRI in MATLAB and assessment of their test-retest reliability, work that led to my first two publications."
+    it: "Stimatori di connettività funzionale per fMRI a riposo in MATLAB e valutazione della loro affidabilità test-retest, lavoro da cui sono nate le mie prime due pubblicazioni."

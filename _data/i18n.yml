@@ -1,0 +1,214 @@
+# User-interface strings, one tree per language. The two trees must have the same keys.
+# Layouts read them as `site.data.i18n[page.lang]`. Content (degrees, roles, hobbies) lives in the other data files
+# with bilingual fields; paper titles, thesis titles, venues and institutions keep their original language.
+en:
+  switch_label: "Language"
+  months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  and: "and"
+  nav_label: "Primary"
+  skip: "Skip to content"
+  theme_dark: "Dark theme"
+  nav:
+    home: "Home"
+    bio: "Biography"
+    publications: "Publications"
+  meta:
+    description: "Edoardo Paolini, Ph.D. student in Computer Science at the University of Verona. Machine learning for EEG and TMS-EEG, brain connectomics, epilepsy."
+    bio_description: "Biography of Edoardo Paolini: experience, education, teaching and conference presentations. Computer science, bioinformatics and bioengineering."
+    pubs_description: "Journal articles, registered reports and conference papers by Edoardo Paolini on brain connectivity, EEG, TMS-EEG and fMRI."
+  hero:
+    fields: ["Computer science", "Bioinformatics", "Bioengineering"]
+    lede: "Ph.D. student in Computer Science at the University of Verona. Machine learning that reads EEG and TMS-EEG as brain networks."
+  stage:
+    b0_title: "Start with the signal."
+    b0_text: "EEG records electrical potentials from 19 electrodes on the scalp. Every trace here is simulated, at 250 samples per second."
+    b1_title: "Correlate the channels."
+    b1_text: "Correlate every pair and the recording becomes a graph. Electrodes are nodes, edges say how much two channels move together. The edges are computed live from the traces on screen."
+    b2_title: "Stimulate and listen."
+    b2_text: "TMS-EEG delivers a magnetic pulse and records the cortical response. Press an electrode: the pulse spreads over the graph and the evoked potential appears in the traces."
+    desc: "Interactive figure. A top view of a head with the 19 electrodes of the 10-20 EEG system and simulated EEG traces. Activating an electrode delivers a simulated pulse that spreads through the connectivity graph."
+    controls_label: "Figure controls"
+    caption: "Simulated figures. No patient data."
+  sentence: "My doctoral work aims to develop EEG and TMS-EEG systems, built on brain connectomics, for the personalized treatment of epilepsy."
+  interests:
+    title: "What I work on."
+  bench:
+    caption: "Simulated signal, real filters."
+    controls_label: "Filters"
+    notch: "Notch 50 Hz"
+    hp: "High-pass 1 Hz"
+    lp: "Low-pass 40 Hz"
+    desc: "Simulated single-channel EEG trace with a small amplitude spectrum. The switches apply real digital filters to the trace."
+  brain:
+    caption: "Toy network on a schematic brain."
+    desc: "Simulated connectivity graph drawn on a rotating schematic brain, with one cluster highlighted as the candidate epileptogenic zone."
+    controls_label: "Electrodes"
+  topo:
+    caption: "Four canonical classes, simulated. Blue is negative, red is positive."
+    desc: "Simulated scalp voltage topography stepping through the four canonical microstate classes A, B, C and D."
+  cell:
+    title: "Before the brain, a bacterium."
+    text: "For my master's thesis I built a dynamic model of the central carbon metabolism of <i>Mycobacterium tuberculosis</i>: Michaelis-Menten kinetics for the Krebs cycle, the glyoxylate shunt, the methylcitrate cycle and the methylmalonyl pathway."
+    text2: "This is a toy version of that network, and the flux runs live. Block or dial down an enzyme, as a drug or a stress would, and watch the carbon find another way, or pile up."
+    controls_label: "Perturbations"
+    desc: "Interactive figure. The central carbon metabolism of Mycobacterium tuberculosis as a network of metabolites and reactions, with particles flowing along the reactions in proportion to the flux. The buttons perturb one enzyme at a time; the readout describes how the flux reroutes."
+    caption: "Toy flux model, not the thesis results."
+  toolbox:
+    title: "What I build with."
+    text: "Hands-on with clinical data since 2019, in academic labs, at Boston Children's Hospital and in a medtech start-up. End-to-end pipelines, from raw signals to predictive models."
+  route:
+    title: "Verona, Trento, Rovereto, Boston, Lyngby."
+    text: "Computer science first, then computational biology, then both applied to the brain, in four teams and three countries."
+    present: "present"
+  pubs:
+    title: "Papers, all about connections."
+    read: "Read the article"
+    kinds:
+      journal: "Journal article"
+      conference: "Conference paper"
+      report: "Registered Report"
+  beyond:
+    title: "Outside the lab."
+    credits: "Photo credits"
+    credits_note: "Photographs from Wikimedia Commons; each name links to the file page and its licence."
+  footer:
+    role: "Ph.D. student in Computer Science, University of Verona."
+    rights: "All rights reserved."
+    built: "Built with Jekyll, hosted on GitHub Pages."
+    profiles: "Profiles"
+  bio:
+    title: "Biography"
+    p1: "I am a computer scientist working at the intersection of machine learning and neuroscience, hands-on with real clinical data since 2019."
+    p2: "I build end-to-end pipelines in Python and MATLAB that take raw biomedical signals (EEG, TMS-EEG, fMRI) through preprocessing, source reconstruction and feature extraction to predictive models, using classical machine learning as well as foundation-model-based methods for tabular data."
+    p3: "I have done this in academic labs, at Boston Children's Hospital and in a medtech start-up. My doctoral work aims to develop EEG and TMS-EEG systems based on brain connectomics for the personalized treatment of epilepsy."
+    experience: "Experience"
+    education: "Education"
+    teaching: "Teaching"
+    grants: "Grants"
+    languages: "Languages"
+    presentations: "Conference presentations"
+    interests: "Research interests"
+    supervisor: "Supervision"
+    cosupervisors: "Co-supervision"
+    thesis: "Thesis"
+    hours: "hours of teaching"
+    poster: "Poster"
+    portrait_alt: "Edoardo Paolini"
+  pubpage:
+    title: "Publications"
+    lede: "Journal articles, registered reports and conference papers, newest first."
+    filter_label: "Filter publications"
+    all: "All"
+    journal: "Journal"
+    conference: "Conference"
+    report: "Registered report"
+    first: "First author"
+    count: "Showing {n} of {total} publications."
+    empty: "No publications match this filter."
+    presentations: "Conference presentations"
+
+it:
+  switch_label: "Lingua"
+  months: ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"]
+  and: "e"
+  nav_label: "Principale"
+  skip: "Vai al contenuto"
+  theme_dark: "Tema scuro"
+  nav:
+    home: "Home"
+    bio: "Biografia"
+    publications: "Pubblicazioni"
+  meta:
+    description: "Edoardo Paolini, dottorando in Informatica all'Università di Verona. Machine learning per EEG e TMS-EEG, connettomica cerebrale, epilessia."
+    bio_description: "Biografia di Edoardo Paolini: esperienze, formazione, didattica e presentazioni a congressi. Informatica, bioinformatica e bioingegneria."
+    pubs_description: "Articoli su rivista, registered report e articoli di conferenza di Edoardo Paolini su connettività cerebrale, EEG, TMS-EEG e fMRI."
+  hero:
+    fields: ["Informatica", "Bioinformatica", "Bioingegneria"]
+    lede: "Dottorando in Informatica all'Università di Verona. Machine learning che legge EEG e TMS-EEG come reti cerebrali."
+  stage:
+    b0_title: "Si parte dal segnale."
+    b0_text: "L'EEG registra i potenziali elettrici da 19 elettrodi sullo scalpo. Ogni traccia qui è simulata, a 250 campioni al secondo."
+    b1_title: "Correla i canali."
+    b1_text: "Correlando i canali, la registrazione diventa un grafo. Gli elettrodi sono nodi, gli archi dicono quanto due canali si muovono insieme. Gli archi sono calcolati in diretta dalle tracce sullo schermo."
+    b2_title: "Stimola e ascolta."
+    b2_text: "La TMS-EEG applica un impulso magnetico e registra la risposta corticale. Premi un elettrodo: l'impulso si propaga sul grafo e il potenziale evocato compare nelle tracce."
+    desc: "Figura interattiva. Vista dall'alto di una testa con i 19 elettrodi del sistema EEG 10-20 e tracce EEG simulate. Attivando un elettrodo si applica un impulso simulato che si propaga nel grafo di connettività."
+    controls_label: "Controlli della figura"
+    caption: "Figure simulate. Nessun dato di pazienti."
+  sentence: "Il mio dottorato punta a sviluppare sistemi EEG e TMS-EEG, fondati sulla connettomica cerebrale, per il trattamento personalizzato dell'epilessia."
+  interests:
+    title: "Di cosa mi occupo."
+  bench:
+    caption: "Segnale simulato, filtri reali."
+    controls_label: "Filtri"
+    notch: "Notch 50 Hz"
+    hp: "Passa-alto 1 Hz"
+    lp: "Passa-basso 40 Hz"
+    desc: "Traccia EEG simulata a canale singolo con un piccolo spettro di ampiezza. Gli interruttori applicano filtri digitali reali alla traccia."
+  brain:
+    caption: "Rete giocattolo su un cervello schematico."
+    desc: "Grafo di connettività simulato disegnato su un cervello tridimensionale che ruota, con un gruppo di elettrodi evidenziato come zona epilettogena candidata."
+    controls_label: "Elettrodi"
+  topo:
+    caption: "Quattro classi canoniche, simulate. Blu negativo, rosso positivo."
+    desc: "Topografia simulata del voltaggio sullo scalpo che alterna le quattro classi canoniche di microstati A, B, C e D."
+  cell:
+    title: "Prima del cervello, un batterio."
+    text: "Per la tesi di laurea magistrale ho costruito un modello dinamico del metabolismo centrale del carbonio di <i>Mycobacterium tuberculosis</i>: cinetiche di Michaelis-Menten per il ciclo di Krebs, lo shunt del gliossilato, il ciclo del metilcitrato e la via del metilmalonile."
+    text2: "Questa è una versione giocattolo di quella rete, e il flusso scorre in diretta. Blocca o riduci un enzima, come farebbe un farmaco o uno stress, e guarda il carbonio trovare un'altra strada, o accumularsi."
+    controls_label: "Perturbazioni"
+    desc: "Figura interattiva. Il metabolismo centrale del carbonio di Mycobacterium tuberculosis come rete di metaboliti e reazioni, con particelle che scorrono lungo le reazioni in proporzione al flusso. I pulsanti perturbano un enzima alla volta; il testo descrive come il flusso si ridistribuisce."
+    caption: "Modello di flusso giocattolo, non i risultati della tesi."
+  toolbox:
+    title: "Con che cosa lavoro."
+    text: "Dal 2019 lavoro con dati clinici reali, in laboratori accademici, al Boston Children's Hospital e in una start-up medtech. Pipeline complete, dal segnale grezzo ai modelli predittivi."
+  route:
+    title: "Verona, Trento, Rovereto, Boston, Lyngby."
+    text: "Prima l'informatica, poi la biologia computazionale, poi entrambe applicate al cervello, in quattro gruppi e tre paesi."
+    present: "oggi"
+  pubs:
+    title: "Articoli, tutti sulle connessioni."
+    read: "Leggi l'articolo"
+    kinds:
+      journal: "Articolo su rivista"
+      conference: "Articolo di conferenza"
+      report: "Registered Report"
+  beyond:
+    title: "Fuori dal laboratorio."
+    credits: "Crediti fotografici"
+    credits_note: "Fotografie da Wikimedia Commons; ogni nome rimanda alla pagina del file e alla sua licenza."
+  footer:
+    role: "Dottorando in Informatica, Università di Verona."
+    rights: "Tutti i diritti riservati."
+    built: "Realizzato con Jekyll, ospitato su GitHub Pages."
+    profiles: "Profili"
+  bio:
+    title: "Biografia"
+    p1: "Sono un informatico che lavora all'incrocio tra machine learning e neuroscienze, a contatto diretto con dati clinici reali dal 2019."
+    p2: "Costruisco pipeline complete in Python e MATLAB che portano i segnali biomedici grezzi (EEG, TMS-EEG, fMRI) dal preprocessing alla ricostruzione delle sorgenti e all'estrazione di feature, fino ai modelli predittivi, con machine learning classico e metodi basati su foundation model per dati tabellari."
+    p3: "L'ho fatto in laboratori accademici, al Boston Children's Hospital e in una start-up medtech. Il mio dottorato punta a sviluppare sistemi EEG e TMS-EEG fondati sulla connettomica cerebrale per il trattamento personalizzato dell'epilessia."
+    experience: "Esperienze"
+    education: "Formazione"
+    teaching: "Didattica"
+    grants: "Borse e finanziamenti"
+    languages: "Lingue"
+    presentations: "Presentazioni a congressi"
+    interests: "Interessi di ricerca"
+    supervisor: "Supervisione"
+    cosupervisors: "Co-supervisione"
+    thesis: "Tesi"
+    hours: "ore di didattica"
+    poster: "Poster"
+    portrait_alt: "Edoardo Paolini"
+  pubpage:
+    title: "Pubblicazioni"
+    lede: "Articoli su rivista, registered report e articoli di conferenza, dal più recente."
+    filter_label: "Filtra le pubblicazioni"
+    all: "Tutte"
+    journal: "Rivista"
+    conference: "Conferenza"
+    report: "Registered report"
+    first: "Primo autore"
+    count: "{n} pubblicazioni su {total}."
+    empty: "Nessuna pubblicazione corrisponde al filtro."
+    presentations: "Presentazioni a congressi"

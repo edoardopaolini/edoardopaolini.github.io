@@ -1,26 +1,33 @@
-# Academic path, newest first. Rendered as the ledger on the home page and as the timeline on /bio/.
-# Fields: degree, institution, place, start, end ("present" for the current one), honors (optional),
-# supervisor (optional), thesis (optional, HTML allowed for species names), focus (optional, shown when there is no thesis).
-- degree: "Ph.D. student in Computer Science"
-  institution: "University of Verona"
-  place: "Verona, Italy"
-  start: "October 2023"
-  end: "present"
+# Degrees, newest first (source: the two CVs in other/). Rendered on /bio/; the home route reads route.yml.
+# Bilingual fields are maps {en, it}. Dates are "YYYY-MM" (the template prints the month in the page language).
+# Thesis titles keep their original language. HTML is allowed in `thesis`.
+- degree: { en: "Ph.D. student in Computer Science", it: "Dottorando in Informatica" }
+  institution: { en: "University of Verona", it: "Università di Verona" }
+  place: { en: "Verona, Italy", it: "Verona" }
+  start: "2023-10"
+  end: present
   supervisor: "Prof. Silvia Francesca Storti"
-  focus: "EEG and TMS-EEG systems based on brain connectomics for the personalized treatment of epilepsy."
+  cosupervisors: "Prof. Gloria Menegaz, Prof. Pietro Sala"
+  focus:
+    en: "EEG and TMS-EEG systems based on brain connectomics for the personalized treatment of epilepsy."
+    it: "Sistemi EEG e TMS-EEG fondati sulla connettomica cerebrale per il trattamento personalizzato dell'epilessia."
 
-- degree: "M.Sc. in Quantitative and Computational Biology"
+- degree: { en: "M.Sc. in Quantitative and Computational Biology", it: "Laurea magistrale in Quantitative and Computational Biology" }
   honors: "110/110 cum laude"
-  institution: "University of Trento"
-  place: "Trento, Italy"
-  start: "September 2020"
-  end: "March 2023"
+  institution: { en: "University of Trento", it: "Università di Trento" }
+  place: { en: "Trento, Italy", it: "Trento" }
+  start: "2020-09"
+  end: "2023-03"
+  supervisor: "Dr. Luca Marchetti"
+  cosupervisors: "Dr. Federico Reali"
   thesis: "A systems biology investigation of metabolic and flux dynamics in <i>Mycobacterium tuberculosis</i>"
 
-- degree: "B.Sc. in Computer Science"
+- degree: { en: "B.Sc. in Computer Science", it: "Laurea in Informatica" }
   honors: "110/110 cum laude"
-  institution: "University of Verona"
-  place: "Verona, Italy"
-  start: "September 2017"
-  end: "July 2020"
+  institution: { en: "University of Verona", it: "Università di Verona" }
+  place: { en: "Verona, Italy", it: "Verona" }
+  start: "2017-09"
+  end: "2020-07"
+  supervisor: "Prof. Silvia Francesca Storti"
+  cosupervisors: "Dr. Ilaria Boscolo Galazzo"
   thesis: "Test-retest reliability analysis of functional and effective connectivity measures in resting state fMRI"

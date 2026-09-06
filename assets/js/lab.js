@@ -1,4 +1,5 @@
-/* Lab: shared helpers for the canvas figures. Loaded after site.js, before the figure modules. */
+/* Lab: shared helpers for the canvas figures (seeded random numbers, tokens, the 10-20 montage, canvas sizing,
+   interpolation, colour parsing, label formatting and strings). Loaded after site.js, before the figure modules. */
 (function () {
   'use strict';
   var Lab = {};
@@ -15,12 +16,13 @@
     };
   };
 
-  /* Design tokens read from CSS so canvases follow the theme. */
+  /* Design tokens read from CSS so canvases follow the theme. Only the tokens a figure reads are listed. */
   var TOKEN_MAP = {
-    bg: '--bg', bg2: '--bg-2', surface: '--surface', surface2: '--surface-2',
+    surface: '--surface', surface2: '--surface-2',
     ink: '--ink', ink2: '--ink-2', muted: '--muted', line: '--line', lineStrong: '--line-strong',
-    accent: '--accent', accentStrong: '--accent-strong', accentSoft: '--accent-soft', accentGlow: '--accent-glow',
-    trace: '--trace', trace2: '--trace-2', fontMono: '--font-mono', fontDisplay: '--font-display', fontBody: '--font-body'
+    accent: '--accent', trace: '--trace', trace2: '--trace-2',
+    neuronFibre: '--neuron-fibre', neuronSoma: '--neuron-soma',
+    fontMono: '--font-mono', fontBody: '--font-body'
   };
   Lab.tokens = function () {
     var cs = getComputedStyle(document.documentElement);
@@ -43,20 +45,15 @@
       ['T3', 1, -90], ['C3', 0.5, -90], ['Cz', 0, 0], ['C4', 0.5, 90], ['T4', 1, 90],
       ['T5', 1, -126], ['P3', 0.55, -141], ['Pz', 0.5, 180], ['P4', 0.55, 141], ['T6', 1, 126], ['O1', 1, -162], ['O2', 1, 162]
     ];
-    return defs.map(function (d, i) {
+    return defs.map(function (d) {
       var th = d[2] * Math.PI / 180;
-      return { name: d[0], index: i, x: +(d[1] * Math.sin(th)).toFixed(4), y: +(d[1] * Math.cos(th)).toFixed(4) };
+      return { name: d[0], x: +(d[1] * Math.sin(th)).toFixed(4), y: +(d[1] * Math.cos(th)).toFixed(4) };
     });
   })();
   Lab.electrodeIndex = function (name) {
     for (var i = 0; i < Lab.MONTAGE.length; i++) if (Lab.MONTAGE[i].name.toLowerCase() === String(name).toLowerCase()) return i;
     return -1;
   };
-  /* Unit-circle point to screen: head centre (cx, cy), radius r (electrodes at radius r sit on the head ring). */
-  Lab.toScreen = function (p, cx, cy, r) {
-    return { x: cx + p.x * r, y: cy - p.y * r };
-  };
-
   /* Canvas sizing with a DPR cap of 2. Returns CSS-pixel size and a context whose transform is set. */
   Lab.fitCanvas = function (canvas) {
     var rect = canvas.getBoundingClientRect();
@@ -116,6 +113,16 @@
     }
     return [128, 128, 128];
   };
+  /* Alpha of a colour token: the fourth component of rgba(), written as "0.11" or "11%" (comma or slash
+     separated); 1 for rgb() and hex. Read once per theme so the frame loops only multiply. */
+  Lab.alpha = function (color) {
+    var m = String(color).match(/rgba?\(([^)]+)\)/);
+    if (!m) return 1;
+    var parts = m[1].split(/[\s,\/]+/).filter(Boolean);
+    if (parts.length < 4) return 1;
+    var a = parts[3].slice(-1) === '%' ? parseFloat(parts[3]) / 100 : parseFloat(parts[3]);
+    return isFinite(a) ? Math.max(0, Math.min(1, a)) : 1;
+  };
   /* Memoised: the figures call this inside draw loops with a handful of colours and quantised alphas,
      so the cache stays small and no strings are built per frame after warm-up. */
   var rgbaCache = {}, rgbaCount = 0;
@@ -134,6 +141,31 @@
   Lab.param = function (name) {
     try { return new URLSearchParams(window.location.search).get(name); } catch (e) { return null; }
   };
+
+  /* "{name}" placeholders filled from a map; a placeholder without a value stays visible so a wrong template
+     shows. Numbers are written as given (callers round or sign them first). */
+  Lab.format = function (template, values) {
+    return String(template).replace(/\{(\w+)\}/g, function (all, key) {
+      return values && values[key] !== undefined ? String(values[key]) : all;
+    });
+  };
+  /* Labels of a figure: str(path, fallback) over window.I18N[moduleKey], which _layouts/default.html inlines
+     from _data/js/*.yml in the language of the page. path may be dotted ("readouts.wild"). English lives only
+     in the yml: when the tree or the entry is missing the getter returns fallback if one is given, else the
+     last segment of the path, and never throws (the tests load the modules without I18N). */
+  Lab.strings = function (moduleKey) {
+    var tree = (typeof window !== 'undefined' && window.I18N && window.I18N[moduleKey]) || null;
+    return function str(path, fallback) {
+      var parts = String(path).split('.'), node = tree, i;
+      for (i = 0; i < parts.length && node !== null && typeof node === 'object'; i++) node = node[parts[i]];
+      if (i === parts.length && typeof node === 'string') return node;
+      return fallback !== undefined ? fallback : parts[parts.length - 1];
+    };
+  };
+  /* Monotonic milliseconds for the frame loops and the readout timers. */
+  Lab.now = (typeof performance !== 'undefined' && performance.now)
+    ? function () { return performance.now(); }
+    : function () { return Date.now(); };
   /* site.js computes the flag (system preference or ?motion=reduce); fall back to the media query if it is absent. */
   Lab.reduceMotion = window.siteMotion ? window.siteMotion.reduce :
     !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);

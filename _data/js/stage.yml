@@ -1,0 +1,31 @@
+# Strings of the stage figure (assets/js/stage.js), serialised into window.I18N.stage by _layouts/default.html.
+# Both trees carry the same keys. Placeholders in braces are filled by the module: {name} electrode name,
+# {a} {b} the two electrodes of a pair, {r} the correlation, {reached} {total} electrode counts, {ms} a latency,
+# {value} the coupling value, {summary} the strongest-pair sentence, {shown} {total} {fs} channels on the page and
+# the sample rate.
+en:
+  stimulate: "Stimulate {name}"
+  coupling: "Coupling"
+  reset: "Reset"
+  reset_label: "Reset the simulation"
+  scale: "1 s"
+  tms: "TMS"
+  traces: "{shown} of {total} channels shown, {fs} samples per second."
+  strongest: "Strongest pair {a}-{b}, r = {r}."
+  prompt: "Press an electrode to deliver a pulse."
+  stimulated: "Stimulated {name}. The wave reached {reached} of {total} electrodes; the farthest at {ms} ms."
+  reset_done: "Simulation reset. {summary}"
+  coupling_set: "Coupling {value}."
+it:
+  stimulate: "Stimola {name}"
+  coupling: "Accoppiamento"
+  reset: "Reimposta"
+  reset_label: "Reimposta la simulazione"
+  scale: "1 s"
+  tms: "TMS"
+  traces: "{shown} canali su {total} mostrati, {fs} campioni al secondo."
+  strongest: "Coppia più forte {a}-{b}, r = {r}."
+  prompt: "Premi un elettrodo per applicare un impulso."
+  stimulated: "Stimolato {name}. L'onda raggiunge {reached} elettrodi su {total}, l'ultimo a {ms} ms."
+  reset_done: "Simulazione reimpostata. {summary}"
+  coupling_set: "Accoppiamento {value}."

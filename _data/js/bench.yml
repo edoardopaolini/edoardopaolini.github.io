@@ -1,0 +1,20 @@
+# Strings of the signal bench (assets/js/bench.js), serialised into window.I18N.bench by the default layout.
+# Placeholders in braces are filled by the module. The two trees must have the same keys.
+en:
+  filters: "Filters: {list}."
+  none: "none"
+  notch: "notch 50 Hz"
+  hp: "high-pass 1 Hz"
+  lp: "low-pass 40 Hz"
+  vs_raw: "{f} Hz: {db} vs raw."
+  tick: "1 s"
+  window: "{s} s window"
+it:
+  filters: "Filtri: {list}."
+  none: "nessuno"
+  notch: "notch 50 Hz"
+  hp: "passa-alto 1 Hz"
+  lp: "passa-basso 40 Hz"
+  vs_raw: "{f} Hz: {db} rispetto al segnale grezzo."
+  tick: "1 s"
+  window: "finestra di {s} s"

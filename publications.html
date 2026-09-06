@@ -2,43 +2,8 @@
 layout: page
 title: Publications
 permalink: /publications/
-description: "Journal articles, a registered report and conference papers by Edoardo Paolini on brain connectivity, EEG, TMS-EEG and fMRI."
+lang: en
+alt: /it/publications/
+meta: pubs_description
 ---
-<header class="page-head">
-    <h1>Publications</h1>
-    <p class="lede">Journal articles and conference papers, newest first.</p>
-    <ul class="profile-links inline" aria-label="Profiles">
-        {% for p in site.data.profiles %}
-        <li><a href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{% include icons/{{ p.icon }}.svg %}<span>{{ p.name }}</span></a></li>
-        {% endfor %}
-    </ul>
-</header>
-
-<fieldset class="segmented" id="pub-filter">
-    <legend class="visually-hidden">Filter publications</legend>
-    <label><input type="radio" name="pubfilter" value="all" checked><span>All</span></label>
-    <label><input type="radio" name="pubfilter" value="journal"><span>Journal</span></label>
-    <label><input type="radio" name="pubfilter" value="conference"><span>Conference</span></label>
-    <label><input type="radio" name="pubfilter" value="first"><span>First author</span></label>
-</fieldset>
-<p class="visually-hidden" id="pub-count" aria-live="polite"></p>
-
-<div class="pub-ledger" id="pub-list">
-    {%- assign years = site.data.publications | map: 'year' | uniq -%}
-    {% for y in years %}
-    <section class="pub-group" aria-labelledby="year-{{ y }}">
-        <h2 class="pub-year mono" id="year-{{ y }}">{{ y }}</h2>
-        <ul>
-            {% for p in site.data.publications %}{% if p.year == y %}
-            <li class="pub-entry" data-type="{{ p.type }}" data-first="{% if p.authors[0] == 'Edoardo Paolini' %}true{% else %}false{% endif %}">
-                <h3><a href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{{ p.title }}</a></h3>
-                <p class="pub-authors">{% include authors.html authors=p.authors %}</p>
-                <p class="pub-meta">{{ p.venue }}. {% include pub-kind.html p=p %}.</p>
-                <a class="text-link" href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{{ p.source | default: 'Read the article' }}</a>
-            </li>
-            {% endif %}{% endfor %}
-        </ul>
-    </section>
-    {% endfor %}
-    <p class="pub-empty" hidden>No publications match this filter.</p>
-</div>
+{% include pubs-body.html %}

@@ -2,48 +2,8 @@
 layout: page
 title: Biography
 permalink: /bio/
-description: "Academic path of Edoardo Paolini: B.Sc. in Computer Science (Verona, 2020), M.Sc. in Quantitative and Computational Biology (Trento, 2023), Ph.D. student in Computer Science (Verona, since 2023)."
+lang: en
+alt: /it/bio/
+meta: bio_description
 ---
-<header class="page-head">
-    <h1>Biography</h1>
-</header>
-
-{%- assign portrait = site.static_files | where: 'path', '/assets/img/portrait.jpg' | first -%}
-<div class="bio-grid{% if portrait %} has-portrait{% endif %}">
-    <div class="bio-text">
-        <p>I received a B.Sc. in Computer Science from the University of Verona, Italy (2020), and an M.Sc. in Quantitative and Computational Biology from the University of Trento, Italy (2023). I am now a Ph.D. student in Computer Science at the University of Verona.</p>
-        <p>My doctoral work aims to develop EEG and TMS-EEG systems based on brain connectomics for the personalized treatment of epilepsy.</p>
-        <p>My interests span computer science, biology and neuroscience: computational models, brain connectivity and signal source estimation.</p>
-    </div>
-    {% if portrait %}<img class="portrait" src="{{ '/assets/img/portrait.jpg' | relative_url }}" alt="Edoardo Paolini" width="220" height="220">{% endif %}
-</div>
-
-<section class="bio-section" aria-labelledby="education-title">
-    <h2 id="education-title">Education</h2>
-    <ol class="rail reveal">
-        {% for e in site.data.education %}
-        <li class="rail-item">
-            <span class="rail-year mono">{{ e.start }} to {{ e.end }}</span>
-            <h3>{{ e.degree }}{% if e.honors %}, {{ e.honors }}{% endif %}</h3>
-            <p class="rail-meta">{{ e.institution }}, {{ e.place }}</p>
-            {% if e.supervisor %}<p class="rail-meta">Supervisor: {{ e.supervisor }}</p>{% endif %}
-            {% if e.thesis %}<p class="rail-thesis">Thesis: {{ e.thesis }}.</p>{% endif %}
-            {% if e.focus %}<p class="rail-thesis">{{ e.focus }}</p>{% endif %}
-        </li>
-        {% endfor %}
-    </ol>
-</section>
-
-<section class="bio-section" aria-labelledby="interests-title">
-    <h2 id="interests-title">Research interests</h2>
-    <dl class="def-grid">
-        {% for i in site.data.interests %}
-        <div>
-            <dt>{{ i.title }}</dt>
-            <dd>{{ i.text }}</dd>
-        </div>
-        {% endfor %}
-    </dl>
-</section>
-
-{% include beyond.html %}
+{% include bio-body.html %}

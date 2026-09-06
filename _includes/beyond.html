@@ -1,23 +1,36 @@
 {%- comment -%}
-"Outside the lab" renders only when _data/beyond.yml has at least one item. Nothing is shown otherwise.
+"Outside the lab": a collage of the items in _data/beyond.yml (photo tiles and text tiles), with the photo credits
+that the Creative Commons licences require in a closed disclosure. Renders nothing when the file is empty.
 {%- endcomment -%}
+{%- assign lang = page.lang | default: 'en' -%}
+{%- assign t = site.data.i18n[lang] -%}
 {% if site.data.beyond and site.data.beyond.size > 0 %}
 <section class="section beyond-section" id="beyond">
     <div class="container">
         <div class="section-head">
-            <h2>Outside the lab{% if page.layout == 'home' %}.{% endif %}</h2>
+            <h2>{{ t.beyond.title }}</h2>
         </div>
-        <div class="collage">
+        <ul class="collage">
             {% for b in site.data.beyond %}
-            <article class="collage-item {% cycle 'wide', 'narrow' %} reveal" style="--reveal-delay: {{ forloop.index0 | times: 50 }}ms">
-                {% if b.image %}<img src="{{ b.image | relative_url }}" alt="{{ b.alt | default: b.title }}" loading="lazy">{% endif %}
-                <h3>{{ b.title }}</h3>
-                {% if b.kind %}<p class="mono">{{ b.kind }}</p>{% endif %}
-                {% if b.note %}<p>{{ b.note }}</p>{% endif %}
-                {% if b.url %}<a class="text-link" href="{{ b.url }}" {% if b.url contains 'http' %}target="_blank" rel="noopener noreferrer"{% endif %}>{{ b.link_label | default: 'Open' }}</a>{% endif %}
-            </article>
+            <li class="tile {% if b.image %}tile-photo{% else %}tile-text glass{% endif %} reveal" style="--reveal-delay: {{ forloop.index0 | times: 50 }}ms">
+                {% if b.image %}<img src="{{ b.image | relative_url }}" alt="{{ b.alt[lang] }}" loading="lazy" decoding="async" width="{{ b.width }}" height="{{ b.height }}">{% endif %}
+                <div class="tile-copy">
+                    <h3>{{ b.title[lang] }}</h3>
+                    {% if b.note %}<p>{{ b.note[lang] }}</p>{% endif %}
+                </div>
+            </li>
             {% endfor %}
-        </div>
+        </ul>
+        {%- assign credited = site.data.beyond | where_exp: 'b', 'b.credit' -%}
+        {% if credited.size > 0 %}
+        <details class="credits">
+            <summary>{{ t.beyond.credits }}</summary>
+            <p>{{ t.beyond.credits_note }}</p>
+            <ul>
+                {% for b in credited %}<li>{{ b.title[lang] }}: {% if b.credit_url %}<a href="{{ b.credit_url }}" target="_blank" rel="noopener noreferrer">{{ b.credit }}</a>{% else %}{{ b.credit }}{% endif %}</li>{% endfor %}
+            </ul>
+        </details>
+        {% endif %}
     </div>
 </section>
 {% endif %}

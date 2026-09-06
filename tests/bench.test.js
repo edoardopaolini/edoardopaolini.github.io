@@ -1,17 +1,12 @@
 /* Model tests for assets/js/bench.js. Run from the repository root:
      jsc tests/bench.test.js
    (JavaScriptCore's jsc, or any engine with load() and print()). */
-var window = this;  // bare engine: the modules attach to window
+var window = this;  /* bare engine: the modules attach to window */
+load('tests/harness.js');
 load('assets/js/lab.js'); load('assets/js/bench.js');
 
 var M = window.__benchModel;
 var FS = M.FS;
-var failed = 0;
-function assert(cond, msg) {
-  print((cond ? 'PASS ' : 'FAIL ') + msg);
-  if (!cond) failed++;
-}
-function near(a, b, tol) { return Math.abs(a - b) <= tol; }
 function dB(ratio) { return 20 * Math.log10(ratio); }
 
 /* ---- module shape ---- */
@@ -74,15 +69,31 @@ assert(Math.abs(y) < 1e-6, 'notch impulse response decays (stable)');
 var ch = new M.Chain();
 assert(ch.label() === 'none' && !ch.anyOn(), 'empty chain: label "none", nothing on');
 ch.setEnabled({ notch: true, hp: true, lp: true });
-assert(ch.label() === 'notch 50 Hz, high-pass 1 Hz, low-pass 40 Hz', 'full label: ' + ch.label());
+assert(ch.label() === 'notch, hp, lp', 'without names the label lists the stage keys: ' + ch.label());
 ch.setEnabled({ hp: false });
-assert(ch.label() === 'notch 50 Hz, low-pass 40 Hz' && ch.getEnabled().hp === false, 'partial setEnabled keeps the other stages');
+assert(ch.label() === 'notch, lp' && ch.getEnabled().hp === false, 'partial setEnabled keeps the other stages');
 for (i = 0; i < 100; i++) ch.process(Math.sin(i));
 var clone = ch.clone();
 assert(clone.process(0.5) === ch.process(0.5), 'clone carries the filter state');
 ch.reset();
 assert(ch.process(0) === 0, 'reset clears the filter state');
-assert(!/[–—]/.test(JSON.stringify(M.STAGES)), 'no en- or em-dashes in the stage labels');
+assert(M.STAGES.every(function (st) { return st.label === undefined; }), 'the stages carry no English labels (they live in _data/js/bench.yml)');
+var names = { notch: 'notch 50 Hz', hp: 'passa-alto 1 Hz', lp: 'passa-basso 40 Hz', none: 'nessuno' };
+assert(ch.label(names) === 'notch 50 Hz, passa-basso 40 Hz', 'label takes the names of the page language: ' + ch.label(names));
+assert(new M.Chain().label(names) === 'nessuno', 'empty chain uses the translated "none"');
+
+/* ---- layout: a pure function of the container width ---- */
+assert(M.STACK_BELOW === 700, 'the bench stacks under 700 px');
+var narrow = M.layoutFor(699), wide = M.layoutFor(700);
+assert(narrow.stacked === true && wide.stacked === false, '699 px stacks, 700 px stays side by side');
+assert(M.layoutFor(360).stacked && M.layoutFor(390).stacked && !M.layoutFor(1200).stacked, 'phones stack, wide figures do not');
+assert(narrow.bars === 8 && wide.bars === 12, 'stacked layout has 8 bars, wide layout 12');
+assert(narrow.labelPx >= 12 && wide.labelPx >= 11, 'stacked labels are at least 12 px');
+assert(narrow.traceMin >= 180 && narrow.specHeight === 110, 'stacked trace at least 180 px tall, spectrum 110 px');
+assert(M.layoutFor(360) === M.layoutFor(500), 'the layout objects are shared, so identity tells a change');
+assert(M.windowFor(278) === 2 && M.windowFor(308) === 2, 'a phone-wide trace shows 2 s');
+assert(M.windowFor(432) === 3 && M.windowFor(594) === 4 && M.windowFor(1400) === 4, 'wider traces show 3 s, then the 4 s maximum');
+assert(M.windowFor(50) === 2 && M.WINDOW_MAX_S === 4, 'the window never drops under 2 s or over 4 s');
 
 /* ---- spectrum: bin mapping, normalisation, DC factor ---- */
 var N = 256, buf = new Float32Array(N);
@@ -147,5 +158,4 @@ var spR = M.spectrum(rawB), spF = M.spectrum(filB);
 g = M.binDb(spF, spR, MEAS, FS, 50); assert(g < -20, 'binDb at 50 Hz with the notch on: ' + g.toFixed(1) + ' dB');
 g = M.binDb(spF, spR, MEAS, FS, 10); assert(Math.abs(g) < 1, 'binDb at 10 Hz with the notch on: ' + g.toFixed(2) + ' dB');
 
-if (failed) throw new Error(failed + ' bench test(s) failed');
-print('bench: all tests passed');
+summary('bench');

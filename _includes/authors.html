@@ -1,7 +1,10 @@
+{%- comment -%} Author list with the page-language conjunction; "Edoardo Paolini" in bold; "et al." follows the last name without a comma. {%- endcomment -%}
+{%- assign lang = page.lang | default: 'en' -%}
+{%- assign t = site.data.i18n[lang] -%}
 {%- for a in include.authors -%}
 {%- if a == 'Edoardo Paolini' %}<strong>{{ a }}</strong>{% else %}{{ a }}{% endif -%}
 {%- unless forloop.last -%}
 {%- assign nxt = include.authors[forloop.index] -%}
-{%- if nxt == 'et al.' %}, {% elsif forloop.rindex == 2 %} and {% else %}, {% endif -%}
+{%- if nxt == 'et al.' %} {% elsif forloop.rindex == 2 %} {{ t.and }} {% else %}, {% endif -%}
 {%- endunless -%}
 {%- endfor -%}

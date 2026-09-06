@@ -1,8 +1,10 @@
 /* Signal bench: a synthetic single-channel EEG trace, three real biquad filters and a small spectrum.
    Part 1 is the pure model (no DOM), exported on window.__benchModel for tests/bench.test.js, which runs
    it in a bare engine after assets/js/lab.js.
-   Part 2 attaches to #bench and exits silently when the element is absent. Plain ES2017, no dependencies
-   beyond window.Lab (assets/js/lab.js). */
+   Part 2 attaches to #bench and exits silently when the element is absent. It measures its container in
+   fit() and stacks the trace over the spectrum when the figure is narrower than STACK_BELOW px.
+   Plain ES5, no dependencies beyond window.Lab (assets/js/lab.js). Labels come from window.I18N.bench
+   (_data/js/bench.yml) through Lab.strings; without the table the stage keys stand in for the labels. */
 (function () {
   'use strict';
 
@@ -13,6 +15,23 @@
      ====================================================================== */
 
   var FS = 250; /* simulated sample rate, Hz */
+
+  /* Two layouts, chosen from the width of the figure container. The stacked one is for phones: the
+     spectrum moves under the trace, gets fewer and wider bars and larger labels. */
+  var STACK_BELOW = 700;
+  var LAYOUTS = {
+    wide: { stacked: false, bars: 12, labelPx: 11, traceMin: 220, specHeight: 0, lineWidth: 1.25 },
+    stacked: { stacked: true, bars: 8, labelPx: 12, traceMin: 180, specHeight: 110, lineWidth: 1.4 }
+  };
+  function layoutFor(width) {
+    return width < STACK_BELOW ? LAYOUTS.stacked : LAYOUTS.wide;
+  }
+  /* Seconds of trace on screen for a trace canvas of the given CSS width: at least PX_PER_SECOND per second,
+     so a 10 Hz rhythm keeps a legible period on a phone, never more than WINDOW_MAX_S. */
+  var PX_PER_SECOND = 150, WINDOW_MIN_S = 2, WINDOW_MAX_S = 4;
+  function windowFor(width) {
+    return Math.max(WINDOW_MIN_S, Math.min(WINDOW_MAX_S, Math.round(width / PX_PER_SECOND)));
+  }
 
   /* RBJ Audio EQ Cookbook biquads. Returns coefficients normalised by a0. */
   function design(type, f0, fs, Q) {
@@ -47,11 +66,12 @@
   };
   Biquad.prototype.copyStateFrom = function (o) { this.z1 = o.z1; this.z2 = o.z2; return this; };
 
-  /* The three bench stages, in processing order. Q = 1/sqrt(2) makes the high- and low-pass Butterworth. */
+  /* The three bench stages, in processing order. Q = 1/sqrt(2) makes the high- and low-pass Butterworth.
+     The keys are also the keys of the labels in _data/js/bench.yml, which the page passes to Chain.label(). */
   var STAGES = [
-    { key: 'notch', type: 'notch', f0: 50, q: 30, label: 'notch 50 Hz' },
-    { key: 'hp', type: 'hp', f0: 1, q: Math.SQRT1_2, label: 'high-pass 1 Hz' },
-    { key: 'lp', type: 'lp', f0: 40, q: Math.SQRT1_2, label: 'low-pass 40 Hz' }
+    { key: 'notch', type: 'notch', f0: 50, q: 30 },
+    { key: 'hp', type: 'hp', f0: 1, q: Math.SQRT1_2 },
+    { key: 'lp', type: 'lp', f0: 40, q: Math.SQRT1_2 }
   ];
 
   /* The filter chain at FS: every stage always exists, only the enabled ones process the sample. */
@@ -88,10 +108,14 @@
     for (var i = 0; i < this.on.length; i++) if (this.on[i]) return true;
     return false;
   };
-  Chain.prototype.label = function () {
+  /* names: optional { notch, hp, lp, none } in the page language; without them the keys themselves are listed. */
+  Chain.prototype.label = function (names) {
     var parts = [];
-    for (var i = 0; i < STAGES.length; i++) if (this.on[i]) parts.push(STAGES[i].label);
-    return parts.length ? parts.join(', ') : 'none';
+    for (var i = 0; i < STAGES.length; i++) {
+      var k = STAGES[i].key;
+      if (this.on[i]) parts.push(names && names[k] ? names[k] : k);
+    }
+    return parts.length ? parts.join(', ') : (names && names.none ? names.none : 'none');
   };
   Chain.prototype.clone = function () {
     var c = new Chain();
@@ -221,6 +245,11 @@
   window.__benchModel = {
     FS: FS,
     STAGES: STAGES,
+    STACK_BELOW: STACK_BELOW,
+    LAYOUTS: LAYOUTS,
+    layoutFor: layoutFor,
+    windowFor: windowFor,
+    WINDOW_MAX_S: WINDOW_MAX_S,
     design: design,
     Biquad: Biquad,
     Chain: Chain,
@@ -237,21 +266,25 @@
   if (typeof document === 'undefined') return;
   var root = document.getElementById('bench');
   if (!root) return;
+  var figure = root.querySelector('.bench-figure');
   var traceCanvas = document.getElementById('bench-canvas');
   var specCanvas = document.getElementById('bench-spectrum');
   var readout = document.getElementById('bench-readout');
-  if (!traceCanvas || !specCanvas) return;
+  if (!figure || !traceCanvas || !specCanvas) return;
 
   var reduce = Lab.reduceMotion;
   var inputs = Array.prototype.slice.call(root.querySelectorAll('input[type=checkbox][data-filter]'));
+  var str = Lab.strings('bench');
+  /* Stage names for Chain.label(), in the language of the page. */
+  var stageNames = { none: str('none') };
+  STAGES.forEach(function (s) { stageNames[s.key] = str(s.key); });
 
   var SIGNAL_SEED = 7;
-  var WINDOW = 4 * FS;          /* 4 s on screen */
   var RING = 1536;              /* about 6 s kept, so a refilter has time to settle before the window */
   var SPEC_N = 256;             /* bars: spectrum of the last 256 filtered samples */
   var MEAS_N = 1024;            /* readout: 50 Hz measurement over the whole 4 s window (bin width 0.24 Hz) */
   var MEAS_F0 = 50;
-  var NBARS = 30, FMAX = 60;
+  var NBARS_MAX = LAYOUTS.wide.bars, FMAX = 60;
   var DB_FLOOR = -36, DB_TOP = 12;      /* bar height range */
   var BAR_SMOOTH = 0.5;                 /* fraction of the new value taken per bar update */
   var BARS_EVERY = 8;                   /* frames between bar updates */
@@ -262,8 +295,7 @@
   var MAX_STEP_S = 0.1;                 /* longest simulated advance per frame */
   var AMP_RANGE = 7.5;                  /* signal units mapped to the half height, fixed so the drift stays visible */
   var TRACE_FOOTER = 22, TRACE_PAD_Y = 6;
-  var SPEC_PAD_X = 12, SPEC_PAD_TOP = 10, SPEC_FOOTER = 20, BAR_GAP = 1;
-  var LABEL_PX = 11;
+  var SPEC_PAD_X = 12, SPEC_PAD_TOP = 10, SPEC_FOOTER = 20, BAR_GAP = 2;
 
   var signal = createSignal(SIGNAL_SEED);
   var raw = new Float32Array(RING);
@@ -282,28 +314,26 @@
   var specMags = new Float32Array(SPEC_N / 2 + 1);
   var measF = new Float32Array(MEAS_N / 2 + 1);
   var measR = new Float32Array(MEAS_N / 2 + 1);
-  var barDb = new Float32Array(NBARS);
-  var barTarget = new Float32Array(NBARS);
+  var barDb = new Float32Array(NBARS_MAX);
+  var barTarget = new Float32Array(NBARS_MAX);
 
   var tv = { w: 0, h: 0, ctx: null };
   var sv = { w: 0, h: 0, ctx: null };
+  var layout = LAYOUTS.wide;
+  var nbars = layout.bars;
+  var winS = WINDOW_MAX_S, winN = winS * FS;   /* seconds and samples on screen, set in fit() */
+  var windowLabel = '';
 
   var shownDb = null;           /* dB value currently in the readout */
   var smoothDb = null;          /* running average of the bin-level measurement between toggles */
 
   /* ---- tokens ---- */
   var t, traceAlpha, trace2Alpha;
-  /* Alpha of an rgba() token (1 for hex and rgb), read once so the frame loop only multiplies. */
-  function baseAlpha(color) {
-    var m = String(color).match(/rgba?\(([^)]+)\)/);
-    if (!m) return 1;
-    var parts = m[1].split(/[\s,\/]+/).filter(Boolean);
-    return parts.length >= 4 ? parseFloat(parts[3]) : 1;
-  }
+  /* The alpha of the two trace tokens is read once per theme so the frame loop only multiplies. */
   function readTokens() {
     t = Lab.tokens();
-    traceAlpha = baseAlpha(t.trace);
-    trace2Alpha = baseAlpha(t.trace2);
+    traceAlpha = Lab.alpha(t.trace);
+    trace2Alpha = Lab.alpha(t.trace2);
   }
   readTokens();
 
@@ -342,8 +372,8 @@
   }
   function updateBars(instant) {
     spectrum(copyLast(specScratch, filt, SPEC_N), specMags);
-    bars(specMags, SPEC_N, FS, NBARS, FMAX, barTarget);
-    for (var j = 0; j < NBARS; j++) {
+    bars(specMags, SPEC_N, FS, nbars, FMAX, barTarget);
+    for (var j = 0; j < nbars; j++) {
       barDb[j] = instant ? barTarget[j] : barDb[j] + (barTarget[j] - barDb[j]) * BAR_SMOOTH;
     }
   }
@@ -356,12 +386,12 @@
   /* force: a toggle just happened, so restart the average and show the new value at once. */
   function writeReadout(force) {
     if (!readout) return;
-    var text = 'Filters: ' + chain.label() + '.';
+    var text = Lab.format(str('filters'), { list: chain.label(stageNames) });
     if (chain.anyOn()) {
       var db = measureDb();
       if (force || smoothDb === null) smoothDb = db; else smoothDb += (db - smoothDb) * READOUT_SMOOTH;
       if (force || shownDb === null || Math.abs(smoothDb - shownDb) >= READOUT_HYSTERESIS_DB) shownDb = smoothDb;
-      text += ' ' + MEAS_F0 + ' Hz: ' + formatDb(shownDb) + ' vs raw.';
+      text += ' ' + Lab.format(str('vs_raw'), { f: MEAS_F0, db: formatDb(shownDb) });
     } else {
       shownDb = null;
       smoothDb = null;
@@ -377,14 +407,16 @@
   }
 
   function drawPolyline(ctx, buf, w, mid, scale) {
-    var x0 = -1, dx = (w + 2) / (WINDOW - 1);
+    var x0 = -1, dx = (w + 2) / (winN - 1);
     ctx.beginPath();
-    for (var i = 0; i < WINDOW; i++) {
-      var y = mid - buf[ringIndex(WINDOW - i)] * scale;
+    for (var i = 0; i < winN; i++) {
+      var y = mid - buf[ringIndex(winN - i)] * scale;
       if (i === 0) ctx.moveTo(x0, y); else ctx.lineTo(x0 + i * dx, y);
     }
     ctx.stroke();
   }
+
+  var tickLabel = str('tick');
 
   function drawTrace(now) {
     var ctx = tv.ctx; if (!ctx) return;
@@ -396,22 +428,22 @@
 
     /* baseline and one tick per second */
     ctx.save();
-    ctx.strokeStyle = t.line;
+    ctx.strokeStyle = t.lineStrong;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    for (var s = 1; s < 4; s++) {
-      var x = Math.round(w * s / 4) + 0.5;
+    for (var s = 1; s < winS; s++) {
+      var x = Math.round(w * s / winS) + 0.5;
       ctx.moveTo(x, plotH + 4); ctx.lineTo(x, plotH + 10);
     }
     ctx.moveTo(0, plotH + 0.5); ctx.lineTo(w, plotH + 0.5);
     ctx.stroke();
     ctx.fillStyle = t.muted;
-    ctx.font = Lab.font(LABEL_PX, t);
+    ctx.font = Lab.font(layout.labelPx, t);
     ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'center';
-    ctx.fillText('1 s', Math.round(w / 8), h - 5);
+    ctx.fillText(tickLabel, Math.round(w / (2 * winS)), h - 5);
     ctx.textAlign = 'right';
-    ctx.fillText('4 s window', w - 12, h - 5);
+    ctx.fillText(windowLabel, w - 12, h - 5);
     ctx.restore();
 
     /* clip the traces to the plot area so a blink never runs into the ticks */
@@ -430,11 +462,11 @@
       drawPolyline(ctx, raw, w, mid, scale);
     }
     if (prevChain && kFade < 1) {
-      ctx.lineWidth = 1.25;
+      ctx.lineWidth = layout.lineWidth;
       ctx.strokeStyle = Lab.rgba(t.trace, traceAlpha * (1 - kFade));
       drawPolyline(ctx, filtPrev, w, mid, scale);
     }
-    ctx.lineWidth = 1.25;
+    ctx.lineWidth = layout.lineWidth;
     ctx.strokeStyle = kFade < 1 ? Lab.rgba(t.trace, traceAlpha * kFade) : t.trace;
     drawPolyline(ctx, filt, w, mid, scale);
     ctx.restore();
@@ -446,31 +478,31 @@
     ctx.clearRect(0, 0, w, h);
     var plotW = w - SPEC_PAD_X * 2, plotH = h - SPEC_PAD_TOP - SPEC_FOOTER;
     var base = SPEC_PAD_TOP + plotH;
-    var bw = (plotW - BAR_GAP * (NBARS - 1)) / NBARS;
+    var bw = (plotW - BAR_GAP * (nbars - 1)) / nbars;
 
     ctx.save();
-    ctx.strokeStyle = t.line;
+    ctx.strokeStyle = t.lineStrong;
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(SPEC_PAD_X, base + 0.5); ctx.lineTo(w - SPEC_PAD_X, base + 0.5); ctx.stroke();
 
     ctx.fillStyle = t.accent;
-    for (var j = 0; j < NBARS; j++) {
+    for (var j = 0; j < nbars; j++) {
       var k = Lab.clamp((barDb[j] - DB_FLOOR) / (DB_TOP - DB_FLOOR), 0, 1);
       var bh = Math.max(k > 0 ? 1 : 0, Math.round(k * plotH));
       if (bh > 0) ctx.fillRect(SPEC_PAD_X + j * (bw + BAR_GAP), base - bh, bw, bh);
     }
 
     ctx.fillStyle = t.muted;
-    ctx.font = Lab.font(LABEL_PX, t);
+    ctx.font = Lab.font(layout.labelPx, t);
     ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'left'; ctx.fillText('0', SPEC_PAD_X, h - 5);
-    ctx.textAlign = 'center'; ctx.fillText('30', SPEC_PAD_X + plotW / 2, h - 5);
-    ctx.textAlign = 'right'; ctx.fillText('60 Hz', w - SPEC_PAD_X, h - 5);
+    ctx.textAlign = 'center'; ctx.fillText(String(FMAX / 2), SPEC_PAD_X + plotW / 2, h - 5);
+    ctx.textAlign = 'right'; ctx.fillText(FMAX + ' Hz', w - SPEC_PAD_X, h - 5);
     ctx.restore();
   }
 
   function drawAll(now) {
-    drawTrace(now === undefined ? performance.now() : now);
+    drawTrace(now === undefined ? Lab.now() : now);
     drawSpectrum();
   }
 
@@ -495,7 +527,7 @@
       if (Object.prototype.hasOwnProperty.call(flags, k) && !!flags[k] !== before[k]) changed = true;
     }
     if (!changed) return;
-    var now = performance.now();
+    var now = Lab.now();
     var fade = animate && !reduce;
     if (fade) {
       prevChain = chain.clone();
@@ -553,14 +585,29 @@
   }
 
   /* ---- sizing, theme, fonts ---- */
+  /* The layout follows the width of the figure container: the class switches the CSS grid, and the canvases
+     are measured after it so both passes of the resize observer converge on the same frame. */
   function fit() {
+    var next = layoutFor(figure.getBoundingClientRect().width);
+    if (next !== layout) {
+      layout = next;
+      nbars = layout.bars;
+      figure.classList.toggle('is-stacked', layout.stacked);
+      updateBars(true);
+    }
     var a = Lab.fitCanvas(traceCanvas);
     tv.w = a.w; tv.h = a.h; tv.ctx = a.ctx;
     var b = Lab.fitCanvas(specCanvas);
     sv.w = b.w; sv.h = b.h; sv.ctx = b.ctx;
+    var seconds = windowFor(tv.w);
+    if (seconds !== winS || !windowLabel) {
+      winS = seconds; winN = winS * FS;
+      windowLabel = Lab.format(str('window'), { s: winS });
+    }
   }
   if (typeof ResizeObserver !== 'undefined') {
     var ro = new ResizeObserver(function () { fit(); drawAll(); });
+    ro.observe(figure);
     ro.observe(traceCanvas);
     ro.observe(specCanvas);
   }
@@ -592,6 +639,8 @@
     setFilters: function (flags) { applyFilters(flags, false); },
     getFilters: function () { return chain.getEnabled(); },
     readout: function () { return readout ? readout.textContent : ''; },
+    layout: function () { return layout; },
+    windowSeconds: function () { return winS; },
     isRunning: function () { return running; }
   };
 })();

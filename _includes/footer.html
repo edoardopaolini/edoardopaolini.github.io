@@ -1,14 +1,16 @@
+{%- assign lang = page.lang | default: 'en' -%}
+{%- assign t = site.data.i18n[lang] -%}
 <footer class="site-footer">
     <div class="container footer-inner">
         <div class="footer-left">
             <p class="footer-name">Edoardo Paolini</p>
-            <p class="footer-note">Ph.D. student in Computer Science, University of Verona.</p>
+            <p class="footer-note">{{ t.footer.role }}</p>
         </div>
-        <ul class="profile-links" aria-label="Profiles">
+        <ul class="profile-links" aria-label="{{ t.footer.profiles }}">
             {% for p in site.data.profiles %}
             <li><a href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{% include icons/{{ p.icon }}.svg %}<span>{{ p.name }}</span></a></li>
             {% endfor %}
         </ul>
-        <p class="footer-copy">&copy; {{ site.time | date: '%Y' }} Edoardo Paolini. All rights reserved. Built with <a href="https://jekyllrb.com/" target="_blank" rel="noopener noreferrer">Jekyll</a>, hosted on GitHub Pages.</p>
+        <p class="footer-copy">&copy; {{ site.time | date: '%Y' }} Edoardo Paolini. {{ t.footer.rights }} {{ t.footer.built | replace: 'Jekyll', '<a href="https://jekyllrb.com/" target="_blank" rel="noopener noreferrer">Jekyll</a>' }}</p>
     </div>
 </footer>

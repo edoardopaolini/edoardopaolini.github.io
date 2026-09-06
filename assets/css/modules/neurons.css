@@ -1,0 +1,17 @@
+/* neurons.css: the living background (owned by neurons.js). The canvas covers the viewport behind every
+   layer and never takes pointer events; header, main and footer sit above it at z-index 1 (style.css).
+   Colours come from --neuron-fibre, --neuron-soma and --accent, read by the script at draw time. */
+
+.neurons {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.neurons[hidden] {
+    display: none;
+}

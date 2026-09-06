@@ -1,0 +1,26 @@
+# Teaching (source: main_en.pdf in other/). Rendered on /bio/.
+courses:
+  - course: { en: "Advanced Methods for Biomedical Signal Processing", it: "Advanced Methods for Biomedical Signal Processing" }
+    program: { en: "M.Sc. in Computer Engineering for Intelligent Systems, healthcare curriculum", it: "Laurea magistrale in Computer Engineering for Intelligent Systems, curriculum healthcare" }
+    years: "2026"
+    hours: 14
+  - course: { en: "Modeling and Analysis of Biological Systems", it: "Modeling and Analysis of Biological Systems" }
+    program: { en: "B.Sc. in Human-Centered Medical System Engineering", it: "Laurea in Human-Centered Medical System Engineering" }
+    years: "2025-2026"
+    hours: 8
+  - course: { en: "Statistical Methods for Engineering", it: "Statistical Methods for Engineering" }
+    program: { en: "B.Sc. in Computer Engineering for Robotic and Intelligent Systems, and Bioinformatics", it: "Laurea in Computer Engineering for Robotic and Intelligent Systems e in Bioinformatica" }
+    years: "2025-2026"
+    hours: 24
+  - course: { en: "Probability and Statistics", it: "Probabilità e Statistica" }
+    program: { en: "B.Sc. in Bioinformatics", it: "Laurea in Bioinformatica" }
+    years: "2023-2024"
+    hours: 24
+supervision:
+  en: "Co-supervision of seven B.Sc. and M.Sc. students during their internship or thesis work, since 2023, with Prof. Silvia Francesca Storti."
+  it: "Co-supervisione di sette studenti di laurea triennale e magistrale durante il tirocinio o la tesi, dal 2023, con la Prof.ssa Silvia Francesca Storti."
+grants:
+  - { en: "Research grant of the Blanceflor Boncompagni Ludovisi Foundation (Sweden) for the research period at Boston Children's Hospital, 2024-2025.", it: "Borsa di ricerca della Fondazione Blanceflor Boncompagni Ludovisi (Svezia) per il periodo di ricerca al Boston Children's Hospital, 2024-2025." }
+languages:
+  - { en: "Italian, native", it: "Italiano, madrelingua" }
+  - { en: "English, professional proficiency (IELTS Academic 6.5; research stays in the USA and Denmark)", it: "Inglese, livello professionale (IELTS Academic 6.5; periodi di ricerca negli Stati Uniti e in Danimarca)" }

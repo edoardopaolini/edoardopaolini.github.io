@@ -1,0 +1,96 @@
+{%- comment -%} Body of the biography page, shared by /bio/ and /it/bio/. {%- endcomment -%}
+{%- assign lang = page.lang | default: 'en' -%}
+{%- assign t = site.data.i18n[lang] -%}
+{%- assign months = t.months -%}
+<header class="page-head">
+    <h1>{{ t.bio.title }}</h1>
+</header>
+
+{%- assign portrait = site.static_files | where: 'path', '/assets/img/portrait.jpg' | first -%}
+<div class="bio-grid{% if portrait %} has-portrait{% endif %}">
+    <div class="bio-text">
+        <p>{{ t.bio.p1 }}</p>
+        <p>{{ t.bio.p2 }}</p>
+        <p>{{ t.bio.p3 }}</p>
+    </div>
+    {% if portrait %}<img class="portrait" src="{{ '/assets/img/portrait.jpg' | relative_url }}" alt="{{ t.bio.portrait_alt }}" width="220" height="220">{% endif %}
+</div>
+
+<section class="bio-section" aria-labelledby="experience-title">
+    <h2 id="experience-title">{{ t.bio.experience }}</h2>
+    <ol class="rail reveal">
+        {% for e in site.data.experience %}
+        {%- assign s = e.start | split: '-' -%}
+        {%- assign sm = s[1] | plus: 0 | minus: 1 -%}
+        <li class="rail-item">
+            <span class="rail-year mono">{{ months[sm] }} {{ s[0] }} - {% if e.end == 'present' %}{{ t.route.present }}{% else %}{% assign en = e.end | split: '-' %}{% assign em = en[1] | plus: 0 | minus: 1 %}{{ months[em] }} {{ en[0] }}{% endif %}</span>
+            <h3>{{ e.role[lang] }}</h3>
+            <p class="rail-meta">{{ e.org[lang] }}, {{ e.place[lang] }}</p>
+            {% if e.supervisor %}<p class="rail-meta">{{ t.bio.supervisor }}: {{ e.supervisor }}</p>{% endif %}
+            <p class="rail-thesis">{{ e.summary[lang] }}</p>
+        </li>
+        {% endfor %}
+    </ol>
+</section>
+
+<section class="bio-section" aria-labelledby="education-title">
+    <h2 id="education-title">{{ t.bio.education }}</h2>
+    <ol class="rail reveal">
+        {% for e in site.data.education %}
+        <li class="rail-item">
+            {%- assign s = e.start | split: '-' -%}
+            {%- assign sm = s[1] | plus: 0 | minus: 1 -%}
+            <span class="rail-year mono">{{ months[sm] }} {{ s[0] }} - {% if e.end == 'present' %}{{ t.route.present }}{% else %}{% assign en = e.end | split: '-' %}{% assign em = en[1] | plus: 0 | minus: 1 %}{{ months[em] }} {{ en[0] }}{% endif %}</span>
+            <h3>{{ e.degree[lang] }}{% if e.honors %}, {{ e.honors }}{% endif %}</h3>
+            <p class="rail-meta">{{ e.institution[lang] }}, {{ e.place[lang] }}</p>
+            {% if e.supervisor %}<p class="rail-meta">{{ t.bio.supervisor }}: {{ e.supervisor }}{% if e.cosupervisors %}. {{ t.bio.cosupervisors }}: {{ e.cosupervisors }}{% endif %}</p>{% endif %}
+            {% if e.thesis %}<p class="rail-thesis">{{ t.bio.thesis }}: {{ e.thesis }}.</p>{% endif %}
+            {% if e.focus %}<p class="rail-thesis">{{ e.focus[lang] }}</p>{% endif %}
+        </li>
+        {% endfor %}
+    </ol>
+</section>
+
+<section class="bio-section" aria-labelledby="teaching-title">
+    <h2 id="teaching-title">{{ t.bio.teaching }}</h2>
+    <ul class="course-list">
+        {% for c in site.data.teaching.courses %}
+        <li class="course glass reveal" style="--reveal-delay: {{ forloop.index0 | times: 50 }}ms">
+            <span class="mono">{{ c.years }}, {{ c.hours }} {{ t.bio.hours }}</span>
+            <h3{% if lang != 'en' and c.course[lang] == c.course.en %} lang="en"{% endif %}>{{ c.course[lang] }}</h3>
+            <p>{{ c.program[lang] }}</p>
+        </li>
+        {% endfor %}
+    </ul>
+    <p class="bio-note">{{ site.data.teaching.supervision[lang] }}</p>
+</section>
+
+<section class="bio-section bio-two" aria-label="{{ t.bio.grants }}, {{ t.bio.languages }}">
+    <div>
+        <h2>{{ t.bio.grants }}</h2>
+        {% for g in site.data.teaching.grants %}<p>{{ g[lang] }}</p>{% endfor %}
+    </div>
+    <div>
+        <h2>{{ t.bio.languages }}</h2>
+        {% for l in site.data.teaching.languages %}<p>{{ l[lang] }}</p>{% endfor %}
+    </div>
+</section>
+
+<section class="bio-section" aria-labelledby="presentations-title">
+    <h2 id="presentations-title">{{ t.bio.presentations }}</h2>
+    {% include presentations.html %}
+</section>
+
+<section class="bio-section" aria-labelledby="interests-title">
+    <h2 id="interests-title">{{ t.bio.interests }}</h2>
+    <dl class="def-grid">
+        {% for i in site.data.interests %}
+        <div>
+            <dt>{{ i.title[lang] }}</dt>
+            <dd>{{ i.text[lang] }}</dd>
+        </div>
+        {% endfor %}
+    </dl>
+</section>
+
+{% include beyond.html %}

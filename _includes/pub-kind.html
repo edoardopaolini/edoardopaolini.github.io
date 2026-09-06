@@ -1,2 +1,4 @@
-{%- comment -%} Human-readable kind of a publication: an explicit `kind` wins, otherwise it follows `type`. {%- endcomment -%}
-{%- if include.p.kind -%}{{ include.p.kind }}{%- elsif include.p.type == 'journal' -%}Journal article{%- elsif include.p.type == 'conference' -%}Conference paper{%- else -%}{{ include.p.type | capitalize }}{%- endif -%}
+{%- comment -%} Human-readable kind of a publication in the page language: an explicit bilingual `kind` wins, otherwise the label of its `type`. {%- endcomment -%}
+{%- assign lang = page.lang | default: 'en' -%}
+{%- assign t = site.data.i18n[lang] -%}
+{%- if include.p.kind -%}{{ include.p.kind[lang] }}{%- else -%}{{ t.pubs.kinds[include.p.type] }}{%- endif -%}

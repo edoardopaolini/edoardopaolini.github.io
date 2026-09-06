@@ -1,8 +1,14 @@
-# Research interests, in the order of the three bento cells on the home page (Signal Bench, connectivity graph,
-# microstates) and of the definition list on /bio/.
-- title: "Neurosignals"
-  text: "EEG and TMS-EEG data preprocessing and signal source estimation."
-- title: "Brain connectivity"
-  text: "Epileptogenic zone localization and prediction of surgical outcome."
-- title: "Microstates"
-  text: "The role of microstates and dynamic scalp potential topographies in neurological disorders."
+# Research interests, in the order of the three bento cells on the home page (signal bench, brain, microstates)
+# and of the definition list on /bio/. Source: main_en.pdf in other/.
+- title: { en: "Neurosignals", it: "Neurosegnali" }
+  text:
+    en: "EEG and TMS-EEG data preprocessing and signal source estimation."
+    it: "Preprocessing di dati EEG e TMS-EEG e stima delle sorgenti del segnale."
+- title: { en: "Brain connectivity", it: "Connettività cerebrale" }
+  text:
+    en: "Epileptogenic zone localization and prediction of surgical outcome."
+    it: "Localizzazione della zona epilettogena e predizione dell'esito chirurgico."
+- title: { en: "Microstates", it: "Microstati" }
+  text:
+    en: "Microstates and dynamic scalp potential topographies as biomarkers of neurological diseases."
+    it: "Microstati e topografie dinamiche del potenziale sullo scalpo come biomarcatori di malattie neurologiche."

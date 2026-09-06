@@ -4,3 +4,4 @@ _site/
 vendor/
 .DS_Store
 .ruby-lsp/
+other/

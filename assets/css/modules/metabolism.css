@@ -1,0 +1,127 @@
+/* metabolism.css: the metabolic flux figure (owned by metabolism.js). */
+
+.met {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.met-frame {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+}
+
+#met-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* The pressable enzyme labels of the figure. Placed from JS over the label boxes the layout computes. */
+.met-buttons {
+    position: absolute;
+    inset: 0;
+}
+
+.met-hit {
+    position: absolute;
+    min-width: 44px;
+    min-height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+}
+
+.met-hit:hover {
+    background: var(--accent-soft);
+}
+
+.met-hit:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+}
+
+/* Readout row, then the control pills on their own row, at every width and in both languages; the readout is
+   kept to a reading measure. */
+.met-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.met-readout {
+    max-width: 62ch;
+    margin: 0;
+    line-height: 1.5;
+    /* Two lines reserved: the wild-type sentence is the shortest readout. */
+    min-height: 3em;
+    color: var(--ink-2);
+}
+
+.met-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.met-pill {
+    padding: 0.5rem 0.95rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--pill);
+    background: transparent;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.met-pill:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+}
+
+.met-pill:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.met-pill[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-ink);
+}
+
+.met-restore[aria-pressed="true"] {
+    border-color: var(--line-strong);
+    background: transparent;
+    color: var(--muted);
+}
+
+.met-caption {
+    margin: 0;
+}
+
+/* Phones: the network is taller than wide. */
+@media (max-width: 720px) {
+    .met-frame {
+        aspect-ratio: 4 / 5;
+    }
+}
+
+@media (max-width: 400px) {
+    .met-pill {
+        padding: 0.45rem 0.8rem;
+        font-size: 0.8125rem;
+    }
+}

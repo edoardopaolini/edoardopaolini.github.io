@@ -1,0 +1,26 @@
+# Conference presentations, newest first (source: main_en.pdf in other/). Titles keep their original language.
+- title: "EEG-based connectome analysis and machine learning predict surgical outcome in pediatric epilepsy"
+  authors: ["Edoardo Paolini", "et al."]
+  event: "Organization for Human Brain Mapping, OHBM 2026"
+  place: { en: "Bordeaux, France", it: "Bordeaux, Francia" }
+  when: { en: "June 2026", it: "giugno 2026" }
+- title: "EEG microstates pipeline for source-level connectivity and classification in multiple sclerosis"
+  authors: ["Edoardo Paolini", "et al."]
+  event: "Organization for Human Brain Mapping, OHBM 2026"
+  place: { en: "Bordeaux, France", it: "Bordeaux, Francia" }
+  when: { en: "June 2026", it: "giugno 2026" }
+- title: "EEG-based connectome analysis and virtual resection predict seizure outcomes in pediatric epilepsy surgery"
+  authors: ["Edoardo Paolini", "et al."]
+  event: "American Epilepsy Society, Annual Meeting 2025"
+  place: { en: "Atlanta, GA, USA", it: "Atlanta, Stati Uniti" }
+  when: { en: "December 2025", it: "dicembre 2025" }
+- title: "Decoding hemispheric differences through time-varying effective connectivity after occipital TMS: a WP3-WP4 collaboration"
+  authors: ["Ilaria Siviero", "Edoardo Paolini", "Davide Bonfanti", "Gloria Menegaz", "Silvia Savazzi", "Chiara Mazzi", "Silvia Francesca Storti"]
+  event: "First MNESYS Spoke 2 Meeting, Neural Plasticity and Connectivity"
+  place: { en: "Naples, Italy", it: "Napoli" }
+  when: { en: "May 2024", it: "maggio 2024" }
+- title: "Exploring the interplay between brain structural and functional connectivity in Alzheimer's disease: a multivariate approach"
+  authors: ["Edoardo Paolini", "Virginia Filippi", "Federica Cruciani", "Lorenza Brusini", "Gloria Menegaz", "Ilaria Boscolo Galazzo", "Silvia Francesca Storti"]
+  event: "ISMRM Workshop on Current Issues in Brain Function"
+  place: { en: "Padua, Italy", it: "Padova" }
+  when: { en: "September 2023", it: "settembre 2023" }

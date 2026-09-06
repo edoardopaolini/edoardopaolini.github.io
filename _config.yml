@@ -1,6 +1,4 @@
 title: "Edoardo Paolini"
-description: >-
-  Edoardo Paolini, Ph.D. student in Computer Science at the University of Verona. EEG, TMS-EEG and brain connectomics for the personalized treatment of epilepsy.
 url: "https://edoardopaolini.github.io"
 lang: en
 timezone: Europe/Rome
@@ -8,6 +6,7 @@ exclude:
   - README.md
   - docs
   - tests
+  - other
   - vendor
   - Gemfile
   - Gemfile.lock

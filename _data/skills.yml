@@ -1,0 +1,40 @@
+# The toolbox on the home page (source: main_industry_en.pdf in other/). Four groups; `primary` items are set large,
+# `items` as pills. `note` is an optional short line under the primaries.
+- name: { en: "Programming", it: "Programmazione" }
+  primary: ["Python", "MATLAB"]
+  note: { en: "daily use", it: "uso quotidiano" }
+  items:
+    - "R"
+    - "SQL"
+    - "Bash"
+    - { en: "C (basic)", it: "C (base)" }
+    - { en: "Java (basic)", it: "Java (base)" }
+
+- name: { en: "Machine learning", it: "Machine learning" }
+  primary: ["scikit-learn", "PyTorch"]
+  items:
+    - "TensorFlow"
+    - { en: "Classification and regression", it: "Classificazione e regressione" }
+    - { en: "Cross-validation on small cohorts", it: "Cross-validation su piccole coorti" }
+    - { en: "Foundation-model methods for tabular data", it: "Metodi basati su foundation model per dati tabellari" }
+
+- name: { en: "Brain signals", it: "Segnali cerebrali" }
+  primary: ["MNE-Python", "EEGLAB"]
+  items:
+    - "FieldTrip"
+    - "Brainstorm"
+    - "FreeSurfer"
+    - { en: "EEG, TMS-EEG, fMRI preprocessing", it: "Preprocessing EEG, TMS-EEG, fMRI" }
+    - { en: "Source estimation", it: "Stima delle sorgenti" }
+    - { en: "Functional and effective connectivity", it: "Connettività funzionale ed effettiva" }
+    - { en: "Microstates", it: "Microstati" }
+
+- name: { en: "Data and tools", it: "Dati e strumenti" }
+  primary: ["NumPy", "pandas"]
+  items:
+    - "SciPy"
+    - { en: "Multivariate time-series features", it: "Feature da serie temporali multivariate" }
+    - { en: "Graph metrics on brain networks", it: "Metriche di grafo su reti cerebrali" }
+    - "Git"
+    - "Linux"
+    - "LaTeX"

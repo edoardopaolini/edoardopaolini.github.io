@@ -1,0 +1,185 @@
+/* cells.css: the insides of the three bento cells (bench.js, brain.js, topo.js own these rules; the main
+   stylesheet owns .bento and .cell*). Canvases draw on the opaque surface with the nested-figure radius. */
+
+/* ==========================================================================
+   Signal bench (#bench): trace and spectrum, side by side or stacked
+   ========================================================================== */
+/* The figure takes the room the cell leaves (flex basis 0, explicit minimum) rather than sizing from its
+   content: a canvas's content size is its bitmap, and letting that drive the layout makes every bitmap
+   resize feed back into the layout (a ResizeObserver loop). */
+.bench-figure {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0.75rem;
+    flex: 1 1 0;
+    min-height: 280px;
+}
+
+#bench-canvas,
+#bench-spectrum {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+
+/* Stacked layout, set by bench.js when the figure is narrower than 700 px: trace on top (at least 180 px),
+   spectrum below (110 px). */
+.bench-figure.is-stacked {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(180px, 1fr) 110px;
+    min-height: 302px;
+}
+
+.bench-figure.is-stacked #bench-spectrum {
+    height: 110px;
+}
+
+.bench-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.bench-readout {
+    margin: 0;
+    min-height: 2.8em;
+    /* Two lines reserved: the readout grows to two lines with all filters on. */
+}
+
+.switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.95rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--pill);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.switch:hover {
+    border-color: var(--ink);
+}
+
+.switch:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--ink);
+}
+
+.switch:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.switch input {
+    accent-color: var(--accent);
+    margin: 0;
+}
+
+.switch input:focus-visible {
+    outline: none;
+}
+
+/* ==========================================================================
+   Small figures (#mini-brain, #mini-topo)
+   ========================================================================== */
+.mini-figure {
+    position: relative;
+    flex: 1 1 auto;
+}
+
+.mini-figure canvas {
+    display: block;
+    width: 100%;
+    height: 220px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+
+.mini-readout {
+    margin: 0;
+    min-height: 1.5em;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--muted);
+}
+
+/* Button layer over the electrodes; brain.js moves each button with a transform and hides the ones that
+   turned to the far side. */
+.mini-buttons {
+    position: absolute;
+    inset: 0;
+}
+
+.mini-buttons button {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    margin: -16px 0 0 -16px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.mini-buttons button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -6px;
+}
+
+/* The brain rotates under the pointer: horizontal drags turn it, vertical swipes still scroll the page. */
+.brain-figure {
+    cursor: grab;
+    touch-action: pan-y pinch-zoom;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.brain-figure.is-dragging {
+    cursor: grabbing;
+}
+
+.brain-figure.is-dragging .mini-buttons button {
+    cursor: grabbing;
+}
+
+.topo-label {
+    position: absolute;
+    right: 0.75rem;
+    top: 0.4rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.topo-bar {
+    display: flex;
+    gap: 3px;
+    height: 8px;
+}
+
+.topo-bar span {
+    flex: var(--dur, 1) 0 0;
+    border-radius: 4px;
+    background: var(--line-strong);
+    transition: background-color 0.2s ease;
+}
+
+.topo-bar span.on {
+    background: var(--accent);
+}

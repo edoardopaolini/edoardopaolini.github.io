@@ -1,22 +1,19 @@
-/* The Stage: the signature figure of the home page. One set of 19 nodes, three sciences.
-   State 0 (hero) and 1: top-view head with the 19 electrodes of the 10-20 montage, an 8-channel EEG page
-     sweeping like an oscilloscope, live functional connectivity (Pearson r of the traces) and TMS pulses
-     that spread breadth-first over the graph and write an evoked potential into the traces.
-   State 2: the same nodes glide to a central carbon metabolism layout, edges become reactions, flux flows as
-     particles, click or tap a reaction to knock it out and watch the flux reroute.
-   State 3: the nodes become the row and column labels of the 19x19 adjacency matrix.
-   Part 1 is the pure model (no DOM), exported on window.__stageModel for tests/stage.test.js, which runs in a
-   bare engine after assets/js/lab.js. Part 2 attaches to #stage and exits when the element is absent.
-   Plain ES2017, no dependencies beyond window.Lab (assets/js/lab.js) and window.whenVisible (assets/js/site.js).
+/* The Stage: the signature figure of the home page. One head, three beats.
+   State 0: top-view head with the 19 electrodes of the 10-20 montage and an 8-channel EEG page sweeping like an
+     oscilloscope. State 1: live functional connectivity, the Pearson r of the traces drawn as edges. State 2:
+     the same graph with the electrodes offered for stimulation. A press delivers a TMS pulse that spreads
+     breadth-first over the graph and writes an evoked potential into the traces; it works in every state.
+   Part 1 is the pure model (no DOM, no strings) on window.__stageModel for tests/stage.test.js (bare engine, after
+     assets/js/lab.js). Part 2 attaches to #stage and exits when the element is absent. Labels come from
+     window.I18N.stage (_data/js/stage.yml) through Lab.strings; a missing table degrades to the key names.
+   Plain ES5, dependencies: window.Lab (assets/js/lab.js) and window.whenVisible (assets/js/site.js).
    Plotting convention: clinical EEG, NEGATIVE UP (a positive potential deflects the trace downwards). */
 (function () {
   'use strict';
 
   var Lab = window.Lab;
 
-  /* ======================================================================
-     Part 1: model
-     ====================================================================== */
+  /* ==================== Part 1: model (no DOM, no strings) ==================== */
 
   var FS = 250;              /* simulated sample rate, Hz */
   var PAGE_S = 10;           /* seconds per EEG page */
@@ -27,16 +24,17 @@
   var ARTIFACT_MS = 10;      /* pulse artifact bridged by a straight interpolated segment (about -2 to +10 ms in
                                 practice; 20 ms would swallow the N15 on the stimulated channel) */
   var MAX_PULSES = 8;        /* pulse markers remembered for the page */
-  var COMPACT_W = 420;       /* below this frame width the layouts trim their labels */
+  var COUPLING_DECAY = 1.6;  /* coupling weight decay with scalp distance */
+  var CORR_HP_HZ = 2.5;      /* high-pass corner of the copy of the traces used for correlations */
+  var REWIRE_P = 0.15;       /* Watts-Strogatz rewiring probability */
+  /* The hidden coupling graph and the traces are seeded apart. The graph is rebuilt from TOPOLOGY_SEED at every
+     coupling change, so the slider rescales the weights without rewiring anything; the traces start from
+     TRACE_SEED (Part 2) plus a reset counter, so Reset gives new traces on the same graph. */
+  var TOPOLOGY_SEED = 20260905;
   var TAU = 2 * Math.PI;
   var MONTAGE = Lab.MONTAGE;
   var N = MONTAGE.length;    /* 19 electrodes */
   var P = N * (N - 1) / 2;   /* 171 pairs */
-
-  /* Tunables in one place. decay: coupling weight decay with scalp distance. corrHpHz: high-pass corner of the
-     copy of the traces used for correlations. Flux solver: hard ceiling on a reaction as a multiple of its
-     nominal capacity, back-pressure gain per sweep, Gauss-Seidel damping and number of sweeps. */
-  var PARAMS = { decay: 1.6, corrHpHz: 2.5, ceiling: 3, bpGain: 0.35, relax: 0.7, sweeps: 240 };
 
   /* Pair tables: pair p connects PA[p] < PB[p]; PAIR_INDEX[i * N + j] is its position. */
   var PA = new Uint8Array(P), PB = new Uint8Array(P), PAIR_INDEX = new Int16Array(N * N);
@@ -56,9 +54,7 @@
     });
     return idx;
   }
-  function scalpDist(i, j) {
-    return Math.hypot(MONTAGE[i].x - MONTAGE[j].x, MONTAGE[i].y - MONTAGE[j].y);
-  }
+  function scalpDist(i, j) { return Math.hypot(MONTAGE[i].x - MONTAGE[j].x, MONTAGE[i].y - MONTAGE[j].y); }
 
   /* Hidden coupling graph: Watts-Strogatz small world (ring by scalp order, k = 4, rewiring p = 0.15), weights
      decreasing with scalp distance and scaled by the global coupling. Returns the symmetric weight matrix
@@ -75,7 +71,7 @@
     for (i = 0; i < N; i++) {
       for (j = 1; j <= 2; j++) {
         a = order[i]; b = order[(i + j) % N];
-        if (rng() >= 0.15) continue;
+        if (rng() >= REWIRE_P) continue;
         var tries = 0, nb;
         do { nb = Math.floor(rng() * N); tries++; } while ((nb === a || adj[a * N + nb]) && tries < 40);
         if (nb === a || adj[a * N + nb]) continue;
@@ -87,7 +83,7 @@
     for (i = 0; i < N; i++) {
       for (j = i + 1; j < N; j++) {
         if (!adj[i * N + j]) continue;
-        var w = Math.exp(-PARAMS.decay * scalpDist(i, j)) * (0.7 + 0.6 * rng()) * coupling;
+        var w = Math.exp(-COUPLING_DECAY * scalpDist(i, j)) * (0.7 + 0.6 * rng()) * coupling;
         Wm[i * N + j] = w; Wm[j * N + i] = w;
         edges.push({ a: i, b: j, w: w });
       }
@@ -146,8 +142,7 @@
   var CENTRAL = ['C3', 'Cz', 'C4', 'T3', 'T4'];
   var FRONTAL = ['Fz', 'F3', 'F4', 'Fp1', 'Fp2'];
   function weightTable(list, inValue, outValue) {
-    var w = new Float32Array(N);
-    w.fill(outValue);
+    var w = new Float32Array(N); w.fill(outValue);
     for (var i = 0; i < list.length; i++) w[Lab.electrodeIndex(list[i])] = inValue;
     return w;
   }
@@ -165,7 +160,7 @@
       leak: 0.90, bgAmp: 0.8, whiteAmp: 0.4,
       /* One-pole high-pass for the correlation copy of the traces. The displayed traces stay raw; without the
          high-pass the slow drift makes any two channels look correlated over a one second window. */
-      hpA: Math.exp(-TAU * PARAMS.corrHpHz / FS),
+      hpA: Math.exp(-TAU * CORR_HP_HZ / FS),
       W: null, norm: new Float32Array(N), adj: null,
       hp: new Float32Array(N), prev: new Float32Array(N), hpbuf: new Float32Array(N * CORR_N),
       sx: new Float64Array(N), sxx: new Float64Array(N), sxy: new Float64Array(P), r: new Float32Array(P), absr: new Float32Array(P),
@@ -179,8 +174,8 @@
     for (k = 0; k < 4; k++) g.stims.push({ active: false, s0: 0, hold: new Float32Array(N), maxHop: 0, dist: new Int32Array(N) });
 
     g.setCoupling = function (c) {
-      var cg = buildCoupling(Lab.rng(20260905), c);
-      g.W = cg.W; g.adj = cg.adj;
+      var cg = buildCoupling(Lab.rng(TOPOLOGY_SEED), c);
+      g.W = cg.W; g.adj = cg.adj; g.coupling = c;
       for (var i = 0; i < N; i++) {
         var s = 1;
         for (var j = 0; j < N; j++) s += g.W[i * N + j] * g.W[i * N + j];
@@ -199,10 +194,7 @@
       for (i = 0; i < g.stims.length; i++) g.stims[i].active = false;
       g.pulses.length = 0;
     };
-    function rememberPulse(s0) {
-      g.pulses.push(s0);
-      if (g.pulses.length > MAX_PULSES) g.pulses.shift();
-    }
+    function rememberPulse(s0) { g.pulses.push(s0); if (g.pulses.length > MAX_PULSES) g.pulses.shift(); }
 
     /* One sample: sources, blink, coupling mix, evoked potentials, ring buffer and running sums. */
     g.step = function () {
@@ -364,132 +356,8 @@
     return g;
   }
 
-  /* ---------------------------------------------------------------------
-     Central carbon metabolism: 19 metabolites (index = montage index), 23 directed reactions, 7 biomass drains.
-     A toy network, not the M. tuberculosis model.
-     --------------------------------------------------------------------- */
-  var METABOLITES = ['glucose', 'G6P', 'F6P', 'FBP', 'GAP', '1,3-BPG', '3PG', '2PG', 'PEP', 'pyruvate',
-    'acetyl-CoA', 'citrate', 'isocitrate', '2-OG', 'succinyl-CoA', 'succinate', 'fumarate', 'malate', 'OAA'];
-  var M = METABOLITES.length;
-  function metIndex(name) { return METABOLITES.indexOf(name); }
-  /* [from, to, capacity, carbon kept]. Flux is in carbon units: capacities are split proportions for the
-     reactions, the fourth entry is the fraction of carbon that reaches the product (the rest leaves as CO2 at
-     pyruvate dehydrogenase, C3 to C2, and the two TCA decarboxylations, C6 to C5 to C4). Those exits are what
-     let the cycle converge. The glyoxylate shunt (21, 22) carries less than the TCA route (13) when intact. */
-  var REACTIONS = [
-    ['glucose', 'G6P', 10], ['G6P', 'F6P', 10], ['F6P', 'FBP', 10], ['FBP', 'GAP', 10], ['GAP', '1,3-BPG', 10],
-    ['1,3-BPG', '3PG', 10], ['3PG', '2PG', 10], ['2PG', 'PEP', 10], ['PEP', 'pyruvate', 10],
-    ['pyruvate', 'acetyl-CoA', 8, 2 / 3], ['acetyl-CoA', 'citrate', 10], ['OAA', 'citrate', 10],
-    ['citrate', 'isocitrate', 8], ['isocitrate', '2-OG', 6, 5 / 6], ['2-OG', 'succinyl-CoA', 8, 4 / 5], ['succinyl-CoA', 'succinate', 8],
-    ['succinate', 'fumarate', 8], ['fumarate', 'malate', 8], ['malate', 'OAA', 8],
-    ['PEP', 'OAA', 1.5], ['pyruvate', 'OAA', 1.5],
-    ['isocitrate', 'succinate', 1.5], ['isocitrate', 'malate', 1.5]
-  ].map(function (r, i) { return { index: i, from: metIndex(r[0]), to: metIndex(r[1]), cap: r[2], keep: r.length > 3 ? r[3] : 1, label: r[0] + ' to ' + r[1] }; });
-  var R = REACTIONS.length;
-  /* Biomass drains: proportional shares that saturate at their capacity. */
-  var DRAINS = [['G6P', 0.8], ['3PG', 0.6], ['PEP', 0.5], ['pyruvate', 0.8], ['acetyl-CoA', 1.0], ['2-OG', 1.2], ['OAA', 1.2]]
-    .map(function (d) { return { node: metIndex(d[0]), cap: d[1] }; });
-  var UPTAKE = 10;
-  /* Directed adjacency of the reaction graph, row = from, col = to. */
-  var ADJ = new Uint8Array(M * M);
-  REACTIONS.forEach(function (r) { ADJ[r.from * M + r.to] = 1; });
-  var ADJ_ONES = ADJ.reduce(function (s, v) { return s + v; }, 0);
-
-  /* Proportional push-flow with back-pressure. Each metabolite splits its inflow across enabled outgoing
-     reactions and drains in proportion to capacity; a drain never takes more than its capacity, the excess is
-     re-split among the other outputs, and what has nowhere to go is stranded. Back-pressure: every pool
-     carries an acceptance factor accept[m] = 1 - stranded[m] / inflow[m] (the fraction of its inflow it can
-     dispose of, damped by bpGain per sweep), and every reaction into m sees its split capacity and its ceiling
-     scaled by accept[m]. A pool that fills up therefore slows the reactions producing it (product inhibition),
-     the pressure walks upstream to the nearest branch point and the flux there re-splits toward the outlets
-     that still drain: blocking 2-OG dehydrogenase sends isocitrate through the glyoxylate shunt instead of
-     piling up at 2-OG. Gauss-Seidel sweeps in flow order with damping so the TCA cycle and the acceptance
-     feedback converge. enabledMask: array of R truthy values (missing = all enabled). Returns per-reaction
-     fluxes (carbon units leaving the substrate), per-drain fluxes, biomass, biomass as a fraction of wild
-     type, CO2, stranded flux, conservation ((biomass + CO2 + stranded) / uptake), the acceptance factors and
-     the number of reactions that carry flux. */
-  function flux(enabledMask) {
-    var f = new Float64Array(R), d = new Float64Array(DRAINS.length), inflow = new Float64Array(M), strandedAt = new Float64Array(M);
-    var accept = new Float64Array(M), outR = [], outD = [], m, k, it, sat = new Uint8Array(DRAINS.length), satR = new Uint8Array(R);
-    for (m = 0; m < M; m++) { outR.push([]); outD.push([]); accept[m] = 1; }
-    for (k = 0; k < R; k++) if (!enabledMask || enabledMask[k]) outR[REACTIONS[k].from].push(k);
-    for (k = 0; k < DRAINS.length; k++) outD[DRAINS[k].node].push(k);
-    var residual = 0, co2 = 0;
-    for (it = 0; it < PARAMS.sweeps; it++) {
-      residual = 0; co2 = 0;
-      for (m = 0; m < M; m++) {
-        var inn = m === 0 ? UPTAKE : 0;
-        for (k = 0; k < R; k++) if (REACTIONS[k].to === m) inn += f[k] * REACTIONS[k].keep;
-        inflow[m] = inn;
-        var rest = inn, pass;
-        for (k = 0; k < outD[m].length; k++) sat[outD[m][k]] = 0;
-        for (k = 0; k < outR[m].length; k++) satR[outR[m][k]] = 0;
-        for (pass = 0; pass < 8; pass++) {
-          var cap = 0, again = false, r, ecap;
-          for (k = 0; k < outR[m].length; k++) { r = outR[m][k]; if (!satR[r]) cap += REACTIONS[r].cap * accept[REACTIONS[r].to]; }
-          for (k = 0; k < outD[m].length; k++) if (!sat[outD[m][k]]) cap += DRAINS[outD[m][k]].cap;
-          if (cap <= 1e-12) break;
-          for (k = 0; k < outD[m].length; k++) {
-            var dr = outD[m][k];
-            if (sat[dr]) continue;
-            var share = rest * DRAINS[dr].cap / cap;
-            if (share > DRAINS[dr].cap) { d[dr] = DRAINS[dr].cap; sat[dr] = 1; rest -= DRAINS[dr].cap; again = true; }
-            else d[dr] = share;
-          }
-          if (again) continue;
-          /* Reactions: proportional share of the acceptance-scaled capacities, capped at ceiling x capacity x
-             acceptance; a capped reaction is treated like a saturated drain and the remainder is re-split. */
-          for (k = 0; k < outR[m].length; k++) {
-            r = outR[m][k];
-            if (satR[r]) continue;
-            ecap = REACTIONS[r].cap * accept[REACTIONS[r].to];
-            var lim = ecap * PARAMS.ceiling;
-            if (rest * ecap / cap > lim + 1e-9) { satR[r] = 1; f[r] = lim; rest -= lim; again = true; }
-          }
-          if (again) continue;
-          for (k = 0; k < outR[m].length; k++) {
-            r = outR[m][k];
-            if (satR[r]) continue;
-            ecap = REACTIONS[r].cap * accept[REACTIONS[r].to];
-            var target = rest * ecap / cap, nv = f[r] + PARAMS.relax * (target - f[r]);
-            if (Math.abs(nv - f[r]) > residual) residual = Math.abs(nv - f[r]);
-            f[r] = nv;
-          }
-          rest = 0;
-          break;
-        }
-        for (k = 0; k < outR[m].length; k++) co2 += f[outR[m][k]] * (1 - REACTIONS[outR[m][k]].keep);
-        strandedAt[m] = rest > 1e-9 ? rest : 0;
-        /* Back-pressure: the fraction of the inflow this pool disposed of, damped. A pool that receives
-           nothing gives no evidence and keeps its factor (resetting it to 1 would let the flux into a dead
-           end resume, strand and be throttled again: a relaxation oscillation that never converges). */
-        if (inn > 1e-6) {
-          var accTarget = Math.max(1e-6, 1 - strandedAt[m] / inn);
-          var na = accept[m] + PARAMS.bpGain * (accTarget - accept[m]);
-          if (Math.abs(na - accept[m]) > residual) residual = Math.abs(na - accept[m]);
-          accept[m] = na;
-        }
-      }
-    }
-    var biomass = 0, stranded = 0, carrying = 0;
-    for (k = 0; k < R; k++) {
-      if (enabledMask && !enabledMask[k]) f[k] = 0;
-      if (f[k] > 1e-9) carrying++;
-    }
-    for (k = 0; k < d.length; k++) biomass += d[k];
-    for (m = 0; m < M; m++) stranded += strandedAt[m];
-    return {
-      fluxes: f, drains: d, biomass: biomass, biomassFraction: WT_BIOMASS > 0 ? biomass / WT_BIOMASS : 1,
-      co2: co2, stranded: stranded, conservation: (biomass + co2 + stranded) / UPTAKE, residual: residual, carrying: carrying
-    };
-  }
-  /* Wild-type biomass, the reference for biomassFraction (still undefined during this call, which reports 1). */
-  var WT_BIOMASS = flux(null).biomass;
-
-  /* ---------------------------------------------------------------------
-     Layouts. All return positions in CSS pixels for a w x h canvas.
-     --------------------------------------------------------------------- */
-  /* Head figure in the upper part of the frame, EEG page below. */
+  /* Layout in CSS pixels for a w x h frame: the head in the upper 60 percent, the EEG page below. The head
+     radius leaves room for the nose (1.11 r) and the ring electrode labels. */
   function headLayout(w, h, pad) {
     var iw = w - 2 * pad, ih = h - 2 * pad;
     var headH = ih * 0.6, pageTop = pad + headH + 6, pageH = ih - headH - 6;
@@ -500,87 +368,15 @@
     return { x: x, y: y, cx: cx, cy: cy, r: Math.max(20, R0), pageX: pad, pageY: pageTop, pageW: iw, pageH: pageH };
   }
 
-  /* Central carbon metabolism: glycolysis as a chain down the left, the TCA cycle as a ring on the right.
-     Each node carries a label anchor (dx, dy offsets and alignment) and the drains a stub direction. The OAA
-     label sits left of its node, slightly above: between the malate edge above and the PEP and pyruvate edges
-     below, the one sector no edge crosses on a compact ring. */
-  var RING = ['citrate', 'isocitrate', '2-OG', 'succinyl-CoA', 'succinate', 'fumarate', 'malate', 'OAA'];
-  var RING_ANGLE = [90, 45, 0, -45, -90, -135, 180, 135];
-  var LABEL_ANCHOR = {
-    'citrate': [1, 0.55, 'left'], 'isocitrate': [1, 0.35, 'left'], '2-OG': [1, 0, 'left'], 'succinyl-CoA': [1, -0.35, 'left'],
-    'succinate': [0, -1, 'center'], 'fumarate': [-1, -0.35, 'right'], 'malate': [-1, 0, 'right'], 'OAA': [-1, -0.5, 'right'],
-    'acetyl-CoA': [1, 0.3, 'left']
-  };
-  var STUB_DIR = { 'G6P': [1, 0], '3PG': [1, 0], 'PEP': [0.45, -0.9], 'pyruvate': [0, 1], 'acetyl-CoA': [-0.55, 0.85], '2-OG': [0.75, 0.75], 'OAA': [0, 1] };
-  var CHAR_W = 0.62;         /* advance width of the mono font as a fraction of its size */
-  function metabolicLayout(w, h, pad) {
-    var iw = w - 2 * pad, ih = h - 2 * pad, compact = w < COMPACT_W;
-    var x = new Float32Array(N), y = new Float32Array(N), i;
-    var chainX = pad + iw * (compact ? 0.25 : 0.27);
-    var chainY0 = pad + ih * 0.06, chainY1 = pad + ih * 0.86;
-    for (i = 0; i <= 9; i++) { x[i] = chainX; y[i] = chainY0 + (chainY1 - chainY0) * i / 9; }
-    var cx = pad + iw * (compact ? 0.63 : 0.70), cy = pad + ih * 0.56;
-    var r = Math.min(iw * (compact ? 0.19 : 0.215), ih * (compact ? 0.26 : 0.27));
-    /* Ring labels sit outside the ring, so reserve room for the longest one ("succinyl-CoA", 12 characters)
-       on the right and keep the ring clear of the chain and its biomass stubs on the left. Between roughly
-       420 and 560 px the default proportions would push the right-hand labels past the frame. */
-    var labelPx = w < 560 ? 10 : 11;
-    var labelReserve = Math.ceil(labelPx * CHAR_W * 12) + 10;
-    var leftLimit = chainX + labelReserve * 1.05, rightLimit = w - pad - labelReserve;
-    if (cx + r > rightLimit || cx - r < leftLimit) {
-      r = Math.max(24, Math.min(r, (rightLimit - leftLimit) / 2));
-      cx = (leftLimit + rightLimit) / 2;
-    }
-    for (i = 0; i < RING.length; i++) {
-      var k = metIndex(RING[i]), a = RING_ANGLE[i] * Math.PI / 180;
-      x[k] = cx + r * Math.cos(a); y[k] = cy + r * Math.sin(a);
-    }
-    var ac = metIndex('acetyl-CoA');
-    x[ac] = pad + iw * 0.50; y[ac] = pad + ih * 0.93;
-    var anchors = [], stubs = [];
-    for (i = 0; i < M; i++) {
-      var an = LABEL_ANCHOR[METABOLITES[i]];
-      anchors.push(an ? { dx: an[0], dy: an[1], align: an[2] } : { dx: -1, dy: 0, align: 'right' });
-    }
-    for (i = 0; i < DRAINS.length; i++) {
-      var sd = STUB_DIR[METABOLITES[DRAINS[i].node]], len = Math.hypot(sd[0], sd[1]);
-      stubs.push({ node: DRAINS[i].node, dx: sd[0] / len, dy: sd[1] / len });
-    }
-    return { x: x, y: y, anchors: anchors, stubs: stubs, compact: compact, labelPx: labelPx, stubLen: Lab.clamp(ih * 0.045, 14, 22) };
-  }
-
-  /* Adjacency matrix: cell size min(w, h) * 0.8 / 19, the block of labels plus grid centred. Nodes land on the
-     row labels; columns get their own small marks. Frames too short for the rotated column labels (the rows
-     would be tighter than the label size) drop them and keep the row labels and the column marks. */
-  var COL_MARK_H = 14;
-  function matrixLayout(w, h, pad, labelPx) {
-    var maxChars = 0, i;
-    for (i = 0; i < M; i++) maxChars = Math.max(maxChars, METABOLITES[i].length);
-    var labelLen = maxChars * labelPx * CHAR_W + 18;
-    function cellSize(topLen) {
-      return Math.max(6, Math.min(Math.min(w, h) * 0.8 / N, (w - 2 * pad - labelLen) / N, (h - 2 * pad - topLen) / N));
-    }
-    var cs = cellSize(labelLen), colLabels = cs >= labelPx;
-    if (!colLabels) cs = cellSize(COL_MARK_H);
-    var topLen = colLabels ? labelLen : COL_MARK_H, gw = cs * N;
-    var gx = (w - (labelLen + gw)) / 2 + labelLen, gy = (h - (topLen + gw)) / 2 + topLen;
-    var x = new Float32Array(N), y = new Float32Array(N);
-    for (i = 0; i < N; i++) { x[i] = gx - 7; y[i] = gy + cs * (i + 0.5); }
-    return { x: x, y: y, cs: cs, gx: gx, gy: gy, gw: gw, labelPx: labelPx, colLabels: colLabels };
-  }
-
   var model = {
-    FS: FS, BUF: BUF, CORR_N: CORR_N, HOP_MS: HOP_MS, N: N, P: P, UPTAKE: UPTAKE,
-    MONTAGE: MONTAGE, METABOLITES: METABOLITES, REACTIONS: REACTIONS, ADJ: ADJ, ADJ_ONES: ADJ_ONES,
+    FS: FS, BUF: BUF, CORR_N: CORR_N, HOP_MS: HOP_MS, TEP_MS: TEP_MS, N: N, P: P, MONTAGE: MONTAGE, TOPOLOGY_SEED: TOPOLOGY_SEED,
     PA: PA, PB: PB, pairIndex: function (i, j) { return i === j ? -1 : PAIR_INDEX[i * N + j]; },
     buildCoupling: buildCoupling, pearson: pearson, bfsTree: bfsTree, tepSample: tepSample,
-    createGenerator: createGenerator, flux: flux, metabolicLayout: metabolicLayout, matrixLayout: matrixLayout
+    createGenerator: createGenerator, headLayout: headLayout
   };
   window.__stageModel = model;
 
-  /* ======================================================================
-     Part 2: DOM
-     ====================================================================== */
+  /* ==================== Part 2: DOM ==================== */
   if (typeof document === 'undefined') return;
   var root = document.getElementById('stage');
   var canvas = document.getElementById('stage-canvas');
@@ -590,76 +386,59 @@
   var controlsEl = document.getElementById('stage-controls');
   if (!root || !canvas || !buttonsEl || !readoutEl || !liveEl || !controlsEl) return;
   var section = document.getElementById('stage-section');
-  var frame = canvas.parentNode;
+  var frame = canvas.parentNode, figureEl = root.parentNode || root;
   var reduce = Lab.reduceMotion;
   var t = Lab.tokens();
 
-  var PAD = 16, SEED = 20260904, DEFAULT_COUPLING = 0.8, BASE_THR = 0.35;
-  var MORPH_MS = 700, EDGE_FADE_MS = 700, KO_MS = 3000, STIM_GAP_MS = 400, STIM_MSG_MS = 4000;
-  var WAVE_FADE_MS = 600, WAVE_EDGE_MS = 300, RING_MS = 200, RING_PX = 40, GLOW_PX = 7.5;
-  var CELL_STAGGER_MS = 10, CELL_FADE_MS = 150;
+  var PAD = 16, TRACE_SEED = 20260904, DEFAULT_COUPLING = 0.8, BASE_THR = 0.35;
+  var COUPLING_MIN = 0.2, COUPLING_MAX = 1.6, COUPLING_STEP = 0.05;
+  var EDGE_FADE_MS = 700, STIM_GAP_MS = 400, STIM_MSG_MS = 4000;
+  var WAVE_FADE_MS = 600, WAVE_EDGE_MS = 300, RING_MS = 200, RING_PX = 40, GLOW_PX = 7.5, NODE_R = 5;
   var READOUT_MS = 1000, CORR_EVERY = 4, MAX_FRAME_MS = 67, FORCED_HOLD_MS = 2000, STIM_PARAM_DELAY_MS = 600;
   var LABEL_PX = 10;         /* floor for every canvas label */
-  var STRANDED_MIN = 0.005;  /* stranded carbon below this fraction of the uptake is not worth a sentence */
+  var LABELS_MIN_W = 420;    /* below this frame width the electrode labels are dropped */
+  var CHAR_W = 0.62;         /* advance width of the mono font as a fraction of its size */
+  var GAP_PX = 8;            /* columns erased ahead of the write head */
+  var TAG_GAP = 4;           /* distance between a pulse marker and its TMS tag */
+  var STATES = 3;
+  var HEADER_PX = 68;        /* sticky header height: the reading area starts below it */
+  var PHONE_QUERY = '(max-width: 900px)'; /* the CSS breakpoint where the figure moves above the beats */
+  var BEAT_SHARE = 0.5, BEAT_SHARE_PHONE = 0.35; /* share of a beat that has to be in view before it takes over */
+  var BEAT_MARGIN = 0.1;     /* a beat takes over only when it shows this much more than the current one */
+  var BEAT_THRESHOLDS = [0, 0.2, 0.35, 0.5, 0.65, 0.8, 1]; /* observer steps: the per-beat ratios stay fresh */
   /* Reduced motion writes the pulse at 4.2 s of the frozen page: left of centre, so the response and its
      spread over the hops sit in the middle of the page. */
   var STATIC_STIM_AT = Math.floor(BUF * 0.42);
-  var STATE_DESC = ['EEG montage', 'Connectivity graph', 'Metabolic network', 'Adjacency matrix'];
 
-  var ctx = null, Wc = 0, Hc = 0;
-  var gen = createGenerator(SEED, DEFAULT_COUPLING);
-  var resetCount = 0;
-  var state = 0, prevState = 0, morphing = false, morphStart = 0;
-  var nodeX = new Float32Array(N), nodeY = new Float32Array(N), nodeR = new Float32Array(N);
-  var fromX = new Float32Array(N), fromY = new Float32Array(N), fromR = new Float32Array(N);
-  var toX = new Float32Array(N), toY = new Float32Array(N), toR = new Float32Array(N);
-  var head = null, meta = null, mat = null;
+  /* Labels: window.I18N.stage in the language of the page (_data/js/stage.yml). */
+  var str = Lab.strings('stage');
+  function tr(key, values) { return Lab.format(str(key), values); }
+  var SCALE_LABEL = tr('scale'), TMS_LABEL = tr('tms');
+  var SCALE_W = 3 + Math.ceil(SCALE_LABEL.length * LABEL_PX * CHAR_W); /* extent of the scale label from the page origin */
+  var TAG_W = 3 + Math.ceil(TMS_LABEL.length * LABEL_PX * CHAR_W);     /* width of the TMS tag */
+
+  var ctx = null, Wc = 0, Hc = 0, head = null, state = 0, resetCount = 0;
+  var gen = createGenerator(TRACE_SEED, DEFAULT_COUPLING);
   var edgeFade = 0, edgeFadeTarget = 0, edgeFadeFrom = 0, edgeFadeStart = -1;
-  var thr = BASE_THR, showLabels = true;
-  var hover = -1, hoverFocus = -1, hoverReaction = -1, hoverCell = -1;
-  var frameCount = 0, lastNow = 0, acc = 0, running = false, rafId = 0, dirty = true;
-  var lastReadout = 0, readoutText = '', messageUntil = 0;
-  var forcedUntil = 0;
+  var thr = BASE_THR, showLabels = true, hover = -1, hoverFocus = -1;
+  var frameCount = 0, lastNow = 0, acc = 0, running = false, rafId = 0;
+  var lastReadout = 0, readoutText = '', messageUntil = 0, forcedUntil = 0, stimulated = false;
 
   /* Stimulation (one visible wave at a time; the generator queues the evoked potentials itself). */
   var stim = { active: false, start: 0, node: -1, maxHop: 0, dist: new Int32Array(N), parent: new Int32Array(N) };
   var lastStim = -1e9;
 
-  /* Metabolism state. */
-  var koUntil = new Float64Array(R), enabled = new Uint8Array(R), fluxRes = null;
-  var PARTICLES = 8, phases = new Float32Array(R * PARTICLES), pcount = new Uint8Array(R);
-  var forcedKnockout = -1, restored = false;
-  (function () { var pr = Lab.rng(11); for (var i = 0; i < phases.length; i++) phases[i] = pr(); })();
-
-  /* Matrix state. */
-  var fillStart = -1;
-
-  function nowMs() { return performance.now(); }
-  function setReadout(text) {
-    if (text === readoutText) return;
-    readoutText = text;
-    readoutEl.textContent = text;
-  }
+  function setReadout(text) { if (text !== readoutText) { readoutText = text; readoutEl.textContent = text; } }
   /* User-triggered messages also reach the live region; the periodic summaries never do. */
-  function announce(text) {
-    setReadout(text);
-    liveEl.textContent = text;
-  }
-  function requestRender() {
-    dirty = true;
-    if (reduce) render(nowMs());
-  }
+  function announce(text) { setReadout(text); liveEl.textContent = text; }
+  /* Reduced motion has no loop, so a change is drawn at once; the loop redraws every frame anyway. */
+  function requestRender() { if (reduce) render(Lab.now()); }
 
-  /* ---------------------------------------------------------------------
-     Offscreen EEG page (8 channels, 10 s, oscilloscope write head)
-     --------------------------------------------------------------------- */
+  /* ---- Offscreen EEG page (8 channels, 10 s, oscilloscope write head) ---- */
   var PAGE_CH = ['Fp1', 'F3', 'C3', 'P3', 'O1', 'Fz', 'Cz', 'Pz'].map(Lab.electrodeIndex);
   var page = document.createElement('canvas'), pctx = page.getContext('2d');
   var pg = { x: 0, y: 0, w: 0, h: 0, gutter: 32, axisH: 14, tx: 0, ty: 0, tw: 0, th: 0, rowH: 0, spp: 1, gain: 1, clampY: 1 };
   var painted = 0, paintedLap = 0, prevY = new Float32Array(PAGE_CH.length), prevValid = new Uint8Array(PAGE_CH.length);
-  var GAP_PX = 8;            /* columns erased ahead of the write head */
-  var TAG_W = 22, TAG_GAP = 4; /* "TMS" tag width and its distance from the pulse marker */
-  var SCALE_W = 3 + Math.ceil(3 * LABEL_PX * CHAR_W); /* extent of the "1 s" scale label from the page origin */
 
   function pageLayout(dpr) {
     pg.x = head.pageX; pg.y = head.pageY; pg.w = Math.max(40, Math.round(head.pageW)); pg.h = Math.max(40, Math.round(head.pageH));
@@ -672,8 +451,7 @@
   }
   /* Page column of a pulse marker, -1 when the pulse is off the page or belongs to another lap. */
   function pulseColumn(ps, lapBase) {
-    if (gen.n - ps > BUF || Math.floor(ps / BUF) * BUF !== lapBase) return -1;
-    return Math.floor((ps % BUF) / pg.spp);
+    return (gen.n - ps > BUF || Math.floor(ps / BUF) * BUF !== lapBase) ? -1 : Math.floor((ps % BUF) / pg.spp);
   }
   /* The TMS tag sits right of its marker (past the scale label when the marker is at the page start), left
      of it when it would run past the page edge. */
@@ -694,25 +472,22 @@
     pctx.fillStyle = t.muted;
     for (var k = 0; k <= PAGE_S; k++) pctx.fillRect(Math.round(pg.tx + k * pg.tw / PAGE_S), pg.axisH - 5, 1, 5);
     pctx.font = Lab.font(LABEL_PX, t); pctx.textBaseline = 'alphabetic'; pctx.textAlign = 'left';
-    pctx.fillText('1 s', pg.tx + 3, pg.axisH - 6);
+    pctx.fillText(SCALE_LABEL, pg.tx + 3, pg.axisH - 6);
     pctx.font = Lab.font(LABEL_PX, t, 500); pctx.fillStyle = t.accent; pctx.strokeStyle = t.surface; pctx.lineWidth = 2;
     for (k = 0; k < gen.pulses.length; k++) {
       var pc = pulseColumn(gen.pulses[k], lapBase);
       if (pc < 0) continue;
       var sp = tagSpan(pc), x = pg.tx + (sp.align === 'left' ? sp.x0 : sp.x1);
       pctx.textAlign = sp.align;
-      pctx.strokeText('TMS', x, pg.axisH - 6); pctx.fillText('TMS', x, pg.axisH - 6);
+      pctx.strokeText(TMS_LABEL, x, pg.axisH - 6); pctx.fillText(TMS_LABEL, x, pg.axisH - 6);
     }
     pctx.restore();
   }
   /* A fresh pulse gets its tag at once: the write head only repaints columns ahead of the marker. */
   function paintTag(ps) {
-    var lapBase = Math.floor(ps / BUF) * BUF, sp = tagSpan(pulseColumn(ps, lapBase));
-    drawAxis(pg.tx + sp.x0, pg.tx + sp.x1, lapBase);
+    var lapBase = Math.floor(ps / BUF) * BUF, sp = tagSpan(pulseColumn(ps, lapBase)); drawAxis(pg.tx + sp.x0, pg.tx + sp.x1, lapBase);
   }
-  function clearTraces(x0, x1) {
-    pctx.clearRect(x0, pg.axisH + 1, x1 - x0, pg.h - pg.axisH - 1);
-  }
+  function clearTraces(x0, x1) { pctx.clearRect(x0, pg.axisH + 1, x1 - x0, pg.h - pg.axisH - 1); }
   /* Channel labels; rows tighter than the label size (short frames) label every other channel. */
   function drawGutter() {
     pctx.clearRect(0, 0, pg.gutter, pg.h);
@@ -803,37 +578,14 @@
     if (wrap > 0) { clearTraces(pg.tx, pg.tx + wrap); drawAxis(pg.tx, pg.tx + wrap, (lap + 1) * BUF); }
   }
 
-  /* ---------------------------------------------------------------------
-     Layout, buttons and the text equivalent of the matrix
-     --------------------------------------------------------------------- */
-  var electrodeButtons = [], reactionButtons = [];
-  for (var bi = 0; bi < N; bi++) {
+  /* ---- Electrode buttons, layout, controls ---- */
+  var electrodeButtons = MONTAGE.map(function (m, i) {
     var eb = document.createElement('button');
-    eb.type = 'button'; eb.className = 'electrode';
-    eb.setAttribute('aria-label', 'Stimulate ' + MONTAGE[bi].name);
-    eb.dataset.index = String(bi);
+    eb.type = 'button'; eb.dataset.index = String(i);
+    eb.setAttribute('aria-label', tr('stimulate', { name: m.name }));
     buttonsEl.appendChild(eb);
-    electrodeButtons.push(eb);
-  }
-  for (var rbI = 0; rbI < R; rbI++) {
-    var rb = document.createElement('button');
-    rb.type = 'button'; rb.className = 'reaction'; rb.hidden = true;
-    rb.setAttribute('aria-label', 'Knock out ' + REACTIONS[rbI].label);
-    rb.setAttribute('aria-pressed', 'false');
-    rb.dataset.index = String(rbI);
-    buttonsEl.appendChild(rb);
-    reactionButtons.push(rb);
-  }
-  var matrixDesc = document.createElement('p');
-  matrixDesc.className = 'visually-hidden'; matrixDesc.id = 'stage-matrix-desc'; matrixDesc.hidden = true;
-  matrixDesc.textContent = 'Adjacency matrix, ' + M + ' by ' + M + ': a cell is 1 where a reaction runs from the row metabolite to the column metabolite. Reactions: ' +
-    REACTIONS.map(function (r) { return r.label; }).join(', ') + '.';
-  frame.appendChild(matrixDesc);
-
-  function targetFor(s, x, y, r) {
-    var src = s <= 1 ? head : s === 2 ? meta : mat, i;
-    for (i = 0; i < N; i++) { x[i] = src.x[i]; y[i] = src.y[i]; r[i] = s === 3 ? 3 : 5; }
-  }
+    return eb;
+  });
   /* Electrode targets are sized from the head: 85% of the closest electrode spacing, between 28 and 44 px, so
      neighbours do not overlap on a small head while desktop keeps the full 44 px. */
   function positionButtons() {
@@ -845,133 +597,72 @@
       es.left = head.x[i].toFixed(1) + 'px'; es.top = head.y[i].toFixed(1) + 'px';
       es.width = size + 'px'; es.height = size + 'px'; es.margin = half + ' 0 0 ' + half;
     }
-    for (i = 0; i < R; i++) {
-      var re = REACTIONS[i], rs = reactionButtons[i].style;
-      rs.left = ((meta.x[re.from] + meta.x[re.to]) / 2).toFixed(1) + 'px'; rs.top = ((meta.y[re.from] + meta.y[re.to]) / 2).toFixed(1) + 'px';
-    }
   }
   function layout() {
     var f = Lab.fitCanvas(canvas);
     ctx = f.ctx; Wc = f.w; Hc = f.h;
-    head = headLayout(Wc, Hc, PAD);
-    meta = metabolicLayout(Wc, Hc, PAD);
-    mat = matrixLayout(Wc, Hc, PAD, LABEL_PX);
-    showLabels = Wc >= COMPACT_W;
-    targetFor(state, toX, toY, toR);
-    if (morphing) targetFor(prevState, fromX, fromY, fromR);
-    else { nodeX.set(toX); nodeY.set(toY); nodeR.set(toR); }
-    pageLayout(f.dpr);
-    repaintPage();
-    positionButtons();
-    requestRender();
+    head = headLayout(Wc, Hc, PAD); showLabels = Wc >= LABELS_MIN_W;
+    pageLayout(f.dpr); repaintPage(); positionButtons(); requestRender();
+    observeBeats();
   }
 
-  /* ---------------------------------------------------------------------
-     Controls (state 0-1: Coupling range and Reset; state 2: Restore; state 3: nothing)
-     --------------------------------------------------------------------- */
-  var couplingLabel = document.createElement('label');
-  var couplingInput = document.createElement('input');
-  couplingInput.type = 'range'; couplingInput.min = '0.2'; couplingInput.max = '1.6'; couplingInput.step = '0.05'; couplingInput.value = String(DEFAULT_COUPLING);
-  couplingInput.id = 'stage-coupling';
-  couplingLabel.appendChild(document.createTextNode('Coupling'));
-  couplingLabel.appendChild(couplingInput);
+  /* Coupling range and Reset, present in every state (the graph is the same throughout). */
+  var couplingLabel = document.createElement('label'), couplingInput = document.createElement('input');
+  couplingInput.type = 'range'; couplingInput.id = 'stage-coupling';
+  /* min, max and step before value: a range sanitises its value against the bounds it has at that moment. */
+  couplingInput.min = String(COUPLING_MIN); couplingInput.max = String(COUPLING_MAX); couplingInput.step = String(COUPLING_STEP);
+  couplingInput.value = String(DEFAULT_COUPLING);
+  couplingLabel.appendChild(document.createTextNode(tr('coupling'))); couplingLabel.appendChild(couplingInput);
   var resetBtn = document.createElement('button');
-  resetBtn.type = 'button'; resetBtn.className = 'btn btn-ghost btn-small'; resetBtn.textContent = 'Reset';
-  resetBtn.setAttribute('aria-label', 'Reset the simulation');
-  var restoreBtn = document.createElement('button');
-  restoreBtn.type = 'button'; restoreBtn.className = 'btn btn-ghost btn-small'; restoreBtn.textContent = 'Restore';
-  restoreBtn.setAttribute('aria-label', 'Restore all reactions');
-  function setControls(s) {
-    while (controlsEl.firstChild) controlsEl.removeChild(controlsEl.firstChild);
-    if (s <= 1) { controlsEl.appendChild(couplingLabel); controlsEl.appendChild(resetBtn); }
-    else if (s === 2) controlsEl.appendChild(restoreBtn);
-  }
+  resetBtn.type = 'button'; resetBtn.className = 'btn btn-ghost btn-small'; resetBtn.textContent = tr('reset');
+  resetBtn.setAttribute('aria-label', tr('reset_label'));
+  controlsEl.appendChild(couplingLabel); controlsEl.appendChild(resetBtn);
 
-  /* ---------------------------------------------------------------------
-     Readout texts
-     --------------------------------------------------------------------- */
+  /* ---- Readout texts ---- */
   function summaryText() {
     var s = gen.summary();
-    return 'Strongest pair ' + MONTAGE[s.a].name + '-' + MONTAGE[s.b].name + ', r = ' + s.r.toFixed(2) + '.';
+    return tr('strongest', { a: MONTAGE[s.a].name, b: MONTAGE[s.b].name, r: s.r.toFixed(2) });
   }
-  function fluxText() {
-    var txt = 'Biomass ' + Math.round(fluxRes.biomassFraction * 100) + '% of wild type. ' + fluxRes.carrying + ' of ' + R + ' reactions carry flux.';
-    if (fluxRes.stranded > STRANDED_MIN * UPTAKE) txt += ' ' + Math.round(fluxRes.stranded / UPTAKE * 100) + '% stranded.';
-    return txt + ' Toy network.';
+  /* State 0 describes the page, state 2 asks for a press until the first pulse (in the readout and with the ring
+     on the buttons), otherwise the strongest pair. The periodic readout waits while a user message is on show. */
+  function idleText() {
+    if (state === 0) return tr('traces', { shown: PAGE_CH.length, total: N, fs: FS });
+    return state === 2 && !stimulated ? tr('prompt') : summaryText();
   }
-  function matrixText() {
-    var count = ADJ_ONES + ' of ' + (M * M) + ' cells are 1.';
-    if (hoverCell < 0) return count;
-    var row = Math.floor(hoverCell / M), col = hoverCell % M;
-    return METABOLITES[row] + ' to ' + METABOLITES[col] + ': ' + (ADJ[hoverCell] ? 'edge' : 'no edge') + '. ' + count;
-  }
-  /* Periodic summary of states 0 and 1, held back while a stimulation message is on show. */
-  function updateCorrelationReadout(now) {
-    if (now >= messageUntil) setReadout(summaryText());
-  }
+  function updateReadout(now) { if (now >= messageUntil) setReadout(idleText()); }
+  function updatePrompt() { root.classList.toggle('is-prompting', state === 2 && !stimulated); }
 
-  /* ---------------------------------------------------------------------
-     State machine
-     --------------------------------------------------------------------- */
+  /* ---- State machine: 0 traces, 1 edges, 2 edges and the stimulation invitation ---- */
   var beats = section ? Array.prototype.slice.call(section.querySelectorAll('[data-stage-step]')) : [];
-  function markBeat(s) {
-    for (var i = 0; i < beats.length; i++) beats[i].classList.toggle('is-active', +beats[i].dataset.stageStep === s);
-  }
+  function markBeat(s) { for (var i = 0; i < beats.length; i++) beats[i].classList.toggle('is-active', +beats[i].dataset.stageStep === s); }
+  /* The edges fade in from state 1 (snapped under reduced motion). The state is scroll-driven, so it is never
+     announced: the live region is kept for what the user does (stimulation, reset, coupling). */
   function setState(n) {
-    n = Lab.clamp(Math.round(+n) || 0, 0, 3);
+    n = Lab.clamp(Math.round(+n) || 0, 0, STATES - 1);
     if (n === state) return;
-    var now = nowMs(), i;
-    prevState = state; state = n;
+    var now = Lab.now();
+    state = n;
     root.dataset.state = String(n);
     markBeat(n);
-    setControls(n);
-    matrixDesc.hidden = n !== 3;
-    for (i = 0; i < N; i++) electrodeButtons[i].hidden = n > 1;
-    for (i = 0; i < R; i++) reactionButtons[i].hidden = n !== 2;
-    hover = -1; hoverFocus = -1; hoverReaction = -1; hoverCell = -1;
-    messageUntil = 0;
-    if (prevState <= 1 && n <= 1) {
-      startEdgeFade(n, now);
-    } else {
-      fromX.set(nodeX); fromY.set(nodeY); fromR.set(nodeR);
-      targetFor(n, toX, toY, toR);
-      if (reduce) { nodeX.set(toX); nodeY.set(toY); nodeR.set(toR); morphing = false; }
-      else { morphing = true; morphStart = now; }
-      edgeFade = n === 1 ? 1 : 0; edgeFadeTarget = edgeFade; edgeFadeStart = -1;
-      if (n <= 1) { acc = 0; stim.active = false; }
-    }
-    announce(STATE_DESC[n]);
-    if (n <= 1) { lastReadout = now; setReadout(summaryText()); }
-    if (n === 2) {
-      if (forcedKnockout >= 0 && !restored && !koUntil[forcedKnockout]) koUntil[forcedKnockout] = Infinity;
-      recomputeFlux();
-      setReadout(fluxText());
-    }
-    if (n === 3) {
-      fillStart = reduce ? -1e9 : now + (morphing ? MORPH_MS : 0);
-      setReadout(matrixText());
-    }
+    edgeFadeFrom = edgeFade; edgeFadeTarget = n >= 1 ? 1 : 0; edgeFadeStart = reduce ? -1 : now;
+    if (reduce) edgeFade = edgeFadeTarget;
+    updatePrompt();
+    messageUntil = 0; lastReadout = now;
+    setReadout(idleText());
     requestRender();
   }
-  function startEdgeFade(target, now) {
-    if (reduce) { edgeFade = target; edgeFadeTarget = target; edgeFadeStart = -1; return; }
-    edgeFadeFrom = edgeFade; edgeFadeTarget = target; edgeFadeStart = now;
-  }
 
-  /* ---------------------------------------------------------------------
-     Stimulation, reset, coupling
-     --------------------------------------------------------------------- */
-  function refreshCorrelation() {
-    gen.correlate();
-    thr = gen.threshold(BASE_THR);
-  }
+  /* ---- Stimulation, reset, coupling ---- */
+  function refreshCorrelation() { gen.correlate(); thr = gen.threshold(BASE_THR); }
   function stimulate(which) {
     var idx = typeof which === 'number' ? which : Lab.electrodeIndex(which);
-    if (idx < 0 || idx >= N || state > 1) return;
-    var now = nowMs();
+    if (idx < 0 || idx >= N) return;
+    var now = Lab.now();
     if (now - lastStim < STIM_GAP_MS) return;
     lastStim = now;
     refreshCorrelation();
+    /* The wave travels over the correlation graph (drawn or not); an isolated electrode falls back to the
+       hidden coupling graph so a press always answers. */
     var adj = gen.adjacency(thr);
     if (!adj.edgeCount || adj[idx].length === 0) adj = gen.hiddenAdjacency();
     var tree = bfsTree(adj, idx), reached = 0, i;
@@ -989,23 +680,23 @@
       gen.stimulate(idx, tree);
       paintTag(gen.n);
     }
+    stimulated = true;
+    updatePrompt();
     messageUntil = now + STIM_MSG_MS;
-    announce('Stimulated ' + MONTAGE[idx].name + '. The wave reached ' + reached + ' of ' + N + ' electrodes; the farthest at ' + (tree.maxHop * HOP_MS) + ' ms.');
+    announce(tr('stimulated', { name: MONTAGE[idx].name, reached: reached, total: N, ms: tree.maxHop * HOP_MS }));
     requestRender();
   }
   function resetSimulation() {
     resetCount++;
-    gen.reseed(SEED + resetCount * 7919);
+    gen.reseed(TRACE_SEED + resetCount * 7919); gen.advance(BUF);
     stim.active = false; acc = 0;
-    gen.advance(BUF);
-    refreshCorrelation();
-    repaintPage();
-    messageUntil = 0; lastReadout = nowMs();
-    announce('Simulation reset. ' + summaryText());
+    refreshCorrelation(); repaintPage();
+    messageUntil = 0; lastReadout = Lab.now();
+    announce(tr('reset_done', { summary: summaryText() }));
     requestRender();
   }
   function setCoupling(v) {
-    v = Lab.clamp(+v || DEFAULT_COUPLING, 0.2, 1.6);
+    v = Lab.clamp(+v || DEFAULT_COUPLING, COUPLING_MIN, COUPLING_MAX);
     gen.setCoupling(v);
     if (couplingInput.value !== String(v)) couplingInput.value = String(v);
     if (reduce) {
@@ -1015,55 +706,11 @@
       refreshCorrelation();
       repaintPage();
     }
-    announce('Coupling ' + v.toFixed(2) + '.' + (reduce ? ' ' + summaryText() : ''));
+    announce(tr('coupling_set', { value: v.toFixed(2) }) + (reduce ? ' ' + summaryText() : ''));
     requestRender();
   }
 
-  /* ---------------------------------------------------------------------
-     Flux and knockouts
-     --------------------------------------------------------------------- */
-  function recomputeFlux() {
-    var now = nowMs(), i;
-    for (i = 0; i < R; i++) {
-      enabled[i] = koUntil[i] > now ? 0 : 1;
-      reactionButtons[i].setAttribute('aria-pressed', enabled[i] ? 'false' : 'true');
-    }
-    fluxRes = flux(enabled);
-    for (i = 0; i < R; i++) pcount[i] = enabled[i] ? Math.min(PARTICLES, Math.ceil(fluxRes.fluxes[i] * 0.6)) : 0;
-    dirty = true;
-  }
-  /* Reduced motion has no frame loop, so a timer restores a temporary knockout. */
-  var koTimers = [];
-  function knockout(idx, persistent) {
-    if (idx < 0 || idx >= R) return;
-    koUntil[idx] = persistent ? Infinity : nowMs() + KO_MS;
-    recomputeFlux();
-    announce(fluxText());
-    if (reduce) {
-      if (koTimers[idx]) clearTimeout(koTimers[idx]);
-      if (!persistent) koTimers[idx] = setTimeout(function () { koTimers[idx] = 0; expireKnockouts(nowMs()); }, KO_MS + 20);
-      render(nowMs());
-    }
-  }
-  function restore() {
-    for (var i = 0; i < R; i++) { koUntil[i] = 0; if (koTimers[i]) { clearTimeout(koTimers[i]); koTimers[i] = 0; } }
-    restored = true;
-    recomputeFlux();
-    announce(fluxText());
-    if (reduce) render(nowMs());
-  }
-  function expireKnockouts(now) {
-    var changed = false;
-    for (var i = 0; i < R; i++) if (koUntil[i] && now >= koUntil[i]) { koUntil[i] = 0; changed = true; }
-    if (!changed) return;
-    recomputeFlux();
-    setReadout(fluxText());
-    if (reduce) render(now);
-  }
-
-  /* ---------------------------------------------------------------------
-     Rendering
-     --------------------------------------------------------------------- */
+  /* ---- Rendering ---- */
   /* Ring electrodes: label pushed radially outward. Inner electrodes: label above and to the right. */
   var lo = { dx: 0, dy: 0, align: 'left' };
   function labelOffset(i) {
@@ -1071,54 +718,31 @@
     if (len < 0.9) { lo.dx = 0.55; lo.dy = -0.85; lo.align = 'left'; }
     else { lo.dx = dx / len; lo.dy = dy / len; lo.align = Math.abs(lo.dx) < 0.3 ? 'center' : (lo.dx < 0 ? 'right' : 'left'); }
   }
-
-  function drawHeadLayer(alpha, now) {
-    if (alpha <= 0.002) return;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    Lab.drawHead(ctx, head.cx, head.cy, head.r, t);
-    /* Functional connectivity edges under the nodes; a hovered electrode keeps its own edges at full strength. */
-    if (edgeFade > 0.002) {
-      var p, a, b, r;
-      ctx.lineCap = 'round';
-      for (p = 0; p < P; p++) {
-        r = gen.absr[p];
-        if (r <= thr) continue;
-        a = PA[p]; b = PB[p];
-        var ea = Math.min(1, r) * edgeFade;
-        if (hover >= 0) ea = (a === hover || b === hover) ? 1 : ea * 0.15;
-        ctx.strokeStyle = Lab.rgba(t.accent, ea);
-        ctx.lineWidth = 0.5 + 2 * r;
-        ctx.beginPath(); ctx.moveTo(nodeX[a], nodeY[a]); ctx.lineTo(nodeX[b], nodeY[b]); ctx.stroke();
-      }
+  /* Functional connectivity edges under the nodes; a hovered electrode keeps its own edges at full strength. */
+  function drawEdges() {
+    var x = head.x, y = head.y, p, a, b, r;
+    ctx.lineCap = 'round';
+    for (p = 0; p < P; p++) {
+      r = gen.absr[p];
+      if (r <= thr) continue;
+      a = PA[p]; b = PB[p];
+      var ea = Math.min(1, r) * edgeFade;
+      if (hover >= 0) ea = (a === hover || b === hover) ? 1 : ea * 0.15;
+      ctx.strokeStyle = Lab.rgba(t.accent, ea);
+      ctx.lineWidth = 0.5 + 2 * r;
+      ctx.beginPath(); ctx.moveTo(x[a], y[a]); ctx.lineTo(x[b], y[b]); ctx.stroke();
     }
-    if (stim.active) drawStim(now);
-    if (showLabels) {
-      ctx.textBaseline = 'middle';
-      for (var i = 0; i < N; i++) {
-        labelOffset(i);
-        var isH = i === hover;
-        var off = nodeR[i] + (isH ? 9 : 6);
-        ctx.font = isH ? Lab.font(12.5, t, 600) : Lab.font(Wc < 560 ? 10 : 11, t);
-        ctx.textAlign = lo.align;
-        ctx.fillStyle = isH ? t.ink : t.muted;
-        ctx.fillText(MONTAGE[i].name, nodeX[i] + lo.dx * off, nodeY[i] + lo.dy * off);
-      }
-    }
-    ctx.drawImage(page, 0, 0, page.width, page.height, pg.x, pg.y, pg.w, pg.h);
-    ctx.restore();
   }
   /* Stimulation wave: expanding ring, traversed edges, nodes lighting per hop. The reduced-motion picture is
      the whole tree at once, dimmer with the hop count. */
   function drawStim(now) {
     /* The rAF timestamp can trail performance.now() by a frame, so elapsed time is clamped at zero. */
-    var e = reduce ? 1e9 : Math.max(0, now - stim.start), i, d, a;
+    var e = reduce ? 1e9 : Math.max(0, now - stim.start), x = head.x, y = head.y, i, d, a;
     if (!reduce && e > stim.maxHop * HOP_MS + WAVE_FADE_MS) { stim.active = false; return; }
-    var sx = nodeX[stim.node], sy = nodeY[stim.node];
     if (reduce || e < RING_MS) {
       var u = reduce ? 1 : e / RING_MS;
       ctx.strokeStyle = Lab.rgba(t.accent, reduce ? 0.5 : 1 - u); ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(sx, sy, RING_PX * u, 0, TAU); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x[stim.node], y[stim.node], RING_PX * u, 0, TAU); ctx.stroke();
     }
     ctx.lineCap = 'round';
     for (i = 0; i < N; i++) {
@@ -1127,7 +751,7 @@
       a = reduce ? 0.8 : 1 - (e - (d - 1) * HOP_MS) / WAVE_EDGE_MS;
       if (a <= 0 || a > 1) continue;
       ctx.strokeStyle = Lab.rgba(t.accent, a); ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(nodeX[stim.parent[i]], nodeY[stim.parent[i]]); ctx.lineTo(nodeX[i], nodeY[i]); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x[stim.parent[i]], y[stim.parent[i]]); ctx.lineTo(x[i], y[i]); ctx.stroke();
     }
     for (i = 0; i < N; i++) {
       d = stim.dist[i];
@@ -1135,231 +759,66 @@
       a = reduce ? 1 - 0.6 * d / Math.max(1, stim.maxHop) : 1 - (e - d * HOP_MS) / WAVE_FADE_MS;
       if (a <= 0 || a > 1) continue;
       ctx.fillStyle = Lab.rgba(t.accent, a);
-      ctx.beginPath(); ctx.arc(nodeX[i], nodeY[i], GLOW_PX, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(x[i], y[i], GLOW_PX, 0, TAU); ctx.fill();
     }
   }
-
-  function arrow(x0, y0, x1, y1, r0, r1, width, color, dashed, headLen) {
-    var dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy);
-    if (len < r0 + r1 + 2) return;
-    var ux = dx / len, uy = dy / len;
-    var ax = x0 + ux * r0, ay = y0 + uy * r0, bx = x1 - ux * r1, by = y1 - uy * r1;
-    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width;
-    if (dashed) ctx.setLineDash([4, 4]);
-    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx - ux * headLen * 0.6, by - uy * headLen * 0.6); ctx.stroke();
-    if (dashed) ctx.setLineDash([]);
-    var hw = headLen * 0.55;
-    ctx.beginPath();
-    ctx.moveTo(bx, by);
-    ctx.lineTo(bx - ux * headLen - uy * hw, by - uy * headLen + ux * hw);
-    ctx.lineTo(bx - ux * headLen + uy * hw, by - uy * headLen - ux * hw);
-    ctx.closePath(); ctx.fill();
-  }
-  function drawMetaLayer(alpha) {
-    if (alpha <= 0.002 || !fluxRes) return;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
-    var i, re, fx, wdt;
-    /* Reactions: width 1 to 6 px with flux, dashed muted when knocked out, accent and thicker when hovered. */
-    for (i = 0; i < R; i++) {
-      re = REACTIONS[i]; fx = fluxRes.fluxes[i];
-      var ko = !enabled[i], hi = i === hoverReaction;
-      wdt = (ko ? 1 : 1 + 5 * Math.min(1, fx / 12)) + (hi ? 1 : 0);
-      var col = hi ? t.accent : ko ? t.muted : Lab.rgba(t.ink, 0.4 + 0.35 * Math.min(1, fx / 12));
-      arrow(nodeX[re.from], nodeY[re.from], nodeX[re.to], nodeY[re.to], nodeR[re.from] + 2, nodeR[re.to] + 2, wdt, col, ko, 4 + wdt * 0.6);
-    }
-    /* Biomass drains as short stubs; compact frames leave them unlabelled and let the readout carry the numbers. */
-    ctx.font = Lab.font(LABEL_PX, t); ctx.textBaseline = 'middle';
-    for (i = 0; i < meta.stubs.length; i++) {
-      var st = meta.stubs[i], n0 = st.node, dv = fluxRes.drains[i];
-      var x0 = nodeX[n0] + st.dx * (nodeR[n0] + 2), y0 = nodeY[n0] + st.dy * (nodeR[n0] + 2);
-      var x1 = nodeX[n0] + st.dx * (nodeR[n0] + 2 + meta.stubLen), y1 = nodeY[n0] + st.dy * (nodeR[n0] + 2 + meta.stubLen);
-      arrow(x0, y0, x1, y1, 0, 0, 1 + 1.5 * Math.min(1, dv / 1.2), Lab.rgba(t.muted, dv > 0.01 ? 0.9 : 0.35), false, 3.5);
-      if (meta.compact) continue;
-      ctx.fillStyle = Lab.rgba(t.muted, 0.9);
-      ctx.textAlign = Math.abs(st.dx) < 0.3 ? 'center' : st.dx > 0 ? 'left' : 'right';
-      ctx.fillText('biomass', x1 + st.dx * 4, y1 + st.dy * 8);
-    }
-    /* Particles: accent dots travelling along each reaction, count and speed with flux. */
-    ctx.fillStyle = t.accent;
-    for (i = 0; i < R; i++) {
-      var pc = pcount[i];
-      if (!pc) continue;
-      re = REACTIONS[i];
-      var ax = nodeX[re.from], ay = nodeY[re.from], bx = nodeX[re.to], by = nodeY[re.to];
-      for (var k = 0; k < pc; k++) {
-        var ph = phases[i * PARTICLES + k];
-        ctx.beginPath(); ctx.arc(ax + (bx - ax) * ph, ay + (by - ay) * ph, 1.9, 0, TAU); ctx.fill();
-      }
-    }
-    ctx.font = Lab.font(meta.labelPx, t); ctx.textBaseline = 'middle'; ctx.fillStyle = t.muted;
-    for (i = 0; i < M; i++) {
-      var an = meta.anchors[i], off = nodeR[i] + 7;
-      ctx.textAlign = an.align;
-      ctx.fillText(METABOLITES[i], nodeX[i] + an.dx * off, nodeY[i] + an.dy * off + (an.dy > 0.5 ? 4 : an.dy < -0.5 ? -4 : 0));
-    }
-    ctx.restore();
-  }
-
-  function drawMatrixLayer(alpha, now) {
-    if (alpha <= 0.002) return;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    var cs = mat.cs, gx = mat.gx, gy = mat.gy, i, j, k;
-    var hr = hoverCell >= 0 ? Math.floor(hoverCell / M) : -1, hc = hoverCell >= 0 ? hoverCell % M : -1;
-    if (hr >= 0) {
-      ctx.fillStyle = t.accentSoft;
-      ctx.fillRect(gx, gy + hr * cs, cs * M, cs);
-      ctx.fillRect(gx + hc * cs, gy, cs, cs * M);
-    }
-    ctx.strokeStyle = t.line; ctx.lineWidth = 1;
-    for (k = 0; k <= M; k++) {
-      ctx.beginPath(); ctx.moveTo(gx + k * cs + 0.5, gy); ctx.lineTo(gx + k * cs + 0.5, gy + cs * M); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(gx, gy + k * cs + 0.5); ctx.lineTo(gx + cs * M, gy + k * cs + 0.5); ctx.stroke();
-    }
-    /* Cells fill in row order, staggered, once the morph has landed. */
-    var elapsed = now - fillStart, inset = Math.max(1, cs * 0.12);
-    for (i = 0; i < M; i++) {
-      for (j = 0; j < M; j++) {
-        k = i * M + j;
-        if (!ADJ[k]) continue;
-        var a = Lab.clamp((elapsed - k * CELL_STAGGER_MS) / CELL_FADE_MS, 0, 1);
-        if (a <= 0) continue;
-        ctx.fillStyle = Lab.rgba(k === hoverCell ? t.accent : t.ink, a);
-        ctx.fillRect(gx + j * cs + inset, gy + i * cs + inset, cs - 2 * inset, cs - 2 * inset);
-      }
-    }
-    if (hoverCell >= 0 && !ADJ[hoverCell]) {
-      ctx.strokeStyle = t.accent; ctx.lineWidth = 1.5;
-      ctx.strokeRect(gx + hc * cs + 1, gy + hr * cs + 1, cs - 2, cs - 2);
-    }
-    /* Labels: rows right-aligned left of the grid (the nodes sit on them), columns rotated above their marks. */
-    ctx.font = Lab.font(mat.labelPx, t);
-    ctx.textBaseline = 'middle'; ctx.textAlign = 'right';
-    for (i = 0; i < M; i++) {
-      ctx.fillStyle = i === hr ? t.accent : t.muted;
-      ctx.fillText(METABOLITES[i], gx - 14, gy + cs * (i + 0.5));
-    }
-    for (j = 0; j < M; j++) {
-      if (mat.colLabels) {
-        ctx.save();
-        ctx.translate(gx + cs * (j + 0.5), gy - 12);
-        ctx.rotate(-Math.PI / 2);
-        ctx.textAlign = 'left';
-        ctx.fillStyle = j === hc ? t.accent : t.muted;
-        ctx.fillText(METABOLITES[j], 0, 0);
-        ctx.restore();
-      }
-      ctx.fillStyle = j === hc ? t.accent : t.ink;
-      ctx.beginPath(); ctx.arc(gx + cs * (j + 0.5), gy - 6, 3, 0, TAU); ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  function drawNodes() {
+  function drawLabels() {
+    ctx.textBaseline = 'middle';
     for (var i = 0; i < N; i++) {
-      var isH = state <= 1 && i === hover;
-      ctx.beginPath(); ctx.arc(nodeX[i], nodeY[i], nodeR[i] + (isH ? 1.5 : 0), 0, TAU);
-      ctx.fillStyle = isH ? t.accent : t.ink;
-      ctx.fill();
-      if (state === 3 && !morphing) continue;
-      ctx.lineWidth = 1.5; ctx.strokeStyle = t.surface; ctx.stroke();
+      labelOffset(i);
+      var isH = i === hover, off = NODE_R + (isH ? 9 : 6);
+      ctx.font = isH ? Lab.font(12.5, t, 600) : Lab.font(Wc < 560 ? 10 : 11, t);
+      ctx.textAlign = lo.align;
+      ctx.fillStyle = isH ? t.ink : t.muted;
+      ctx.fillText(MONTAGE[i].name, head.x[i] + lo.dx * off, head.y[i] + lo.dy * off);
     }
   }
-
-  function drawLayer(s, alpha, now) {
-    if (s <= 1) drawHeadLayer(alpha, now);
-    else if (s === 2) drawMetaLayer(alpha);
-    else drawMatrixLayer(alpha, now);
+  function drawNodes() {
+    ctx.lineWidth = 1.5; ctx.strokeStyle = t.surface;
+    for (var i = 0; i < N; i++) {
+      var isH = i === hover;
+      ctx.beginPath(); ctx.arc(head.x[i], head.y[i], NODE_R + (isH ? 1.5 : 0), 0, TAU);
+      ctx.fillStyle = isH ? t.accent : t.ink;
+      ctx.fill(); ctx.stroke();
+    }
   }
   function render(now) {
     if (!ctx) return;
     ctx.clearRect(0, 0, Wc, Hc);
-    var p = 1, i;
-    if (morphing) {
-      p = Lab.easeOut((now - morphStart) / MORPH_MS);
-      if (now - morphStart >= MORPH_MS) { p = 1; morphing = false; }
-      for (i = 0; i < N; i++) {
-        nodeX[i] = fromX[i] + (toX[i] - fromX[i]) * p; nodeY[i] = fromY[i] + (toY[i] - fromY[i]) * p; nodeR[i] = fromR[i] + (toR[i] - fromR[i]) * p;
-      }
-    }
-    /* The old layer is gone by mid-morph, the new one fades in over the second half. */
-    if (morphing) drawLayer(prevState, Lab.clamp(1 - p * 2.2, 0, 1), now);
-    drawLayer(state, morphing ? Lab.clamp((p - 0.45) / 0.55, 0, 1) : 1, now);
+    Lab.drawHead(ctx, head.cx, head.cy, head.r, t);
+    if (edgeFade > 0.002) drawEdges();
+    if (stim.active) drawStim(now);
+    if (showLabels) drawLabels();
+    ctx.drawImage(page, 0, 0, page.width, page.height, pg.x, pg.y, pg.w, pg.h);
     drawNodes();
-    dirty = false;
   }
 
-  /* ---------------------------------------------------------------------
-     Loop: runs only while the figure and the tab are visible, never in reduced motion
-     --------------------------------------------------------------------- */
+  /* ---- Loop: runs only while the figure and the tab are visible, never in reduced motion ---- */
   function tick() {
     if (!running) return;
     rafId = requestAnimationFrame(tick);
-    var now = nowMs();
+    var now = Lab.now();
     var dt = lastNow ? Math.min(now - lastNow, MAX_FRAME_MS) : 16;
     lastNow = now;
     frameCount++;
-    var live = state <= 1 || (morphing && prevState <= 1);
-    if (live) {
-      acc += dt;
-      var k = Math.floor(acc * FS / 1000);
-      if (k > 0) { acc -= k * 1000 / FS; gen.advance(k); advancePage(); }
-      if (frameCount % CORR_EVERY === 0) refreshCorrelation();
-      if (edgeFadeStart >= 0) {
-        var u = Lab.clamp((now - edgeFadeStart) / EDGE_FADE_MS, 0, 1);
-        edgeFade = edgeFadeFrom + (edgeFadeTarget - edgeFadeFrom) * Lab.easeOut(u);
-        if (u >= 1) edgeFadeStart = -1;
-      }
-      if (state <= 1 && now - lastReadout > READOUT_MS) { lastReadout = now; updateCorrelationReadout(now); }
+    acc += dt;
+    var k = Math.floor(acc * FS / 1000);
+    if (k > 0) { acc -= k * 1000 / FS; gen.advance(k); advancePage(); }
+    if (frameCount % CORR_EVERY === 0) refreshCorrelation();
+    if (edgeFadeStart >= 0) {
+      var u = Lab.clamp((now - edgeFadeStart) / EDGE_FADE_MS, 0, 1);
+      edgeFade = edgeFadeFrom + (edgeFadeTarget - edgeFadeFrom) * Lab.easeOut(u);
+      if (u >= 1) edgeFadeStart = -1;
     }
-    var animate2 = state === 2 || (morphing && prevState === 2);
-    if (animate2 && fluxRes) {
-      if (state === 2) expireKnockouts(now);
-      for (var i = 0; i < R; i++) {
-        var pc = pcount[i];
-        if (!pc) continue;
-        var re = REACTIONS[i], len = Math.hypot(nodeX[re.to] - nodeX[re.from], nodeY[re.to] - nodeY[re.from]) || 1;
-        var step = (dt / 1000) * (14 + 6 * fluxRes.fluxes[i]) / len;
-        for (var q = 0; q < pc; q++) {
-          var ph = phases[i * PARTICLES + q] + step;
-          phases[i * PARTICLES + q] = ph >= 1 ? ph - 1 : ph;
-        }
-      }
-    }
-    var filling = state === 3 && now - fillStart < M * M * CELL_STAGGER_MS + CELL_FADE_MS;
-    if (live || animate2 || morphing || filling || dirty) render(now);
+    if (now - lastReadout > READOUT_MS) { lastReadout = now; updateReadout(now); }
+    render(now);
   }
-  /* Watchdog: a throttled frame rate (background iframe, low power mode) must not freeze a morph half way.
-     When no frame has run for a while, one frame is produced from a timer; the rAF loop stays in charge. */
-  var watchdogId = 0;
-  function watchdog() {
-    if (!running) return;
-    watchdogId = setTimeout(watchdog, 400);
-    if (nowMs() - lastNow > 350) { var keep = rafId; tick(); cancelAnimationFrame(rafId); rafId = keep; }
-  }
-  function start() {
-    if (running) return;
-    running = true; lastNow = 0; acc = 0; dirty = true;
-    rafId = requestAnimationFrame(tick);
-    watchdogId = setTimeout(watchdog, 400);
-  }
-  function stop() {
-    running = false;
-    if (rafId) cancelAnimationFrame(rafId);
-    if (watchdogId) clearTimeout(watchdogId);
-    rafId = 0; watchdogId = 0;
-  }
+  function start() { if (running) return; running = true; lastNow = 0; acc = 0; rafId = requestAnimationFrame(tick); }
+  function stop() { running = false; if (rafId) cancelAnimationFrame(rafId); rafId = 0; }
 
-  /* ---------------------------------------------------------------------
-     Events
-     --------------------------------------------------------------------- */
+  /* ---- Events ---- */
   /* A focused electrode stays highlighted while the pointer roams. */
-  function resolveHover() {
-    if (hoverFocus >= 0) hover = hoverFocus;
-    requestRender();
-  }
+  function resolveHover() { if (hoverFocus >= 0) hover = hoverFocus; requestRender(); }
   electrodeButtons.forEach(function (b) {
     var idx = +b.dataset.index;
     b.addEventListener('pointerenter', function () { hover = idx; resolveHover(); });
@@ -1368,51 +827,32 @@
     b.addEventListener('blur', function () { if (hoverFocus === idx) hoverFocus = -1; if (hover === idx) hover = -1; resolveHover(); });
     b.addEventListener('click', function () { stimulate(idx); });
   });
-  /* Hover and focus only highlight a reaction; click, Enter or Space knock it out. */
-  reactionButtons.forEach(function (b) {
-    var idx = +b.dataset.index;
-    function highlight() { hoverReaction = idx; requestRender(); }
-    function unhighlight() { if (hoverReaction === idx) hoverReaction = -1; requestRender(); }
-    b.addEventListener('pointerenter', highlight);
-    b.addEventListener('focus', highlight);
-    b.addEventListener('pointerleave', unhighlight);
-    b.addEventListener('blur', unhighlight);
-    b.addEventListener('click', function () { knockout(idx, false); });
-  });
   couplingInput.addEventListener('input', function () { setCoupling(+couplingInput.value); });
   resetBtn.addEventListener('click', resetSimulation);
-  restoreBtn.addEventListener('click', restore);
 
-  /* Matrix hover (mouse only): the cell under the pointer, its row and column. */
-  function cellAt(clientX, clientY) {
-    var rect = canvas.getBoundingClientRect();
-    var c = Math.floor((clientX - rect.left - mat.gx) / mat.cs), r = Math.floor((clientY - rect.top - mat.gy) / mat.cs);
-    if (c < 0 || r < 0 || c >= M || r >= M) return -1;
-    return r * M + c;
-  }
-  function setHoverCell(cell) {
-    if (cell === hoverCell) return;
-    hoverCell = cell;
-    setReadout(matrixText());
-    requestRender();
-  }
-  frame.addEventListener('pointermove', function (e) {
-    if (state === 3 && e.pointerType !== 'touch' && mat) setHoverCell(cellAt(e.clientX, e.clientY));
-  });
-  frame.addEventListener('pointerleave', function () {
-    if (state === 3) setHoverCell(-1);
-  });
-
-  /* Beats: the most recently intersecting step drives the state. Phones show less of a beat at a time, so a
-     smaller share of it has to be in view before it takes over. */
-  if (beats.length && 'IntersectionObserver' in window) {
-    var bio = new IntersectionObserver(function (entries) {
-      var next = -1;
-      for (var i = 0; i < entries.length; i++) if (entries[i].isIntersecting) next = +entries[i].target.dataset.stageStep;
-      if (next < 0 || nowMs() < forcedUntil) return;
+  /* Beats: the beat that shows the most of itself in the reading area drives the state. The reading area is the
+     viewport below the header and, on phones, below the sticky figure (a beat hidden under the figure must not
+     count), hence the root margin; phones also show less of a beat at a time, so a smaller share has to be in
+     view. A callback only carries the beats that crossed a threshold, so the ratios are kept per beat and the
+     choice is made over all of them; a beat takes over once it shows at least its share and BEAT_MARGIN more
+     than the current one, so a small nudge does not flip the state. Rebuilt from layout() because the margin
+     follows the figure height. */
+  var beatIO = null, beatRatio = [];
+  function observeBeats() {
+    if (!beats.length || !('IntersectionObserver' in window)) return;
+    if (beatIO) beatIO.disconnect();
+    var phone = !!(window.matchMedia && window.matchMedia(PHONE_QUERY).matches), share = phone ? BEAT_SHARE_PHONE : BEAT_SHARE;
+    var covered = Math.round(phone ? HEADER_PX + figureEl.getBoundingClientRect().height : HEADER_PX);
+    beatRatio.length = 0;
+    beatIO = new IntersectionObserver(function (entries) {
+      var i, next = -1, best = 0;
+      for (i = 0; i < entries.length; i++) beatRatio[+entries[i].target.dataset.stageStep] = entries[i].intersectionRatio;
+      for (i = 0; i < beatRatio.length; i++) if (beatRatio[i] > best) { best = beatRatio[i]; next = i; }
+      if (next < 0 || best < share - 0.01 || Lab.now() < forcedUntil) return;
+      if (next !== state && best < (beatRatio[state] || 0) + BEAT_MARGIN) return;
       setState(next);
-    }, { threshold: window.innerWidth < 900 ? 0.35 : 0.5 });
-    beats.forEach(function (b) { bio.observe(b); });
+    }, { threshold: BEAT_THRESHOLDS, rootMargin: '-' + covered + 'px 0px 0px 0px' });
+    beats.forEach(function (b) { beatIO.observe(b); });
   }
 
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(layout).observe(frame);
@@ -1420,42 +860,36 @@
   Lab.onTheme(function () { t = Lab.tokens(); repaintPage(); requestRender(); });
   Lab.fontsReady(function () { repaintPage(); requestRender(); });
 
-  /* ---------------------------------------------------------------------
-     Init and debug hooks
-     --------------------------------------------------------------------- */
+  /* ---- Init and debug hooks (?stage=0..2, ?stim=C3) ---- */
   if (section) section.classList.add('stage-ready');
-  var forcedState = Lab.param('stage'), stimParam = Lab.param('stim'), koParam = Lab.param('knockout');
-  if (koParam !== null && koParam !== '' && !isNaN(+koParam)) forcedKnockout = Lab.clamp(Math.round(+koParam), 0, R - 1);
+  if (reduce) root.classList.add('stage-reduce');
+  var forcedState = Lab.param('stage'), stimParam = Lab.param('stim');
   /* One full page is generated up front so the oscilloscope starts with a page to overwrite and the graph
      has data from the first frame; from here on the generator advances in real time. */
   gen.advance(BUF);
   refreshCorrelation();
   layout();
-  setControls(state);
   markBeat(state);
-  setReadout(summaryText());
+  setReadout(idleText());
   if (forcedState !== null && forcedState !== '') {
-    /* Forced initial state: nothing was on screen before, so the morph, the edge fade and the matrix fill
-       are snapped. Scroll-driven transitions keep their motion. The beat observer is held off for 2 s. */
-    forcedUntil = nowMs() + FORCED_HOLD_MS;
+    /* Forced initial state: nothing was on screen before, so the edge fade is snapped. Scroll-driven
+       transitions keep their motion. The beat observer is held off for 2 s. */
+    forcedUntil = Lab.now() + FORCED_HOLD_MS;
     setState(+forcedState);
-    if (morphing) { nodeX.set(toX); nodeY.set(toY); nodeR.set(toR); morphing = false; }
-    if (state === 1) { edgeFade = 1; edgeFadeTarget = 1; edgeFadeStart = -1; }
-    if (state === 3) fillStart = -1e9;
+    edgeFade = edgeFadeTarget; edgeFadeStart = -1;
   }
-  render(nowMs());
-  if (stimParam) setTimeout(function () { if (state > 1) setState(1); stimulate(stimParam); }, STIM_PARAM_DELAY_MS);
+  render(Lab.now());
+  if (stimParam) setTimeout(function () { stimulate(stimParam); }, STIM_PARAM_DELAY_MS);
   if (!reduce) Lab.whenVisible(root, start, stop);
 
-  /* Scripted checks (see README) drive the figure through window.__stage. */
+  /* Scripted checks drive the figure through window.__stage. */
   var api = {
-    setState: setState, stimulate: stimulate, knockout: function (idx) { knockout(idx, true); }, restore: restore,
-    reset: resetSimulation, setCoupling: setCoupling, model: model, reduceMotion: reduce,
-    threshold: function () { return thr; }, flux: function () { return fluxRes; }, generator: gen,
-    positions: function () { return { x: nodeX, y: nodeY }; },
-    frames: function () { return frameCount; }, fillElapsed: function () { return state === 3 ? nowMs() - fillStart : 0; }
+    setState: setState, stimulate: stimulate, reset: resetSimulation, setCoupling: setCoupling,
+    model: model, reduceMotion: reduce, generator: gen,
+    threshold: function () { return thr; }, frames: function () { return frameCount; },
+    positions: function () { return { x: head.x, y: head.y }; }
   };
   Object.defineProperty(api, 'state', { get: function () { return state; }, enumerable: true });
-  Object.defineProperty(api, 'morphing', { get: function () { return morphing; }, enumerable: true });
+  Object.defineProperty(api, 'stimulated', { get: function () { return stimulated; }, enumerable: true });
   window.__stage = api;
 })();

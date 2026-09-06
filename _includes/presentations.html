@@ -1,0 +1,15 @@
+{%- comment -%} Conference presentations from _data/presentations.yml, used on /bio/ and /publications/. {%- endcomment -%}
+{%- assign lang = page.lang | default: 'en' -%}
+{%- assign t = site.data.i18n[lang] -%}
+<ul class="talks">
+    {% for p in site.data.presentations %}
+    <li class="talk reveal" style="--reveal-delay: {{ forloop.index0 | times: 40 }}ms">
+        <span class="talk-when mono">{{ p.when[lang] }}</span>
+        <div class="talk-body">
+            <h3{% if lang != 'en' %} lang="en"{% endif %}>{{ p.title }}</h3>
+            <p class="talk-authors">{% include authors.html authors=p.authors %}</p>
+            <p class="talk-meta">{{ t.bio.poster }}, {{ p.event }}, {{ p.place[lang] }}.</p>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
