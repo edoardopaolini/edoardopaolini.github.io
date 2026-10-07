@@ -9,8 +9,8 @@
   end: present
   supervisor: "Prof. Silvia Francesca Storti"
   summary:
-    en: "Analysis pipelines for EEG and TMS-EEG data, from preprocessing and Bayesian estimation of TMS-evoked potentials to source reconstruction, time-varying effective connectivity and microstate analysis, applied to the classification of neurological patients. Teaching assistant for four B.Sc. and M.Sc. courses and co-supervisor of thesis and internship students."
-    it: "Pipeline di analisi per dati EEG e TMS-EEG, dal preprocessing e dalla stima bayesiana dei potenziali evocati da TMS alla ricostruzione delle sorgenti, alla connettività effettiva tempo-variante e all'analisi dei microstati, applicate alla classificazione di pazienti neurologici. Assistente alla didattica in quattro insegnamenti di laurea triennale e magistrale e co-supervisore di tesisti e tirocinanti."
+    en: "Analysis pipelines for EEG and TMS‑EEG data, from preprocessing and Bayesian estimation of TMS-evoked potentials to source reconstruction, time-varying effective connectivity and microstate analysis, applied to the classification of neurological patients. Teaching assistant for four B.Sc. and M.Sc. courses and co-supervisor of thesis and internship students."
+    it: "Pipeline di analisi per dati EEG e TMS‑EEG, dal preprocessing e dalla stima bayesiana dei potenziali evocati da TMS alla ricostruzione delle sorgenti, alla connettività effettiva tempo-variante e all'analisi dei microstati, applicate alla classificazione di pazienti neurologici. Assistente alla didattica in quattro insegnamenti di laurea triennale e magistrale e co-supervisore di tesisti e tirocinanti."
 
 - role: { en: "Graduate student intern (visiting Ph.D. student)", it: "Dottorando ospite (graduate student intern)" }
   org: { en: "BrainCapture ApS", it: "BrainCapture ApS" }
@@ -18,8 +18,8 @@
   start: "2026-06"
   end: "2026-07"
   summary:
-    en: "Medtech start-up developing portable EEG with AI-assisted analysis for epilepsy diagnostics. Machine learning for EEG analysis in an industrial R&D setting, bringing research pipelines closer to a clinical product."
-    it: "Start-up medtech che sviluppa EEG portatili con analisi assistita dall'intelligenza artificiale per la diagnosi dell'epilessia. Machine learning per l'analisi EEG in un contesto di ricerca e sviluppo industriale, avvicinando le pipeline di ricerca a un prodotto clinico."
+    en: "Medtech company developing portable EEG systems for epilepsy diagnostics. A two-month stay classifying EEG recordings with and without epileptiform activity, and separating patients on anti-seizure medication from those who take none, with a tabular foundation model."
+    it: "Azienda medtech che sviluppa sistemi EEG portatili per la diagnosi dell'epilessia. Due mesi di lavoro sulla classificazione di registrazioni EEG con e senza attività epilettiforme e sulla distinzione tra pazienti in terapia con farmaci antiepilettici e pazienti che non la assumono, con un foundation model per dati tabellari."
 
 - role: { en: "Graduate student intern (visiting Ph.D. student)", it: "Dottorando ospite (graduate student intern)" }
   org: { en: "Fetal-Neonatal Neuroimaging and Developmental Science Center, Boston Children's Hospital", it: "Fetal-Neonatal Neuroimaging and Developmental Science Center, Boston Children's Hospital" }
@@ -28,8 +28,8 @@
   end: "2025-03"
   supervisor: "Dr. Eleonora Tamilia"
   summary:
-    en: "EEG-based connectome analysis pipeline for pediatric drug-resistant epilepsy: source-level connectivity, network analysis and virtual resection of the planned surgical target, with machine learning models that predict post-surgical seizure outcome from connectome features on retrospective clinical data."
-    it: "Pipeline di analisi del connettoma da EEG per l'epilessia pediatrica farmacoresistente: connettività a livello di sorgente, analisi di rete e resezione virtuale del bersaglio chirurgico pianificato, con modelli di machine learning che predicono l'esito post-chirurgico delle crisi dalle feature del connettoma su dati clinici retrospettivi."
+    en: "EEG-based connectome analysis pipeline for pediatric drug-resistant epilepsy: source-level connectivity, network analysis and virtual resection of the planned surgical target, with cross-validated machine learning classifiers that predict post-surgical seizure outcome from network features on retrospective clinical data."
+    it: "Pipeline di analisi del connettoma da EEG per l'epilessia pediatrica farmacoresistente: connettività a livello di sorgente, analisi di rete e resezione virtuale del bersaglio chirurgico pianificato, con classificatori di machine learning validati in cross-validation che predicono l'esito post-chirurgico delle crisi dalle feature di rete su dati clinici retrospettivi."
 
 - role: { en: "Post-graduate research fellow", it: "Borsista di ricerca post-laurea" }
   org: { en: "BraiNAVLab, University of Verona", it: "BraiNAVLab, Università di Verona" }
@@ -38,8 +38,8 @@
   end: "2023-09"
   supervisor: "Prof. Silvia Francesca Storti"
   summary:
-    en: "Machine learning architectures for monitoring and predicting biomedical time series, within a funded project on workplace safety in Industry 4.0 with brain-computer interface applications."
-    it: "Architetture di machine learning per il monitoraggio e la predizione di serie temporali biomediche, in un progetto finanziato sulla sicurezza sul lavoro nell'Industria 4.0 con applicazioni di interfaccia cervello-computer."
+    en: "Comparison of machine learning architectures for monitoring and predicting biomedical time series, within a funded project on workplace safety in Industry 4.0."
+    it: "Confronto fra architetture di machine learning per il monitoraggio e la predizione di serie temporali biomediche, in un progetto finanziato sulla sicurezza sul lavoro nell'Industria 4.0."
 
 - role: { en: "Research assistant", it: "Assistente di ricerca" }
   org: { en: "BraiNAVLab, University of Verona", it: "BraiNAVLab, Università di Verona" }

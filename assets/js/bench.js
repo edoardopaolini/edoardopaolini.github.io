@@ -271,6 +271,9 @@
   var traceCanvas = document.getElementById('bench-canvas');
   var specCanvas = document.getElementById('bench-spectrum');
   var readout = document.getElementById('bench-readout');
+  /* Mirror of the readout for screen readers, so a toggled filter is announced (see stage.js and
+     metabolism.js, which do the same). */
+  var live = document.getElementById('bench-live');
   if (!figure || !traceCanvas || !specCanvas) return;
 
   var reduce = Lab.reduceMotion;
@@ -397,7 +400,10 @@
       shownDb = null;
       smoothDb = null;
     }
-    if (readout.textContent !== text) readout.textContent = text;
+    if (readout.textContent !== text) {
+      readout.textContent = text;
+      if (live) live.textContent = text;
+    }
   }
 
   /* ---- drawing ---- */
@@ -486,7 +492,7 @@
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(SPEC_PAD_X, base + 0.5); ctx.lineTo(w - SPEC_PAD_X, base + 0.5); ctx.stroke();
 
-    ctx.fillStyle = t.accent;
+    ctx.fillStyle = t.ink2;
     for (var j = 0; j < nbars; j++) {
       var k = Lab.clamp((barDb[j] - DB_FLOOR) / (DB_TOP - DB_FLOOR), 0, 1);
       var bh = Math.max(k > 0 ? 1 : 0, Math.round(k * plotH));

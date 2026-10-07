@@ -55,7 +55,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.45rem 0.95rem;
-    border: 1px solid var(--line-strong);
+    border: 1px solid var(--line);
     border-radius: var(--pill);
     font-size: 0.875rem;
     font-weight: 500;
@@ -85,6 +85,21 @@
     margin: 0;
 }
 
+.cell-bench .switch {
+    gap: 0;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.75rem;
+}
+
+/* The pill fill and aria-checked carry the state; the box is redundant and costs 20px a switch. */
+.cell-bench .switch input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
 .switch input:focus-visible {
     outline: none;
 }
@@ -97,6 +112,20 @@
     flex: 1 1 auto;
 }
 
+/* Every figure on the site wears the same control bar: the readout flush left, the controls flush right,
+   wrapping to two rows only when the column is too narrow for one (see .stage-bar in stage.css). */
+.bench-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+}
+
+.bench-bar .bench-readout {
+    margin: 0;
+    min-height: 2.8em;
+}
+
 .mini-figure canvas {
     width: 100%;
     height: 220px;
@@ -104,12 +133,21 @@
     background: var(--surface);
 }
 
-.mini-readout {
-    margin: 0;
-    min-height: 1.5em;
-    font-size: 0.8rem;
-    line-height: 1.5;
-    color: var(--muted);
+/* The two bento plates share a height, so the shorter figure grows into the spare room rather than leaving
+   the plate half empty. */
+.cell-topo {
+    justify-content: space-between;
+}
+
+.cell-topo .mini-figure {
+    display: flex;
+    min-height: 0;
+}
+
+.cell-topo .mini-figure canvas {
+    height: auto;
+    min-height: 220px;
+    flex: 1 1 auto;
 }
 
 /* Button layer over the figure; brain.js moves each button with a transform and hides the ones whose source
@@ -148,9 +186,16 @@
     margin: -14px 0 0 -14px;
 }
 
-/* The cortex is wide and low, so this cell gets more height than the other two: the surface fills the frame. */
+/* The cortex is wide and low, so it gets more height than the other figures: the surface fills the frame. */
 .brain-figure canvas {
     height: 286px;
+}
+
+/* In the hero the cortex is the product shot: no plate behind it, and the size of a real subject. */
+.hero-stage .brain-figure canvas {
+    height: clamp(240px, 30vw, 380px);
+    background: transparent;
+    border-radius: 0;
 }
 
 /* The cortex rotates under the pointer: horizontal drags turn it, vertical swipes still scroll the page. */
@@ -170,11 +215,12 @@
 
 .topo-label {
     position: absolute;
-    right: 0.75rem;
-    top: 0.4rem;
-    font-size: 1.6rem;
+    left: 0;
+    top: 0;
+    font-size: 1.25rem;
     font-weight: 600;
-    color: var(--accent);
+    letter-spacing: -0.012em;
+    color: var(--muted);
 }
 
 .topo-bar {
@@ -192,5 +238,5 @@
 }
 
 .topo-bar span.on {
-    background: var(--accent);
+    background: var(--ink);
 }

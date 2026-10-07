@@ -60,11 +60,10 @@ assert(durOk, 'every segment lasts 60-120 ms');
 
 /* Colormap: the classic diverging voltage map, blue through the neutral to red. */
 var P = M.PALETTES;
-assert(P.light.blue === '#2456c7' && P.light.red === '#c8323a', 'light palette is #2456c7 to #c8323a');
-assert(P.dark.blue === '#4f7ee8' && P.dark.red === '#e05a5a', 'dark palette is #4f7ee8 to #e05a5a');
-/* The neutral is the --surface-2 token, which only a browser can resolve: these two stand in for its light
-   and dark values, since colormap() takes the three endpoints as arguments. */
-var neutral = [240, 242, 245], blue = Lab.rgb(P.light.blue), red = Lab.rgb(P.light.red);
+assert(P.light.blue === '#2f6fd0' && P.light.neutral === '#f2f2f4' && P.light.red === '#d9342b', 'light ramp is #2f6fd0 through #f2f2f4 to #d9342b');
+assert(P.dark.blue === '#4a86e8' && P.dark.neutral === '#2c2c2e' && P.dark.red === '#ef4b3f', 'dark ramp is #4a86e8 through #2c2c2e to #ef4b3f');
+/* The neutral now belongs to the palette, so the ramp can be checked without a browser. */
+var neutral = Lab.rgb(P.light.neutral), blue = Lab.rgb(P.light.blue), red = Lab.rgb(P.light.red);
 function same(a, b) { return near(a[0], b[0], 1e-9) && near(a[1], b[1], 1e-9) && near(a[2], b[2], 1e-9); }
 assert(same(M.colormap(-1, neutral, blue, red), blue), 'value -1 gives the blue endpoint');
 assert(same(M.colormap(0, neutral, blue, red), neutral), 'value 0 gives the neutral');

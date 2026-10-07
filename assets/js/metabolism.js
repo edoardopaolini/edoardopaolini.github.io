@@ -68,7 +68,7 @@
     { id: 'SSA', name: 'Succinic\nsemialdehyde', mid: 'SSA', abbr: 'SSA', p: onRing(90), lp: [0.552, 0.949], align: 'center' },
     { id: 'SCA', name: 'Succinyl-CoA', mid: 'Succinyl-CoA', abbr: 'SCA', p: [0.555, 0.775], lp: [0.548, 0.745], align: 'center' },
     { id: 'SUC', name: 'Succinate', mid: 'Succinate', abbr: 'SUC', p: onRing(128), lp: [0.368, 0.845], align: 'right' },
-    { id: 'FA', name: 'Fumarate', mid: 'Fumarate', abbr: 'FA', p: onRing(160), lp: [0.303, 0.735], align: 'right' },
+    { id: 'FA', name: 'Fumarate', mid: 'Fumarate', abbr: 'FUM', p: onRing(160), lp: [0.303, 0.735], align: 'right' },
     { id: 'MAL', name: 'Malate', mid: 'Malate', abbr: 'MAL', p: onRing(197), lp: [0.305, 0.548], align: 'center' },
     { id: 'OAA', name: 'Oxaloacetate', mid: 'Oxaloacetate', abbr: 'OAA', p: onRing(238), lp: [0.413, 0.462], align: 'left' },
     { id: 'GLY', name: 'Glyoxylate', mid: 'Glyoxylate', abbr: 'GLY', p: [0.455, 0.655], lp: [0.455, 0.622], align: 'center' },
@@ -129,7 +129,7 @@
       outs: [{ to: 'SUC', f: 1, c1: [0.52, 0.83], c2: [0.45, 0.855] }], lp: [0.50, 0.85], align: 'center' },
     { id: 'SDH', label: 'SDH', from: 'SUC', w: 10, cap: 16, key: 'sdh',
       outs: [{ to: 'FA', f: 1, ring: true }], lp: [0.32, 0.80], align: 'right' },
-    { id: 'FUM', label: 'FUM', from: 'FA', w: 10, cap: 16, key: null,
+    { id: 'FUM', label: 'FH', from: 'FA', w: 10, cap: 16, key: null,
       outs: [{ to: 'MAL', f: 1, ring: true }], lp: [0.29, 0.665], align: 'right' },
     { id: 'MDH', label: 'MDH', from: 'MAL', w: 10, cap: 20, key: null,
       outs: [{ to: 'OAA', f: 1, ring: true }], lp: [0.372, 0.528], align: 'left' },
@@ -735,6 +735,8 @@
     b.type = 'button';
     b.className = 'met-hit';
     b.tabIndex = -1;
+    /* The layer is aria-hidden, so a click must not leave DOM focus inside it. */
+    b.addEventListener('mousedown', function (e) { e.preventDefault(); });
     b.setAttribute('aria-pressed', 'false');
     b.setAttribute('aria-label', str('aria.' + key));
     b.addEventListener('click', function () { toggle(key); });

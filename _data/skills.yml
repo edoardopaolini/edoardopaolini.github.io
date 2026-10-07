@@ -4,8 +4,8 @@
 # The first group is the widest: style.css gives it the full row and a larger type size, so put the strongest
 # skills there and keep the remaining groups to a multiple of the three columns that follow.
 - name: { en: "Programming", it: "Programmazione" }
-  primary: ["Python", "MATLAB"]
-  note: { en: "daily use", it: "uso quotidiano" }
+  primary: ["MATLAB", "Python"]
+  note: { en: "MATLAB daily, Python often", it: "MATLAB ogni giorno, Python di frequente" }
   items:
     - "R"
     - "SQL"
@@ -19,7 +19,7 @@
     - "TensorFlow"
     - { en: "Classification and regression", it: "Classificazione e regressione" }
     - { en: "Cross-validation on small cohorts", it: "Cross-validation su piccole coorti" }
-    - { en: "Foundation-model methods for tabular data", it: "Metodi basati su foundation model per dati tabellari" }
+    - { en: "Tabular foundation models", it: "Foundation model per dati tabellari" }
 
 - name: { en: "Brain signals", it: "Segnali cerebrali" }
   primary: ["MNE-Python", "EEGLAB"]
@@ -27,7 +27,7 @@
     - "FieldTrip"
     - "Brainstorm"
     - "FreeSurfer"
-    - { en: "EEG, TMS-EEG, fMRI preprocessing", it: "Preprocessing EEG, TMS-EEG, fMRI" }
+    - { en: "EEG, TMS‑EEG, fMRI preprocessing", it: "Preprocessing EEG, TMS‑EEG, fMRI" }
     - { en: "Source estimation", it: "Stima delle sorgenti" }
     - { en: "Functional and effective connectivity", it: "Connettività funzionale ed effettiva" }
     - { en: "Microstates", it: "Microstati" }

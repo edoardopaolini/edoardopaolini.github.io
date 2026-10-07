@@ -16,8 +16,8 @@
     {%- assign desc = t.meta[page.meta] | default: t.meta.description -%}
     <meta name="description" content="{{ desc }}">
     <meta name="color-scheme" content="light dark">
-    <meta name="theme-color" content="#eef1f6" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#070b12" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
     <meta property="og:title" content="{{ page.title | default: site.title }}">
     <meta property="og:description" content="{{ desc }}">
     <meta property="og:type" content="website">
@@ -28,10 +28,8 @@
     <link rel="alternate" hreflang="it" href="{{ url_it | absolute_url }}">
     <link rel="alternate" hreflang="x-default" href="{{ url_en | absolute_url }}">
     <link rel="icon" href="{{ '/assets/img/favicon.svg' | relative_url }}" type="image/svg+xml">
-    <link rel="preload" href="{{ '/assets/fonts/clash-display-600.woff2' | relative_url }}" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="{{ '/assets/fonts/clash-display-500.woff2' | relative_url }}" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="{{ '/assets/fonts/satoshi-variable.woff2' | relative_url }}" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="{{ '/assets/fonts/jetbrains-mono-latin.woff2' | relative_url }}" as="font" type="font/woff2" crossorigin>
+    {%- comment -%} Not preloaded: on Apple hardware -apple-system resolves to SF Pro and this file is never
+      fetched, so preloading it would be a wasted request for most of the audience. {%- endcomment -%}
     <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
     <link rel="stylesheet" href="{{ '/assets/css/modules/neurons.css' | relative_url }}">
     {%- comment -%} Only the home page carries the three figure stylesheets. {%- endcomment -%}
@@ -68,7 +66,7 @@
     <a class="skip-link" href="#main">{{ t.skip }}</a>
     {% include header.html %}
 
-    <main id="main">
+    <main id="main" tabindex="-1">
         {{ content }}
     </main>
 

@@ -13,7 +13,9 @@ All content lives in `_data/`. Fields that differ between languages are maps wit
 - `route.yml`: the stations of the home route, in time order.
 - `skills.yml`: the four groups of the toolbox on the home page (`primary` items are set large, `items` become pills).
 - `teaching.yml`: courses, co-supervision, grants and languages (biography page).
-- `interests.yml`: the three research interests, in the order of the three cells on the home page.
+- `interests.yml`: the three research interests. The first and the third label the two figure plates on the
+  home page; the second captions the cortical surface in the hero, which is the figure it describes. All
+  three are listed again on `/bio/`.
 - `profiles.yml`: external profiles shown in the footer and on `/publications/`.
 - `beyond.yml`: the "Outside the lab" collage (home and biography). Items with `image` become photo tiles, the others text tiles. Photos live in `assets/img/beyond/`; the current ones come from Wikimedia Commons and carry a `credit` line that the page prints under "Photo credits". Replace them with your own photos and drop the credit.
 - `i18n.yml`: every interface string, once per language. `js/*.yml`: the strings of the canvas figures, one file per module, exposed to the scripts as `window.I18N`.
@@ -22,6 +24,10 @@ Optional portrait: add `assets/img/portrait.jpg` (square, at least 440 x 440) an
 
 Adding a language means adding a tree to `i18n.yml` and `js/*.yml`, a new key in every `{en: ..., it: ...}` map of the data files, and a copy of `it/` with the new `lang`, `alt` and `permalink` front matter.
 
+When you write "TMS-EEG" in a data file, use U+2011 NON-BREAKING HYPHEN rather than the ASCII hyphen. It looks
+identical and never offers a line break; with the plain hyphen the term splits across two lines at phone
+widths. Every occurrence in `_data/` already uses it, so copying an existing line is enough.
+
 ## Figures
 
 The interactive figures are toy simulations written for this site, in `assets/js/`. Every figure reads its colours from the CSS tokens, runs only while visible, has a static version for `prefers-reduced-motion`, and takes its labels from `window.I18N`. Nothing on the page is patient data or a published result.
@@ -29,14 +35,34 @@ The interactive figures are toy simulations written for this site, in `assets/js
 - `neurons.js`: the living background on every page (a neuron field on a fixed canvas, with action potentials travelling between cells).
 - `stage.js`: the home page stage. 10-20 EEG montage with simulated traces, live Pearson correlation edges and click-to-stimulate (TMS-evoked potentials spreading over the graph).
 - `bench.js`: the signal bench (synthetic EEG with real RBJ biquad filters and a spectrum).
-- `brain.js`: the connectivity graph on the rotating cortical surface of the ICBM152 template, with the candidate epileptogenic zone drawn on the cortex and the sources of the network placed on it.
+- `brain.js`: the connectivity graph on the rotating cortical surface of the ICBM152 template, with the candidate epileptogenic zone drawn on the cortex and the sources of the network placed on it. It is the hero figure of the home page.
 - `cortex-data.js`: the prepared surface `brain.js` draws, a 1 284-vertex, 2 560-face mesh with its curvature, normals, zone weights and source indices packed into a base64 string. It comes from BrainMesh_ICBM152_smoothed of [BrainNet Viewer](https://www.nitrc.org/projects/bnv/), the ICBM152 surface provided by Prof. Alan C. Evans, Montreal Neurological Institute.
 - `topo.js`: the microstate topography (blue to red voltage map).
 - `metabolism.js`: the central carbon metabolism of *Mycobacterium tuberculosis* as a live flux network with perturbations taken from the master's thesis.
 - `lab.js`: shared helpers (seeded random numbers, tokens, montage coordinates, canvas sizing, interpolation, `Lab.format` for `{name}` placeholders, `Lab.strings` for the labels of a module).
 - `site.js`: theme toggle, scroll reveals, publications filter.
 
-Module stylesheets live in `assets/css/modules/` (`neurons.css`, `stage.css`, `cells.css` for the three bento cells, `metabolism.css`); `assets/css/style.css` holds the tokens and the page layout.
+Module stylesheets live in `assets/css/modules/` (`neurons.css`, `stage.css`, `cells.css` for the small figures, `metabolism.css`); `assets/css/style.css` holds the tokens and the page layout.
+
+## Type and colour
+
+One typeface. `-apple-system` resolves to SF Pro on Apple hardware, which is what the design is drawn for;
+everywhere else the fallback is Pretendard Std Variable, self-hosted as one 70 KB subset file in
+`assets/fonts/` under the SIL Open Font License (see `PRETENDARD-LICENSE.txt` beside it). There is no display
+face and no self-hosted monospace: the few readouts that print numbers use the system monospace, which is SF
+Mono on Apple hardware.
+
+One accent, Apple blue, `#0071e3` in light and `#2997ff` in dark, with `--accent-text` darkened in the light
+theme so a link still passes AA on the `#f5f5f7` ground. Light is white over `#f5f5f7`, dark is true black.
+Three radius steps and no exceptions: pills for interactive elements, 18px for surfaces, 28px for full-bleed
+stage tiles, 12px for chips nested in a figure.
+
+The sections carry alternating opaque grounds (`.on-bg` and `.on-alt`), which is what keeps the living neuron
+canvas to the hero: it is a fixed canvas behind everything, and every section below the hero paints over it.
+
+The diverging voltage ramp of the microstate figure is deliberately not a token and not the accent, because
+blue cannot mean both "negative microvolts" and "selected and live" on the same page. Its values live in
+`PALETTES` in `topo.js` and are asserted in `tests/topo.test.js`.
 
 ## Tests
 
@@ -56,7 +82,7 @@ Handy when checking the page or taking screenshots:
 | --- | --- |
 | `?theme=light` or `?theme=dark` | Force a theme without saving it |
 | `?motion=reduce` | Force the reduced-motion path |
-| `?shot=1` | Screenshot mode: no viewport-relative heights, no sticky figure, reveals shown |
+| `?shot=1` | Screenshot mode: no viewport-relative heights, no sticky figure, reveals shown, no transitions (a headless capture otherwise photographs the theme transition in flight) |
 | `?neurons=off` | Disable the background |
 | `?spike=1` | Fire the background neurons at once and then every 600 ms |
 | `?stage=0..2` | Force a stage state |

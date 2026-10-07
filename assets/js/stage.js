@@ -596,12 +596,14 @@
     buttonsEl.appendChild(eb);
     return eb;
   });
-  /* Electrode targets are sized from the head: 85% of the closest electrode spacing, between 28 and 44 px, so
-     neighbours do not overlap on a small head while desktop keeps the full 44 px. */
+  /* Electrode targets are sized from the head: 85% of the closest electrode spacing, between 32 and 44 px, so
+     desktop keeps the full 44 px target. The floor is a deliberate trade-off: nineteen electrodes on a
+     328 px head are 33 px apart, so a 44 px target everywhere would make neighbours overlap and press the
+     wrong one. 32 px clears the 24 px minimum of WCAG 2.2 while keeping each target its own. */
   function positionButtons() {
     var minDist = Infinity, i, j;
     for (i = 0; i < N; i++) for (j = i + 1; j < N; j++) minDist = Math.min(minDist, Math.hypot(head.x[i] - head.x[j], head.y[i] - head.y[j]));
-    var size = Lab.clamp(Math.round(0.85 * minDist), 28, 44), half = -size / 2 + 'px';
+    var size = Lab.clamp(Math.round(0.85 * minDist), 32, 44), half = -size / 2 + 'px';
     for (i = 0; i < N; i++) {
       var es = electrodeButtons[i].style;
       es.left = head.x[i].toFixed(1) + 'px'; es.top = head.y[i].toFixed(1) + 'px';

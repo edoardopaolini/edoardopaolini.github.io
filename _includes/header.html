@@ -1,6 +1,7 @@
 {%- comment -%} Site header: wordmark, primary navigation, language switch and theme toggle. Like every include
   here it derives `lang` and `t` itself, so it does not depend on what the caller happens to have assigned.
-  The toggle carries no icon; site.js flips aria-checked and the label, the knob slides in CSS. {%- endcomment -%}
+  The toggle carries no icon; site.js flips aria-checked, the label stays put as a switch's label should,
+  and the knob slides in CSS. {%- endcomment -%}
 {%- assign lang = page.lang | default: 'en' -%}
 {%- assign t = site.data.i18n[lang] -%}
 {%- if lang == 'it' -%}{%- assign base = '/it' -%}{%- else -%}{%- assign base = '' -%}{%- endif -%}

@@ -15,23 +15,23 @@ en:
     bio: "Biography"
     publications: "Publications"
   meta:
-    description: "Edoardo Paolini, Ph.D. student in Computer Science at the University of Verona. Machine learning for EEG and TMS-EEG, brain connectomics, epilepsy."
+    description: "Edoardo Paolini, Ph.D. student in Computer Science at the University of Verona. Machine learning for EEG and TMS‑EEG, brain connectomics, epilepsy."
     bio_description: "Biography of Edoardo Paolini: experience, education, teaching and conference presentations. Computer science, bioinformatics and bioengineering."
-    pubs_description: "Journal articles, registered reports and conference papers by Edoardo Paolini on brain connectivity, EEG, TMS-EEG and fMRI."
+    pubs_description: "Journal articles, registered reports and conference papers by Edoardo Paolini on brain connectivity, EEG, TMS‑EEG and fMRI."
   hero:
     fields: ["Computer science", "Bioinformatics", "Bioengineering"]
-    lede: "Ph.D. student in Computer Science at the University of Verona. Machine learning that reads EEG and TMS-EEG as brain networks."
+    intro: "Ph.D. student in Computer Science at the University of Verona."
   stage:
     b0_title: "Start with the signal."
     b0_text: "EEG records electrical potentials from 19 electrodes on the scalp. Every trace here is simulated, at 250 samples per second."
     b1_title: "Correlate the channels."
     b1_text: "Correlate every pair and the recording becomes a graph. Electrodes are nodes, edges say how much two channels move together. The edges are computed live from the traces on screen."
     b2_title: "Stimulate and listen."
-    b2_text: "TMS-EEG delivers a magnetic pulse and records the cortical response. Press an electrode: the pulse spreads over the graph and the evoked potential appears in the traces."
+    b2_text: "TMS‑EEG delivers a magnetic pulse and records the cortical response. Press an electrode: the pulse spreads over the graph and the evoked potential appears in the traces."
     desc: "Interactive figure. A top view of a head with the 19 electrodes of the 10-20 EEG system and simulated EEG traces. Activating an electrode delivers a simulated pulse that spreads through the connectivity graph."
     controls_label: "Figure controls"
     caption: "Simulated figures. No patient data."
-  sentence: "My doctoral work aims to develop EEG and TMS-EEG systems, built on brain connectomics, for the personalized treatment of epilepsy."
+  sentence: "My doctoral work aims to develop EEG and TMS‑EEG systems, built on brain connectomics, for the personalized treatment of epilepsy."
   interests:
     title: "What I work on."
   bench:
@@ -56,8 +56,8 @@ en:
     desc: "Interactive figure. The central carbon metabolism of Mycobacterium tuberculosis as a network of metabolites and reactions, with particles flowing along the reactions in proportion to the flux. The buttons perturb one enzyme at a time; the readout describes how the flux reroutes."
     caption: "Toy flux model, not the thesis results."
   toolbox:
-    title: "What I build with."
-    text: "Hands-on with clinical data since 2019, in academic labs, at Boston Children's Hospital and in a medtech start-up. End-to-end pipelines, from raw signals to predictive models."
+    title: "What I have worked with."
+    text: "Neuroimaging and electrophysiological data since 2019, the ADNI cohort among them, in academic labs, at Boston Children's Hospital and in a medtech start-up. End-to-end pipelines, from raw signals to predictive models."
   route:
     title: "Verona, Trento, Rovereto, Boston, Lyngby."
     text: "Computer science first, then computational biology, then both applied to the brain, in four teams and three countries."
@@ -80,9 +80,9 @@ en:
     profiles: "Profiles"
   bio:
     title: "Biography"
-    p1: "I am a computer scientist working at the intersection of machine learning and neuroscience, hands-on with real clinical data since 2019."
-    p2: "I build end-to-end pipelines in Python and MATLAB that take raw biomedical signals (EEG, TMS-EEG, fMRI) through preprocessing, source reconstruction and feature extraction to predictive models, using classical machine learning as well as foundation-model-based methods for tabular data."
-    p3: "I have done this in academic labs, at Boston Children's Hospital and in a medtech start-up. My doctoral work aims to develop EEG and TMS-EEG systems based on brain connectomics for the personalized treatment of epilepsy."
+    p1: "I am a computer scientist working at the intersection of machine learning and neuroscience. I have worked with neuroimaging and electrophysiological data since my bachelor's thesis in 2019."
+    p2: "I build end-to-end pipelines in Python and MATLAB that take raw biomedical signals (EEG, TMS‑EEG, fMRI) through preprocessing, source reconstruction and feature extraction to predictive models, using classical machine learning as well as foundation-model-based methods for tabular data."
+    p3: "I have done this in academic labs, at Boston Children's Hospital and in a medtech start-up. My doctoral work aims to develop EEG and TMS‑EEG systems based on brain connectomics for the personalized treatment of epilepsy."
     experience: "Experience"
     education: "Education"
     teaching: "Teaching"
@@ -122,23 +122,23 @@ it:
     bio: "Biografia"
     publications: "Pubblicazioni"
   meta:
-    description: "Edoardo Paolini, dottorando in Informatica all'Università di Verona. Machine learning per EEG e TMS-EEG, connettomica cerebrale, epilessia."
+    description: "Edoardo Paolini, dottorando in Informatica all'Università di Verona. Machine learning per EEG e TMS‑EEG, connettomica cerebrale, epilessia."
     bio_description: "Biografia di Edoardo Paolini: esperienze, formazione, didattica e presentazioni a congressi. Informatica, bioinformatica e bioingegneria."
-    pubs_description: "Articoli su rivista, registered report e articoli di conferenza di Edoardo Paolini su connettività cerebrale, EEG, TMS-EEG e fMRI."
+    pubs_description: "Articoli su rivista, registered report e articoli di conferenza di Edoardo Paolini su connettività cerebrale, EEG, TMS‑EEG e fMRI."
   hero:
     fields: ["Informatica", "Bioinformatica", "Bioingegneria"]
-    lede: "Dottorando in Informatica all'Università di Verona. Machine learning che legge EEG e TMS-EEG come reti cerebrali."
+    intro: "Dottorando in Informatica all'Università di Verona."
   stage:
     b0_title: "Si parte dal segnale."
     b0_text: "L'EEG registra i potenziali elettrici da 19 elettrodi sullo scalpo. Ogni traccia qui è simulata, a 250 campioni al secondo."
     b1_title: "Correla i canali."
     b1_text: "Correlando i canali, la registrazione diventa un grafo. Gli elettrodi sono nodi, gli archi dicono quanto due canali si muovono insieme. Gli archi sono calcolati in diretta dalle tracce sullo schermo."
     b2_title: "Stimola e ascolta."
-    b2_text: "La TMS-EEG applica un impulso magnetico e registra la risposta corticale. Premi un elettrodo: l'impulso si propaga sul grafo e il potenziale evocato compare nelle tracce."
+    b2_text: "La TMS‑EEG applica un impulso magnetico e registra la risposta corticale. Premi un elettrodo: l'impulso si propaga sul grafo e il potenziale evocato compare nelle tracce."
     desc: "Figura interattiva. Vista dall'alto di una testa con i 19 elettrodi del sistema EEG 10-20 e tracce EEG simulate. Attivando un elettrodo si applica un impulso simulato che si propaga nel grafo di connettività."
     controls_label: "Controlli della figura"
     caption: "Figure simulate. Nessun dato di pazienti."
-  sentence: "Il mio dottorato punta a sviluppare sistemi EEG e TMS-EEG, fondati sulla connettomica cerebrale, per il trattamento personalizzato dell'epilessia."
+  sentence: "Il mio dottorato punta a sviluppare sistemi EEG e TMS‑EEG, fondati sulla connettomica cerebrale, per il trattamento personalizzato dell'epilessia."
   interests:
     title: "Di cosa mi occupo."
   bench:
@@ -163,8 +163,8 @@ it:
     desc: "Figura interattiva. Il metabolismo centrale del carbonio di Mycobacterium tuberculosis come rete di metaboliti e reazioni, con particelle che scorrono lungo le reazioni in proporzione al flusso. I pulsanti perturbano un enzima alla volta; il testo descrive come il flusso si ridistribuisce."
     caption: "Modello di flusso giocattolo, non i risultati della tesi."
   toolbox:
-    title: "Con che cosa lavoro."
-    text: "Dal 2019 lavoro con dati clinici reali, in laboratori accademici, al Boston Children's Hospital e in una start-up medtech. Pipeline complete, dal segnale grezzo ai modelli predittivi."
+    title: "Con che cosa ho lavorato."
+    text: "Dal 2019 ho lavorato con dati di neuroimaging ed elettrofisiologici, fra cui la coorte ADNI, in laboratori accademici, al Boston Children's Hospital e in una start-up medtech. Pipeline complete, dal segnale grezzo ai modelli predittivi."
   route:
     title: "Verona, Trento, Rovereto, Boston, Lyngby."
     text: "Prima l'informatica, poi la biologia computazionale, poi entrambe applicate al cervello, in quattro gruppi e tre paesi."
@@ -187,9 +187,9 @@ it:
     profiles: "Profili"
   bio:
     title: "Biografia"
-    p1: "Sono un informatico che lavora all'incrocio tra machine learning e neuroscienze, a contatto diretto con dati clinici reali dal 2019."
-    p2: "Costruisco pipeline complete in Python e MATLAB che portano i segnali biomedici grezzi (EEG, TMS-EEG, fMRI) dal preprocessing alla ricostruzione delle sorgenti e all'estrazione di feature, fino ai modelli predittivi, con machine learning classico e metodi basati su foundation model per dati tabellari."
-    p3: "L'ho fatto in laboratori accademici, al Boston Children's Hospital e in una start-up medtech. Il mio dottorato punta a sviluppare sistemi EEG e TMS-EEG fondati sulla connettomica cerebrale per il trattamento personalizzato dell'epilessia."
+    p1: "Sono un informatico che lavora all'incrocio tra machine learning e neuroscienze. Lavoro con dati di neuroimaging ed elettrofisiologici dalla tesi triennale del 2019."
+    p2: "Costruisco pipeline complete in Python e MATLAB che portano i segnali biomedici grezzi (EEG, TMS‑EEG, fMRI) dal preprocessing alla ricostruzione delle sorgenti e all'estrazione di feature, fino ai modelli predittivi, con machine learning classico e metodi basati su foundation model per dati tabellari."
+    p3: "L'ho fatto in laboratori accademici, al Boston Children's Hospital e in una start-up medtech. Il mio dottorato punta a sviluppare sistemi EEG e TMS‑EEG fondati sulla connettomica cerebrale per il trattamento personalizzato dell'epilessia."
     experience: "Esperienze"
     education: "Formazione"
     teaching: "Didattica"

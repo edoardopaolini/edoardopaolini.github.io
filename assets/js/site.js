@@ -43,6 +43,10 @@
   if (/[?&]shot=1/.test(window.location.search)) root.classList.add('shot');
   window.siteTheme = { isDark: currentIsDark };
   window.siteMotion = { reduce: reduce };
+  /* The motion hook has to reach the stylesheet too, or ?motion=reduce quiets only the canvas animations
+     while the CSS transitions and reveals keep running. The reduced-motion block is mirrored on
+     html.motion-reduce for exactly this. */
+  if (reduce) root.classList.add('motion-reduce');
   /* Initial aria-checked (the markup says false); the figure modules load after this script, so nothing hears
      the themechange this dispatches. */
   announce();
@@ -108,12 +112,19 @@
       var mode = checked ? checked.value : 'all';
       var shown = 0;
       entries.forEach(function (li) {
-        var ok = mode === 'all' || (mode === 'first' ? li.dataset.first === 'true' : li.dataset.type === mode);
+        /* `data-also` lets one entry answer to a second chip: the ccPAS paper is a journal article and a
+           registered report, and the report chip would otherwise hide it. */
+        var ok = mode === 'all' || (mode === 'first'
+          ? li.dataset.first === 'true'
+          : li.dataset.type === mode || li.dataset.also === mode);
         li.hidden = !ok;
         if (ok) shown++;
       });
+      var first = true;
       groups.forEach(function (g) {
         g.hidden = !g.querySelector('.pub-entry:not([hidden])');
+        g.classList.toggle('is-first', !g.hidden && first);
+        if (!g.hidden) first = false;
       });
       if (empty) empty.hidden = shown > 0;
       /* The sentence comes from the page language (data-count-template on the fieldset). */

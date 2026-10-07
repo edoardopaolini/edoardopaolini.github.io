@@ -1,89 +1,81 @@
 /* ==========================================================================
-   Edoardo Paolini, personal site. Version 2, "A living network".
-   Native CSS, no build step. Fonts are self-hosted (Clash Display for headings,
-   Satoshi for text, JetBrains Mono for data). One accent colour (teal), light and
-   dark themes from the same tokens, glass panels over a living neuron background.
-   Shape system: containers 24px, nested figures 14px, interactive elements pill.
-   Display weights shipped: Clash Display 500 and 600 only.
-   Figure-specific rules live in assets/css/modules/ next to their scripts.
+   Edoardo Paolini, personal site. Version 3, "Apple grammar".
+   Native CSS, no build step. One typeface: the system font, which is SF Pro on Apple hardware, with
+   Pretendard self-hosted for everyone else; no display face, because Apple has none. One accent, Apple
+   blue. Light is white over #f5f5f7, dark is true black. Sections carry opaque grounds that alternate,
+   so the living neuron canvas shows through in the hero only instead of behind every paragraph.
+   Shape system, three steps and no exceptions: interactive elements are pills, surfaces 18px, full-bleed
+   stage tiles 28px, chips inside a figure 12px.
+   Figure-specific rules live in assets/css/modules/ next to their scripts. The canvases read --surface,
+   --surface-2, --ink, --ink-2, --muted, --line, --line-strong, --accent, --trace, --trace-2,
+   --neuron-fibre, --neuron-soma, --font-mono and --font-body off the root at draw time (see lab.js), so
+   a value changed here changes the figures too.
    Order: the shared foundations first (in ---- sections), then one ==== section per page area, then the
    responsive collapses and the reduced-motion, no-script and screenshot overrides.
+   The design contract is docs/superpowers/specs/2026-10-07-portfolio-apple-restyle.md.
    ========================================================================== */
 
 /* ---------- Fonts ---------- */
+/* Only loaded where -apple-system does not resolve, which is every non-Apple platform. Subset to Latin and
+   Latin Extended (the Italian accents), weights 400 to 700 in one variable file. SIL OFL 1.1, see
+   PRETENDARD-LICENSE.txt next to it. */
 @font-face {
-    font-family: 'Clash Display';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url('../fonts/clash-display-500.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Clash Display';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url('../fonts/clash-display-600.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'Satoshi';
-    font-style: normal;
-    font-weight: 300 900;
-    font-display: swap;
-    src: url('../fonts/satoshi-variable.woff2') format('woff2');
-}
-
-@font-face {
-    font-family: 'JetBrains Mono';
+    font-family: 'Pretendard';
     font-style: normal;
     font-weight: 400 700;
     font-display: swap;
-    src: url('../fonts/jetbrains-mono-latin.woff2') format('woff2');
+    src: url('../fonts/pretendard-variable.woff2') format('woff2');
 }
 
 /* ---------- Tokens ---------- */
 :root {
-    --font-display: 'Clash Display', 'Helvetica Neue', Arial, sans-serif;
-    --font-body: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Segoe UI', Roboto, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 
-    --radius: 24px;
-    --radius-sm: 14px;
-    --pill: 999px;
+    /* Three radius steps. --radius and --radius-sm are the two the canvases read. */
+    --radius: 18px;
+    --radius-lg: 28px;
+    --radius-sm: 12px;
+    --pill: 980px;
 
-    --container: 1200px;
-    --gutter: clamp(1.25rem, 4vw, 2.5rem);
-    --section-y: clamp(5rem, 12vw, 9rem);
-    --header-h: 68px;
+    /* Three grids: copy sits on the measure, text sections on the container, media on the wide grid. */
+    --container: 980px;
+    --wide: 1440px;
+    --measure: 692px;
+    --gutter: clamp(1rem, 4vw, 1.5rem);
+    --section-y: clamp(4.5rem, 9vw, 7.5rem);
+    --moment-y: clamp(5rem, 11vw, 10rem);
+    --header-h: 52px;
 
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-    --dur: 0.7s;
+    --dur: 0.6s;
 
     /* Light palette */
-    --bg: #eef1f6;
+    --bg: #ffffff;
+    --bg-alt: #f5f5f7;
     --surface: #ffffff;
-    --surface-2: #f4f6f9;
-    --glass: rgba(255, 255, 255, 0.62);
-    --ink: #0f1420;
-    --ink-2: #313a4b;
-    --muted: #4e5a6b;
-    --line: rgba(15, 20, 32, 0.10);
-    --line-strong: rgba(15, 20, 32, 0.22);
-    --accent: #0a7f70;
-    --accent-text: #075f54;
+    --surface-2: #f5f5f7;
+    --ink: #1d1d1f;
+    --ink-2: #424245;
+    --muted: #6e6e73;
+    --line: #d2d2d7;
+    --line-strong: #86868b;
+    --accent: #0071e3;
+    /* Darkened for link text so it still passes AA on the #f5f5f7 ground (5.27:1). */
+    --accent-text: #0063cc;
+    /* The fill stays the darker blue in both themes, so white on it holds 4.70:1. */
+    --accent-fill: #0071e3;
+    --accent-hover: #0077ed;
     --accent-ink: #ffffff;
-    --accent-soft: rgba(10, 127, 112, 0.10);
-    --accent-glow: rgba(10, 127, 112, 0.30);
-    --trace: #0f1420;
-    --trace-2: rgba(15, 20, 32, 0.35);
-    --neuron-fibre: rgba(15, 20, 32, 0.135);
-    --neuron-soma: rgba(15, 20, 32, 0.175);
-    --tint-1: rgba(10, 127, 112, 0.11);
-    --tint-2: rgba(10, 127, 112, 0.06);
-    --header-bg: rgba(238, 241, 246, 0.70);
-    --toggle-track: #4e5a6b;
+    --accent-soft: rgba(0, 113, 227, 0.10);
+    --trace: #1d1d1f;
+    --trace-2: rgba(29, 29, 31, 0.38);
+    --neuron-fibre: rgba(29, 29, 31, 0.075);
+    --neuron-soma: rgba(29, 29, 31, 0.11);
+    --header-bg: rgba(255, 255, 255, 0.72);
+    --shadow: 0 18px 50px rgba(60, 60, 67, 0.10);
+    --toggle-track: #e8e8ed;
+    --seg-knob: #ffffff;
     color-scheme: light;
 }
 
@@ -92,58 +84,59 @@
    figures read these tokens off the root element, so a value that differs between them shows up in a figure. */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-        --bg: #070b12;
-        --surface: #0f1622;
-        --surface-2: #151d2c;
-        --glass: rgba(15, 22, 34, 0.58);
-        --ink: #edf1f7;
-        --ink-2: #c4ccd9;
-        --muted: #98a3b4;
-        --line: rgba(237, 241, 247, 0.10);
-        --line-strong: rgba(237, 241, 247, 0.22);
-        --accent: #3ddcc0;
-        --accent-text: #3ddcc0;
-        --accent-ink: #06110f;
-        --accent-soft: rgba(61, 220, 192, 0.12);
-        --accent-glow: rgba(61, 220, 192, 0.35);
-        --trace: #edf1f7;
-        --trace-2: rgba(237, 241, 247, 0.32);
-        --neuron-fibre: rgba(61, 220, 192, 0.175);
-        --neuron-soma: rgba(61, 220, 192, 0.25);
-        --tint-1: rgba(61, 220, 192, 0.10);
-        --tint-2: rgba(61, 220, 192, 0.06);
-        --header-bg: rgba(7, 11, 18, 0.62);
-        --toggle-track: #1c2434;
+        --bg: #000000;
+        --bg-alt: #101011;
+        --surface: #1d1d1f;
+        --surface-2: #161617;
+        --ink: #f5f5f7;
+        --ink-2: #d2d2d7;
+        --muted: #86868b;
+        --line: #424245;
+        --line-strong: #6e6e73;
+        --accent: #2997ff;
+        --accent-text: #2997ff;
+        --accent-fill: #0071e3;
+        --accent-hover: #0077ed;
+        --accent-ink: #ffffff;
+        --accent-soft: rgba(41, 151, 255, 0.14);
+        --trace: #f5f5f7;
+        --trace-2: rgba(245, 245, 247, 0.40);
+        --neuron-fibre: rgba(245, 245, 247, 0.085);
+        --neuron-soma: rgba(245, 245, 247, 0.13);
+        --header-bg: rgba(0, 0, 0, 0.72);
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+        --toggle-track: #39393d;
+        --seg-knob: #3a3a3c;
         color-scheme: dark;
     }
 }
 
 :root[data-theme="dark"] {
-    --bg: #070b12;
-    --surface: #0f1622;
-    --surface-2: #151d2c;
-    --glass: rgba(15, 22, 34, 0.58);
-    --ink: #edf1f7;
-    --ink-2: #c4ccd9;
-    --muted: #98a3b4;
-    --line: rgba(237, 241, 247, 0.10);
-    --line-strong: rgba(237, 241, 247, 0.22);
-    --accent: #3ddcc0;
-    --accent-text: #3ddcc0;
-    --accent-ink: #06110f;
-    --accent-soft: rgba(61, 220, 192, 0.12);
-    --accent-glow: rgba(61, 220, 192, 0.35);
-    --trace: #edf1f7;
-    --trace-2: rgba(237, 241, 247, 0.32);
-    --neuron-fibre: rgba(61, 220, 192, 0.175);
-    --neuron-soma: rgba(61, 220, 192, 0.25);
-    --tint-1: rgba(61, 220, 192, 0.10);
-    --tint-2: rgba(61, 220, 192, 0.06);
-    --header-bg: rgba(7, 11, 18, 0.62);
-    --toggle-track: #1c2434;
+    --bg: #000000;
+    --bg-alt: #101011;
+    --surface: #1d1d1f;
+    --surface-2: #161617;
+    --ink: #f5f5f7;
+    --ink-2: #d2d2d7;
+    --muted: #86868b;
+    --line: #424245;
+    --line-strong: #6e6e73;
+    --accent: #2997ff;
+    --accent-text: #2997ff;
+    --accent-fill: #0071e3;
+    --accent-hover: #0077ed;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(41, 151, 255, 0.14);
+    --trace: #f5f5f7;
+    --trace-2: rgba(245, 245, 247, 0.40);
+    --neuron-fibre: rgba(245, 245, 247, 0.085);
+    --neuron-soma: rgba(245, 245, 247, 0.13);
+    --header-bg: rgba(0, 0, 0, 0.72);
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+    --toggle-track: #39393d;
+    --seg-knob: #3a3a3c;
     color-scheme: dark;
 }
-
 /* ---------- Reset ---------- */
 *,
 *::before,
@@ -162,32 +155,22 @@ body {
     background: var(--bg);
     color: var(--ink-2);
     font-family: var(--font-body);
-    font-size: 1.0625rem;
-    line-height: 1.65;
+    font-size: 17px;
+    line-height: 1.47;
+    letter-spacing: -0.003em;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
     position: relative;
-    /* Its own stacking context, so the z-index -1 tints below stay behind the page and not behind the canvas. */
     isolation: isolate;
     transition: background-color 0.35s ease, color 0.35s ease;
 }
 
-/* Two faint tints behind everything, so neither theme is a flat colour. */
-body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background:
-        radial-gradient(60% 50% at 12% 0%, var(--tint-1), transparent 70%),
-        radial-gradient(50% 45% at 100% 90%, var(--tint-2), transparent 70%);
-}
-
-/* The living background is a fixed canvas under every page (positioned in modules/neurons.css). */
+/* The living background is a fixed canvas under every page (positioned in modules/neurons.css). Every section
+   below the hero carries an opaque ground, so the canvas is visible in the hero only: it is a moment, not
+   wallpaper. Nothing in JavaScript does this masking; the section backgrounds do. */
 .site-header,
 main,
 .site-footer,
@@ -244,7 +227,7 @@ p {
     position: absolute;
     left: 1rem;
     top: -3rem;
-    background: var(--accent);
+    background: var(--accent-fill);
     color: var(--accent-ink);
     padding: 0.5rem 0.9rem;
     border-radius: var(--pill);
@@ -254,6 +237,11 @@ p {
 
 .skip-link:focus {
     top: 1rem;
+}
+
+/* Focused only by the skip link, so it must not draw a ring around the whole page. */
+#main:focus {
+    outline: none;
 }
 
 /* Off-screen but still read out: the figure descriptions and the aria-live regions of the canvas modules. */
@@ -270,47 +258,64 @@ p {
 }
 
 /* ---------- Typography ---------- */
+/* Tracking is negative and grows more negative with size, as Apple sets it; it reaches zero below 15px.
+   Every display size is a clamp with a viewport term, so the Italian strings, about 15 percent longer than
+   the English, shrink before they wrap. */
 h1,
 h2,
 h3 {
-    font-family: var(--font-display);
     color: var(--ink);
     margin: 0;
     font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.05;
+    letter-spacing: -0.018em;
+    line-height: 1.07;
     text-wrap: balance;
 }
 
+/* The moment title. The name in the hero sets its own, larger size. */
 h1 {
-    font-size: clamp(2.6rem, 6.2vw, 5rem);
-    letter-spacing: -0.03em;
-    line-height: 0.98;
+    font-size: clamp(2.125rem, 4.6vw, 3.5rem);
 }
 
 h2 {
-    font-size: clamp(2rem, 4.2vw, 3.4rem);
-    letter-spacing: -0.025em;
+    font-size: clamp(2.125rem, 4.6vw, 3.5rem);
 }
 
 h3 {
-    font-size: clamp(1.25rem, 1.8vw, 1.5rem);
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    line-height: 1.2;
+    font-size: clamp(1.3125rem, 2.2vw, 1.75rem);
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    line-height: 1.21;
+}
+
+.talk h3,
+.rail-item h3,
+.course h3 {
+    text-wrap: pretty;
+    max-width: var(--measure);
 }
 
 .lede {
-    font-size: clamp(1.1rem, 1.6vw, 1.3rem);
-    line-height: 1.5;
-    color: var(--ink-2);
-    max-width: 38ch;
+    font-size: clamp(1.1875rem, 1.7vw, 1.3125rem);
+    line-height: 1.43;
+    letter-spacing: -0.010em;
+    color: var(--muted);
+    max-width: var(--measure);
 }
 
+/* Small print, and the honesty notes under the figures. */
+.fine {
+    font-size: 0.75rem;
+    line-height: 1.33;
+    color: var(--muted);
+    letter-spacing: 0;
+}
+
+/* The monospace is for figure readouts and venue codes only: never a label under a heading. */
 .mono {
     font-family: var(--font-mono);
     font-size: 0.8125rem;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
     color: var(--muted);
 }
 
@@ -331,37 +336,59 @@ strong {
     padding-block: var(--section-y);
 }
 
+/* Media sit on the wider grid; copy stays on the container. */
+.container-wide {
+    width: 100%;
+    max-width: var(--wide);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+}
+
+/* The alternating ground. A section declares which of the two it stands on; the change of colour is the
+   separator, so there are no rules between sections. */
+.on-alt {
+    background: var(--bg-alt);
+}
+
+.on-bg {
+    background: var(--bg);
+}
+
+/* A full-bleed moment: the figure is the whole width and the ground is the frame. */
+.moment {
+    padding-block: var(--moment-y);
+}
+
 .section-head {
-    max-width: 62ch;
+    max-width: var(--measure);
     margin-bottom: clamp(2rem, 5vw, 3.5rem);
+}
+
+/* Apple centres the copy over a full-bleed moment and left-aligns it everywhere else. */
+.section-head.centred {
+    margin-inline: auto;
+    text-align: center;
 }
 
 .section-head p {
     margin-top: 1rem;
-    font-size: 1.125rem;
+    font-size: clamp(1.1875rem, 1.7vw, 1.3125rem);
+    line-height: 1.43;
+    letter-spacing: -0.010em;
     color: var(--muted);
-    max-width: 58ch;
     text-wrap: pretty;
 }
 
 .section-head p+p {
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
 }
 
-/* Glass panel: translucent over the neuron background. Solid where transparency is unwanted or expensive. */
-.glass {
-    background: var(--glass);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    backdrop-filter: blur(18px) saturate(140%);
-    border: 1px solid var(--line);
-}
-
-@media (prefers-reduced-transparency: reduce) {
-    .glass {
-        background: var(--surface);
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-    }
+/* A figure plate. The glass panel is gone: a plate is opaque, borderless and lifted by a tinted shadow. */
+.plate {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
 }
 
 /* ---------- Buttons and links ---------- */
@@ -371,67 +398,104 @@ strong {
     gap: 0.5rem;
     padding: 0.85rem 1.45rem;
     border-radius: var(--pill);
-    font-weight: 600;
-    font-size: 0.975rem;
+    font-weight: 400;
+    font-size: 1.0625rem;
+    letter-spacing: -0.012em;
     line-height: 1;
+    min-height: 44px;
     white-space: nowrap;
     border: 1px solid transparent;
-    transition: transform 0.2s var(--ease-out), background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.14s var(--ease-out), opacity 0.14s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .btn:active {
-    transform: translateY(1px) scale(0.985);
+    transform: scale(0.975);
+    opacity: 0.86;
 }
 
 .btn-primary {
-    background: var(--ink);
-    color: var(--bg);
-}
-
-.btn-primary:hover {
-    background: var(--accent);
+    background: var(--accent-fill);
     color: var(--accent-ink);
 }
 
+.btn-primary:hover {
+    background: var(--accent-hover);
+}
+
+/* A blue ring on a blue fill is invisible, so this one button inverts its focus ring. */
+.btn-primary:focus-visible {
+    outline-color: var(--ink);
+}
+
+/* The secondary action is not a second button: it is a blue text link with a chevron, Apple's own pairing.
+   .btn-ghost is kept for the few places that need a real bordered control (the filter reset). */
 .btn-ghost {
-    border-color: var(--line-strong);
+    border-color: var(--line);
     color: var(--ink);
-    background: var(--glass);
+    background: var(--surface);
 }
 
 .btn-ghost:hover {
-    border-color: var(--ink);
+    border-color: var(--line-strong);
 }
 
 .btn-small {
-    padding: 0.5rem 0.95rem;
-    font-size: 0.85rem;
+    min-height: 32px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8125rem;
 }
 
 .text-link {
     color: var(--accent-text);
-    font-weight: 600;
+    font-size: 1.0625rem;
+    letter-spacing: -0.012em;
     text-decoration: underline;
     text-decoration-color: transparent;
     text-underline-offset: 0.2em;
-    transition: text-decoration-color 0.2s ease;
+    transition: text-decoration-color 0.2s ease, opacity 0.14s ease;
 }
 
 .text-link:hover {
     text-decoration-color: currentColor;
 }
 
+.text-link:active {
+    opacity: 0.7;
+}
+
+/* The chevron belongs to standalone "more" links only, never to a link inside a paragraph. It is a glyph in
+   the text font rather than an icon file, which is how Apple draws it. */
+.text-link.more::after {
+    content: '\203A';
+    display: inline-block;
+    margin-left: 0.32em;
+    transition: transform 0.2s var(--ease-out);
+}
+
+.text-link.more:hover::after {
+    transform: translateX(2px);
+}
+
 .cta-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1.75rem;
+    align-items: center;
+    gap: 0.5rem 1.5rem;
+    margin-top: 2rem;
 }
 
 .section-link {
     display: inline-block;
     margin-top: 2.5rem;
-    font-size: 1.05rem;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+
+    .site-header {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        background: var(--bg);
+    }
 }
 
 /* ---------- Header ---------- */
@@ -456,10 +520,9 @@ strong {
 }
 
 .wordmark {
-    font-family: var(--font-display);
     font-weight: 600;
-    font-size: 1.2rem;
-    letter-spacing: -0.02em;
+    font-size: 0.9375rem;
+    letter-spacing: -0.012em;
     color: var(--ink);
     white-space: nowrap;
 }
@@ -477,34 +540,21 @@ strong {
 
 .site-nav a {
     color: var(--muted);
-    font-weight: 500;
-    font-size: 0.95rem;
+    font-weight: 400;
+    font-size: 0.875rem;
+    letter-spacing: -0.004em;
     padding: 0.35rem 0;
-    position: relative;
     transition: color 0.2s ease;
 }
 
-.site-nav a::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 2px;
-    border-radius: 2px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s var(--ease-out);
-}
-
-.site-nav a:hover,
-.site-nav a[aria-current="page"] {
+.site-nav a:hover {
     color: var(--ink);
 }
 
-.site-nav a[aria-current="page"]::after {
-    transform: scaleX(1);
+/* The current page is marked by ink and weight, not by a rule that slides in under it. */
+.site-nav a[aria-current="page"] {
+    color: var(--ink);
+    font-weight: 500;
 }
 
 .header-tools {
@@ -516,30 +566,31 @@ strong {
 /* Language switch: two segments in one pill. */
 .lang-switch {
     display: inline-flex;
-    padding: 3px;
-    border: 1px solid var(--line-strong);
+    padding: 2px;
+    border: 1px solid var(--line);
     border-radius: var(--pill);
-    background: var(--glass);
+    background: var(--surface-2);
 }
 
 .lang-switch a {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.010em;
+    padding: 0.3rem 0.62rem;
     border-radius: var(--pill);
     color: var(--muted);
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.24s var(--ease-out), color 0.24s ease;
 }
 
 .lang-switch a:hover {
     color: var(--ink);
 }
 
+/* The selected segment is carried by a filled knob, and by aria-current, never by colour alone. */
 .lang-switch a[aria-current="true"] {
-    background: var(--ink);
-    color: var(--bg);
+    background: var(--seg-knob);
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.10);
 }
 
 .theme-toggle {
@@ -551,10 +602,10 @@ strong {
 
 .theme-toggle-track {
     width: 40px;
-    height: 22px;
+    height: 24px;
     border-radius: var(--pill);
     background: var(--toggle-track);
-    border: 1px solid var(--line-strong);
+    border: 1px solid var(--line);
     position: relative;
     display: block;
     transition: background-color 0.3s ease;
@@ -564,37 +615,34 @@ strong {
     position: absolute;
     top: 2px;
     left: 2px;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
-    background: var(--surface);
-    box-shadow: 0 1px 2px rgba(15, 20, 32, 0.25);
-    transition: transform 0.35s var(--ease-out), background-color 0.3s ease;
+    background: var(--ink);
+    transition: transform 0.24s var(--ease-out), background-color 0.3s ease;
 }
 
 :root[data-theme="dark"] .theme-toggle-knob {
-    transform: translateX(18px);
-    background: var(--accent);
+    transform: translateX(16px);
 }
 
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) .theme-toggle-knob {
-        transform: translateX(18px);
-        background: var(--accent);
+        transform: translateX(16px);
     }
 }
 
 .theme-toggle:hover .theme-toggle-track {
-    background: var(--accent-glow);
+    border-color: var(--line-strong);
 }
 
 /* ---------- Footer ---------- */
 .site-footer {
     border-top: 1px solid var(--line);
     padding-block: 3rem 2.5rem;
-    font-size: 0.925rem;
+    font-size: 0.875rem;
     color: var(--muted);
-    background: var(--glass);
+    background: var(--bg-alt);
 }
 
 .footer-inner {
@@ -605,11 +653,10 @@ strong {
 }
 
 .footer-name {
-    font-family: var(--font-display);
     color: var(--ink);
     font-weight: 600;
-    font-size: 1.15rem;
-    letter-spacing: -0.02em;
+    font-size: 1.0625rem;
+    letter-spacing: -0.012em;
     margin: 0 0 0.25rem;
 }
 
@@ -676,41 +723,37 @@ strong {
 /* ==========================================================================
    Home: hero
    ========================================================================== */
+/* Centred, which is the one place the anti-centre rule is overridden: this is a launch composition where
+   the message is the design (Section 4.3 of the taste rulebook). It is also the only transparent ground on
+   the page, so the living neuron canvas is a moment here and wallpaper nowhere. */
 .hero {
-    min-height: calc(100dvh - var(--header-h));
-    display: flex;
-    align-items: start;
-    padding-block: clamp(3rem, 10vh, 6rem) clamp(3rem, 8vh, 5rem);
+    padding-block: clamp(2.5rem, 6vh, 4rem) 0;
+    text-align: center;
 }
 
-.hero-inner {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 1.5rem clamp(1rem, 2vw, 2rem);
-    align-items: end;
+.hero-copy {
+    max-width: 48rem;
 }
 
 .hero-name {
-    grid-column: 1 / -1;
-    font-size: clamp(3.2rem, 11.2vw, 10.5rem);
+    font-size: clamp(2.75rem, 7.4vw, 5.5rem);
     font-weight: 600;
-    letter-spacing: -0.045em;
-    line-height: 0.9;
-    margin: 0 0 0.5rem;
-    text-wrap: balance;
+    letter-spacing: -0.022em;
+    line-height: 1.05;
+    margin: 0;
 }
 
 /* Each line of the name rises in once; reason: entry hierarchy, the name is read first. */
 .js .hero-line {
     display: inline-block;
-    animation: hero-rise 0.9s var(--ease-out) both;
-    animation-delay: calc(var(--i) * 140ms);
+    animation: hero-rise 0.8s var(--ease-out) both;
+    animation-delay: calc(var(--i) * 110ms);
 }
 
 @keyframes hero-rise {
     from {
         opacity: 0;
-        transform: translateY(0.35em);
+        transform: translateY(0.28em);
     }
 
     to {
@@ -719,66 +762,66 @@ strong {
     }
 }
 
-.hero-fields {
-    grid-column: 1 / span 7;
+.hero-intro {
+    font-size: clamp(1.3125rem, 2.2vw, 1.75rem);
+    font-weight: 400;
+    letter-spacing: -0.010em;
+    line-height: 1.21;
+    color: var(--ink);
+    margin: 0.75rem auto 0;
+    max-width: 24ch;
+    text-wrap: balance;
+}
+
+.hero .cta-row {
+    justify-content: center;
+    margin-top: 1.75rem;
+}
+
+/* The product shot. No plate, no border, no shadow: the cortex sits on the ground, as Apple sets a product.
+   The bottom padding is the gap to the next section: the figure needs room under it or the stage plate
+   crowds the caption. */
+.hero-stage {
+    margin-top: clamp(1.5rem, 3.5vw, 2.5rem);
+    padding-bottom: clamp(3.5rem, 8vw, 7rem);
+    padding-inline: var(--gutter);
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem 1.25rem;
-    margin: 0;
-    font-family: var(--font-display);
-    font-weight: 500;
-    font-size: clamp(1.15rem, 1.9vw, 1.5rem);
-    letter-spacing: -0.015em;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hero-stage .mini-figure {
+    width: min(100%, 44rem);
+}
+
+/* It prints the interaction hint until a source is picked and the state of that source afterwards. Both are
+   sentences, so this one is set as text; the monospace is kept for the figures that print real numbers. */
+.hero-readout {
+    margin: 1.25rem auto 0;
+    max-width: 48ch;
+    min-height: 1.4em;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    line-height: 1.43;
     color: var(--muted);
+    text-align: center;
+    text-wrap: balance;
 }
 
-.hero-fields .field {
-    white-space: nowrap;
-}
-
-/* The three fields light up in turn; reason: they are the claim of the site, read one at a time. */
-.js .hero-fields .field {
-    animation: field-light 7.2s ease-in-out infinite;
-    animation-delay: calc(var(--i) * 2.4s + 0.8s);
-}
-
-@keyframes field-light {
-
-    0%,
-    36%,
-    100% {
-        color: var(--muted);
-    }
-
-    6%,
-    30% {
-        color: var(--ink);
-    }
-}
-
-.hero-side {
-    grid-column: 8 / -1;
-    justify-self: end;
-    max-width: 32rem;
-}
-
-.hero-lede {
-    margin: 0;
-    max-width: 40ch;
-}
-
-.hero-side .cta-row {
-    margin-top: 1.5rem;
+.hero-caption {
+    margin: 0.5rem auto 0;
+    max-width: 46ch;
+    text-align: center;
+    text-wrap: balance;
 }
 
 /* ==========================================================================
    Home: the one sentence
    ========================================================================== */
 .sentence {
-    font-family: var(--font-display);
     font-weight: 600;
-    font-size: clamp(1.9rem, 4.6vw, 3.6rem);
-    letter-spacing: -0.03em;
+    font-size: clamp(1.75rem, 3.6vw, 2.75rem);
+    letter-spacing: -0.016em;
     line-height: 1.08;
     max-width: 24ch;
     margin: 0;
@@ -819,33 +862,31 @@ strong {
 }
 
 /* ==========================================================================
-   Home: research interests (2+1 bento). Cell internals live in modules/cells.css.
+   Home: research interests. Two figure plates side by side; the cortex left this section for the hero.
+   Cell internals live in modules/cells.css.
    ========================================================================== */
 .bento {
     display: grid;
-    grid-template-columns: 7fr 5fr;
-    grid-auto-rows: auto;
-    gap: 1rem;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(1rem, 2vw, 1.5rem);
+    align-items: stretch;
 }
 
+/* A cell is a plate: opaque, borderless, lifted by a tinted shadow. The decorative dot grid and the tinted
+   wash that used to distinguish the cells are gone; the figures distinguish themselves. */
 .cell {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    overflow: hidden;
-}
-
-.cell-tall {
-    grid-row: 1 / span 2;
+    gap: 1.25rem;
+    padding: clamp(1.5rem, 2.6vw, 2.25rem);
+    border-radius: var(--radius-lg);
 }
 
 .cell-head p {
     margin: 0.35rem 0 0;
     color: var(--muted);
-    font-size: 0.975rem;
+    font-size: 1rem;
     max-width: 42ch;
 }
 
@@ -853,20 +894,17 @@ strong {
     margin: 0;
 }
 
-.cell-brain {
-    background-image: radial-gradient(var(--line) 1px, transparent 1.5px);
-    background-size: 16px 16px;
-}
-
-.cell-topo {
-    background-image: linear-gradient(180deg, var(--accent-soft), transparent 70%);
-}
-
 /* ==========================================================================
    Home: the cell (metabolism). Figure internals live in modules/metabolism.css.
    ========================================================================== */
+/* The one full-bleed moment on the page: the copy is centred over it, the figure runs the media grid. */
 .cell-section .section-head {
-    max-width: 66ch;
+    max-width: var(--measure);
+}
+
+.cell-section .met {
+    margin-inline: auto;
+    max-width: var(--wide);
 }
 
 /* ==========================================================================
@@ -900,16 +938,15 @@ strong {
     flex-wrap: wrap;
     gap: 0.2rem 1rem;
     margin: 0;
-    font-family: var(--font-display);
     font-weight: 600;
-    font-size: clamp(1.9rem, 3vw, 2.6rem);
-    letter-spacing: -0.03em;
+    font-size: clamp(1.75rem, 3vw, 2.375rem);
+    letter-spacing: -0.018em;
     line-height: 1.05;
     color: var(--ink);
 }
 
 .tool-group:first-child .tool-primary {
-    font-size: clamp(2.6rem, 5vw, 4.4rem);
+    font-size: clamp(2rem, 3.6vw, 2.75rem);
     gap: 0.2rem 1.5rem;
 }
 
@@ -941,6 +978,10 @@ strong {
 
 /* Full-bleed strip: the padding is the container gutter, so the first card lines up with the text above it
    and the last one can still scroll clear of the right edge. */
+/* Six stations on a strip wider than any viewport. macOS hides the scrollbar until the pointer moves, so
+   without an edge treatment the fourth card simply looks truncated: the mask fades the last 72px out, which
+   reads as "this continues" rather than as a clipping bug. The strip is one tab stop and scrolls with the
+   arrow keys, so the keyboard path does not depend on it. */
 .route {
     display: flex;
     gap: 1rem;
@@ -951,6 +992,8 @@ strong {
     scroll-padding-inline: max(var(--gutter), calc((100% - var(--container)) / 2 + var(--gutter)));
     scrollbar-width: thin;
     scrollbar-color: var(--line-strong) transparent;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
 }
 
 .station {
@@ -959,23 +1002,10 @@ strong {
     position: relative;
     padding: 1.6rem 1.4rem 1.3rem;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--glass);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    backdrop-filter: blur(18px) saturate(140%);
+    background: var(--surface);
+    box-shadow: var(--shadow);
 }
 
-/* Accent bar inset from the rounded corners (a border-top would taper into them). */
-.station::before {
-    content: '';
-    position: absolute;
-    left: 1.4rem;
-    right: 1.4rem;
-    top: 0;
-    height: 2px;
-    border-radius: 0 0 2px 2px;
-    background: var(--accent);
-}
 
 .station-years {
     display: block;
@@ -1008,8 +1038,9 @@ strong {
 }
 
 .pub-featured-title {
-    font-size: clamp(1.6rem, 3vw, 2.4rem);
-    line-height: 1.1;
+    font-size: clamp(1.625rem, 2.8vw, 2.125rem);
+    letter-spacing: -0.016em;
+    line-height: 1.14;
 }
 
 .pub-featured-title a,
@@ -1053,7 +1084,6 @@ strong {
 }
 
 .pub-index-title {
-    font-family: var(--font-display);
     font-weight: 500;
     font-size: 1.18rem;
     line-height: 1.25;
@@ -1122,17 +1152,17 @@ strong {
     right: 0;
     bottom: 0;
     padding: 3rem 1.3rem 1.1rem;
-    background: linear-gradient(180deg, rgba(7, 11, 18, 0) 0%, rgba(7, 11, 18, 0.62) 40%, rgba(7, 11, 18, 0.88) 100%);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.62) 40%, rgba(0, 0, 0, 0.88) 100%);
 }
 
 .tile-photo h3,
 .tile-photo p {
-    color: #f6f8fb;
-    text-shadow: 0 1px 2px rgba(7, 11, 18, 0.5);
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .tile-photo p {
-    color: #dfe5ee;
+    color: rgba(255, 255, 255, 0.86);
 }
 
 /* An item of beyond.yml without a photo: the title carries the tile. */
@@ -1163,10 +1193,30 @@ strong {
     font-size: 0.875rem;
 }
 
+/* The native triangle is the one unstyled control left on the page, so it is replaced by the same chevron
+   the "more" links use, rotated when the disclosure is open. */
 .credits summary {
     cursor: pointer;
     width: max-content;
     font-weight: 500;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.credits summary::-webkit-details-marker {
+    display: none;
+}
+
+.credits summary::before {
+    content: '\203A';
+    display: inline-block;
+    transition: transform 0.2s var(--ease-out);
+}
+
+.credits[open] summary::before {
+    transform: rotate(90deg);
 }
 
 .credits p {
@@ -1185,34 +1235,34 @@ strong {
 }
 
 .page-head {
-    max-width: 62ch;
+    max-width: var(--measure);
     margin-bottom: clamp(2.5rem, 6vw, 4rem);
 }
 
 .page-head h1 {
-    font-size: clamp(2.4rem, 5vw, 4rem);
     margin-bottom: 1rem;
 }
 
 .page h2 {
-    font-size: clamp(1.7rem, 3vw, 2.3rem);
     margin-bottom: 1.5rem;
 }
 
 .bio-grid {
     display: grid;
-    grid-template-columns: minmax(0, 62ch);
+    grid-template-columns: minmax(0, var(--measure));
     gap: 3rem;
     align-items: start;
     margin-bottom: clamp(3rem, 8vw, 5rem);
 }
 
 .bio-grid.has-portrait {
-    grid-template-columns: minmax(0, 62ch) auto;
+    grid-template-columns: minmax(0, var(--measure)) auto;
 }
 
 .bio-text p {
-    font-size: 1.125rem;
+    font-size: clamp(1.1875rem, 1.7vw, 1.3125rem);
+    line-height: 1.43;
+    letter-spacing: -0.010em;
 }
 
 .portrait {
@@ -1229,6 +1279,7 @@ strong {
 
 .page .beyond-section {
     padding-block: 0;
+    background: none;
 }
 
 .page .beyond-section .container {
@@ -1276,7 +1327,7 @@ strong {
 }
 
 .rail::after {
-    background: var(--accent);
+    background: var(--line-strong);
     transform-origin: top;
     transform: scaleY(0);
     transition: transform 1.4s var(--ease-out);
@@ -1321,7 +1372,13 @@ strong {
     margin-left: -6px;
     border-radius: 50%;
     background: var(--bg);
-    border: 2px solid var(--accent);
+    border: 2px solid var(--line-strong);
+}
+
+/* The accent marks state: on a rail, the state is "this is the current one". The other markers are markers. */
+.rail-item:first-child::before {
+    background: var(--accent);
+    border-color: var(--accent);
 }
 
 .rail-year {
@@ -1329,23 +1386,20 @@ strong {
     margin-bottom: 0.4rem;
 }
 
-.rail-item h3 {
-    font-size: clamp(1.3rem, 2vw, 1.6rem);
-}
 
 .rail-meta {
     margin: 0.3rem 0 0;
+    max-width: var(--measure);
     color: var(--ink-2);
 }
 
 .rail-thesis {
     margin: 0.5rem 0 0;
     color: var(--muted);
-    font-size: 0.975rem;
-    max-width: 66ch;
+    max-width: var(--measure);
 }
 
-/* Teaching: one glass card per course. */
+/* Teaching: one opaque plate per course, at --radius like every other surface. */
 .course-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1358,14 +1412,15 @@ strong {
 }
 
 .course h3 {
-    font-size: 1.15rem;
+    font-size: 1.0625rem;
+    letter-spacing: -0.003em;
     margin: 0.5rem 0 0.35rem;
 }
 
 .course p {
     margin: 0;
     color: var(--muted);
-    font-size: 0.95rem;
+    font-size: 0.875rem;
 }
 
 /* Conference presentations */
@@ -1407,7 +1462,6 @@ strong {
 }
 
 .def-grid dt {
-    font-family: var(--font-display);
     font-weight: 500;
     font-size: 1.2rem;
     color: var(--ink);
@@ -1440,7 +1494,7 @@ strong {
     margin: 0 0 2rem;
     border: 1px solid var(--line);
     border-radius: var(--pill);
-    background: var(--glass);
+    background: var(--surface-2);
 }
 
 .segmented label {
@@ -1459,10 +1513,11 @@ strong {
 
 .segmented span {
     display: inline-block;
-    padding: 0.45rem 0.95rem;
+    padding: 0.5rem 0.9rem;
     border-radius: var(--pill);
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     font-weight: 500;
+    letter-spacing: 0.010em;
     color: var(--muted);
     transition: background-color 0.2s ease, color 0.2s ease;
 }
@@ -1486,10 +1541,14 @@ strong {
     grid-template-columns: 8rem 1fr;
     gap: 1.5rem;
     padding: 2rem 0;
+    border-top: 1px solid var(--line);
 }
 
-.pub-group+.pub-group {
-    border-top: 1px solid var(--line);
+/* Every group owns its rule and site.js clears it on the first one still visible, so filtering never leaves
+   a hairline hanging under the control with nothing above it. */
+.pub-group:first-child,
+.pub-group.is-first {
+    border-top: 0;
 }
 
 .pub-group[hidden],
@@ -1504,6 +1563,13 @@ strong {
 
 .pub-entry {
     padding-left: 1rem;
+}
+
+.pub-code {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--muted);
 }
 
 .pub-entry h3 {
@@ -1531,24 +1597,13 @@ strong {
 /* ==========================================================================
    Responsive collapses
    ========================================================================== */
-@media (max-width: 1024px) {
-    .hero-fields {
-        grid-column: 1 / -1;
-    }
-
-    .hero-side {
-        grid-column: 1 / -1;
-        justify-self: start;
-    }
-}
-
 @media (max-width: 900px) {
     .bento {
         grid-template-columns: 1fr;
     }
 
-    .cell-tall {
-        grid-row: auto;
+    .pub-entry {
+        padding-left: 0;
     }
 
     .toolbox {
@@ -1595,15 +1650,6 @@ strong {
         font-size: 0.9rem;
     }
 
-    /* Blurring a moving background behind many panels is expensive on phones: solid panels instead. */
-    .glass,
-    .station,
-    .site-footer {
-        -webkit-backdrop-filter: none;
-        backdrop-filter: none;
-        background: var(--surface);
-    }
-
     .hero {
         padding-top: clamp(2.5rem, 8vh, 4rem);
     }
@@ -1617,8 +1663,13 @@ strong {
     }
 }
 
+/* Phones. Every control in this row has to clear a 44px touch target without the row growing wider than the
+   narrowest viewport worth supporting, so the targets grow into the 52px header height rather than sideways:
+   the visible pill keeps its size and the hit area is padding around it. */
 @media (max-width: 520px) {
-    .nav-home {
+
+    /* As specific as the .site-nav a rule below, which would otherwise override this display. */
+    .site-nav .nav-home {
         display: none;
     }
 
@@ -1631,42 +1682,65 @@ strong {
     }
 
     .header-inner {
-        gap: 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .wordmark {
+        display: inline-flex;
+        align-items: center;
+        min-width: 44px;
+        min-height: 44px;
     }
 
     .site-nav {
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
 
     .site-nav a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding-block: 0;
         font-size: 0.875rem;
     }
 
     .header-tools {
-        gap: 0.4rem;
+        gap: 0.25rem;
     }
 
+    /* The track keeps the desktop proportion; the segment grows inside it, not past it. */
     .lang-switch {
+        align-items: stretch;
         padding: 2px;
     }
 
     .lang-switch a {
-        padding: 0.25rem 0.45rem;
-        font-size: 0.68rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 38px;
+        min-height: 36px;
+        padding: 0 0.4rem;
+        font-size: 0.6875rem;
     }
 
     .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
         padding: 2px;
     }
 
     .theme-toggle-track {
-        width: 34px;
-        height: 20px;
+        width: 36px;
+        height: 22px;
     }
 
     .theme-toggle-knob {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
     }
 
     :root[data-theme="dark"] .theme-toggle-knob {
@@ -1708,13 +1782,56 @@ strong {
     }
 }
 
+/* The narrowest viewport worth supporting is 320px, where the header row has 320 minus the gutters to hold a
+   wordmark, two nav links, a language switch and a toggle, all at a 44px touch target. Everything that can
+   give, gives. */
+@media (max-width: 360px) {
+    :root {
+        --gutter: 0.75rem;
+    }
+
+    .header-inner {
+        gap: 0.25rem;
+    }
+
+    .site-nav {
+        gap: 0.25rem;
+    }
+
+    .site-nav a {
+        font-size: 0.75rem;
+    }
+
+    .header-tools {
+        gap: 0.125rem;
+    }
+
+    .lang-switch a {
+        min-width: 30px;
+        padding: 0 0.2rem;
+    }
+
+    .wordmark {
+        min-width: 34px;
+    }
+}
+
 @media (max-width: 400px) {
     :root {
         --gutter: 1rem;
     }
 
+    .site-nav a {
+        font-size: 0.8125rem;
+    }
+
+    .section-head p,
+    .lede {
+        text-wrap: auto;
+    }
+
     .site-nav {
-        gap: 0.6rem;
+        gap: 0.4rem;
     }
 
     .site-nav a {
@@ -1743,14 +1860,32 @@ strong {
         transform: none;
     }
 
-    .js .hero-fields .field {
-        animation: none;
-        color: var(--ink);
-    }
-
     .js .hero-line {
         animation: none;
     }
+}
+
+/* The ?motion=reduce debug hook, mirrored: site.js puts this class on the root so the hook exercises the same
+   path as the real preference instead of quieting only the canvas animations. */
+html.motion-reduce {
+    scroll-behavior: auto;
+}
+
+html.motion-reduce *,
+html.motion-reduce *::before,
+html.motion-reduce *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+}
+
+html.motion-reduce .reveal {
+    opacity: 1;
+    transform: none;
+}
+
+html.motion-reduce .hero-line {
+    animation: none;
 }
 
 /* ==========================================================================
@@ -1758,11 +1893,22 @@ strong {
    ========================================================================== */
 html:not(.js) .stage-figure,
 html:not(.js) .bench-figure,
-html:not(.js) .bench-controls,
+html:not(.js) .bench-bar,
+html:not(.js) .hero-stage,
 html:not(.js) .mini-figure,
 html:not(.js) .topo-bar,
 html:not(.js) .met {
     display: none;
+}
+
+/* With the figure gone the scrolltelling beats are just three paragraphs, so they stop reserving its height. */
+html:not(.js) .stage-grid {
+    grid-template-columns: 1fr;
+}
+
+html:not(.js) .beat {
+    min-height: auto;
+    padding-block: 1.5rem;
 }
 
 html:not(.js) .sentence .w {
@@ -1778,6 +1924,15 @@ html:not(.js) .rail::after {
    ========================================================================== */
 .shot .hero {
     min-height: auto !important;
+}
+
+/* Headless captures advance virtual time faster than transitions resolve, so a capture taken while the theme
+   transition is in flight photographs a half-applied ground. Screenshot mode has no transitions at all. */
+.shot,
+.shot *,
+.shot *::before,
+.shot *::after {
+    transition: none !important;
 }
 
 .shot .reveal {
@@ -1796,11 +1951,6 @@ html:not(.js) .rail::after {
     animation: none !important;
 }
 
-.shot .hero-line,
-.shot .hero-fields .field {
+.shot .hero-line {
     animation: none !important;
-}
-
-.shot .hero-fields .field {
-    color: var(--ink) !important;
 }

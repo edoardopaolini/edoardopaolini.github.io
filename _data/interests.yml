@@ -3,8 +3,8 @@
 # Exactly three entries: the home layout pairs each one with a figure of its own, by position.
 - title: { en: "Neurosignals", it: "Neurosegnali" }
   text:
-    en: "EEG and TMS-EEG data preprocessing and signal source estimation."
-    it: "Preprocessing di dati EEG e TMS-EEG e stima delle sorgenti del segnale."
+    en: "EEG and TMS‑EEG data preprocessing and signal source estimation."
+    it: "Preprocessing di dati EEG e TMS‑EEG e stima delle sorgenti del segnale."
 
 - title: { en: "Brain connectivity", it: "Connettività cerebrale" }
   text:

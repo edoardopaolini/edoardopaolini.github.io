@@ -9,7 +9,7 @@
             <p class="footer-name">Edoardo Paolini</p>
             <p class="footer-note">{{ t.footer.role }}</p>
         </div>
-        <ul class="profile-links" aria-label="{{ t.footer.profiles }}">
+        <ul class="profile-links" role="list" aria-label="{{ t.footer.profiles }}">
             {% for p in site.data.profiles %}
             <li><a href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{% include icons/{{ p.icon }}.svg %}<span>{{ p.name }}</span></a></li>
             {% endfor %}

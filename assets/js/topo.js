@@ -19,11 +19,12 @@
 
   var CLASSES = ['A', 'B', 'C', 'D'];
 
-  /* Data colours of the voltage map (a scientific colormap, outside the accent lock): one pair per theme,
-     the neutral is the --surface-2 token read at draw time. */
+  /* Data colours of the voltage map. This is a scientific colormap, so it sits outside the accent lock and
+     carries its own neutral: taken from a page token it drifted against the plate the map is drawn on, and
+     in the dark theme a neutral darker than the plate reads as a hole through the head. */
   var PALETTES = {
-    light: { blue: '#2456c7', red: '#c8323a' },
-    dark: { blue: '#4f7ee8', red: '#e05a5a' }
+    light: { blue: '#2f6fd0', neutral: '#f2f2f4', red: '#d9342b' },
+    dark: { blue: '#4a86e8', neutral: '#2c2c2e', red: '#ef4b3f' }
   };
 
   function normalise(arr) {
@@ -176,14 +177,14 @@
     mask = topo.mask;
   }
 
-  /* Colour endpoints, refreshed on theme change: the neutral is the surface-2 token, blue and red come from
+  /* Colour endpoints, refreshed on theme change: all three come from
      the palette of the current theme. The legend gradient is rebuilt here too, never inside the loop. */
   var neutral = [0, 0, 0], blue = [0, 0, 0], red = [0, 0, 0];
   var rgb = [0, 0, 0];               /* scratch the per-pixel colormap writes into */
   var legendGradient = null;
   function readColors() {
     var pal = t.dark ? PALETTES.dark : PALETTES.light;
-    neutral = Lab.rgb(t.surface2); blue = Lab.rgb(pal.blue); red = Lab.rgb(pal.red);
+    neutral = Lab.rgb(pal.neutral); blue = Lab.rgb(pal.blue); red = Lab.rgb(pal.red);
     legendGradient = null;
   }
   readColors();
@@ -322,7 +323,7 @@
       compose(c, 1, c, 1, 1);
       drawHeadMap(cx, cy, r, STATIC_DOT_R);
       ctx.font = Lab.font(12, t, 600);
-      ctx.fillStyle = t.accent;
+      ctx.fillStyle = t.muted;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
       ctx.fillText(CLASSES[c], cx, cy - r * NOSE_R - STATIC_LETTER_GAP);

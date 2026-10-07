@@ -7,7 +7,7 @@
 <header class="page-head">
     <h1>{{ t.pubpage.title }}</h1>
     <p class="lede">{{ t.pubpage.lede }}</p>
-    <ul class="profile-links inline" aria-label="{{ t.footer.profiles }}">
+    <ul class="profile-links inline" role="list" aria-label="{{ t.footer.profiles }}">
         {% for p in site.data.profiles %}
         <li><a href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{% include icons/{{ p.icon }}.svg %}<span>{{ p.name }}</span></a></li>
         {% endfor %}
@@ -29,9 +29,10 @@
     {% for y in years %}
     <section class="pub-group" aria-labelledby="year-{{ y }}">
         <h2 class="pub-year mono" id="year-{{ y }}">{{ y }}</h2>
-        <ul>
+        <ul role="list">
             {% for p in site.data.publications %}{% if p.year == y %}
-            <li class="pub-entry" data-type="{{ p.type }}" data-first="{% if p.authors[0] == 'Edoardo Paolini' %}true{% else %}false{% endif %}">
+            <li class="pub-entry" data-type="{{ p.type }}"{% if p.also %} data-also="{{ p.also }}"{% endif %} data-first="{% if p.authors[0] == 'Edoardo Paolini' %}true{% else %}false{% endif %}">
+                <span class="pub-code mono">{{ p.venue_short }}</span>
                 <h3{% if lang != 'en' %} lang="en"{% endif %}><a href="{{ p.url }}" target="_blank" rel="noopener noreferrer">{{ p.title }}</a></h3>
                 <p class="pub-authors">{% include authors.html authors=p.authors %}</p>
                 <p class="pub-meta">{{ p.venue }}. {% include pub-kind.html p=p %}.</p>

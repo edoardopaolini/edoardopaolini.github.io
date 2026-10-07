@@ -2,7 +2,13 @@
 layout: default
 ---
 {%- comment -%} Subpages (/bio/ and /publications/, in both languages): the default shell plus one measured
-  column. The body itself is an include, so the English and the Italian page share it. {%- endcomment -%}
-<div class="container page">
-    {{ content }}
+  column. The body itself is an include, so the English and the Italian page share it.
+  The wrapper carries the opaque ground: the living neuron canvas is fixed behind every page, and without a
+  ground here it would run behind every paragraph of these two pages, which is the wallpaper the restyle set
+  out to remove. It is full width rather than on .page, because a 980px ground would leave the canvas showing
+  in the gutters. {%- endcomment -%}
+<div class="on-bg">
+    <div class="container page">
+        {{ content }}
+    </div>
 </div>

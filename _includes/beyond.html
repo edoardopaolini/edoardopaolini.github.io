@@ -7,14 +7,14 @@ reshapes the mosaic. Used on the home page and on /bio/.
 {%- assign lang = page.lang | default: 'en' -%}
 {%- assign t = site.data.i18n[lang] -%}
 {% if site.data.beyond and site.data.beyond.size > 0 %}
-<section class="section beyond-section" id="beyond">
+<section class="section beyond-section on-alt" id="beyond">
     <div class="container">
         <div class="section-head">
             <h2>{{ t.beyond.title }}</h2>
         </div>
-        <ul class="collage">
+        <ul class="collage" role="list">
             {% for b in site.data.beyond %}
-            <li class="tile {% if b.image %}tile-photo{% else %}tile-text glass{% endif %} reveal" style="--reveal-delay: {{ forloop.index0 | times: 50 }}ms">
+            <li class="tile {% if b.image %}tile-photo{% else %}tile-text plate{% endif %} reveal" style="--reveal-delay: {{ forloop.index0 | times: 50 }}ms">
                 {% if b.image %}<img src="{{ b.image | relative_url }}" alt="{{ b.alt[lang] }}" loading="lazy" decoding="async" width="{{ b.width }}" height="{{ b.height }}">{% endif %}
                 <div class="tile-copy">
                     <h3>{{ b.title[lang] }}</h3>
@@ -28,7 +28,7 @@ reshapes the mosaic. Used on the home page and on /bio/.
         <details class="credits">
             <summary>{{ t.beyond.credits }}</summary>
             <p>{{ t.beyond.credits_note }}</p>
-            <ul>
+            <ul role="list">
                 {% for b in credited %}<li>{{ b.title[lang] }}: {% if b.credit_url %}<a href="{{ b.credit_url }}" target="_blank" rel="noopener noreferrer">{{ b.credit }}</a>{% else %}{{ b.credit }}{% endif %}</li>{% endfor %}
             </ul>
         </details>

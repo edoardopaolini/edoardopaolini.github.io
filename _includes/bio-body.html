@@ -8,6 +8,7 @@
 {%- assign t = site.data.i18n[lang] -%}
 <header class="page-head">
     <h1>{{ t.bio.title }}</h1>
+    <p class="lede">{% for f in t.hero.fields %}{% if forloop.first %}{{ f }}{% else %}{{ f | downcase }}{% endif %}{% unless forloop.last %}, {% endunless %}{% endfor %}.</p>
 </header>
 
 {%- comment -%} The portrait is optional: the file is looked up in the build so the page renders without it,
@@ -24,10 +25,10 @@
 
 <section class="bio-section" aria-labelledby="experience-title">
     <h2 id="experience-title">{{ t.bio.experience }}</h2>
-    <ol class="rail reveal">
+    <ol class="rail reveal" role="list">
         {% for e in site.data.experience %}
         <li class="rail-item">
-            <span class="rail-year mono">{% include date-range.html start=e.start end=e.end %}</span>
+            <span class="rail-year fine">{% include date-range.html start=e.start end=e.end %}</span>
             <h3>{{ e.role[lang] }}</h3>
             <p class="rail-meta">{{ e.org[lang] }}, {{ e.place[lang] }}</p>
             <p class="rail-thesis">{{ e.summary[lang] }}</p>
@@ -38,10 +39,10 @@
 
 <section class="bio-section" aria-labelledby="education-title">
     <h2 id="education-title">{{ t.bio.education }}</h2>
-    <ol class="rail reveal">
+    <ol class="rail reveal" role="list">
         {% for e in site.data.education %}
         <li class="rail-item">
-            <span class="rail-year mono">{% include date-range.html start=e.start end=e.end %}</span>
+            <span class="rail-year fine">{% include date-range.html start=e.start end=e.end %}</span>
             <h3>{{ e.degree[lang] }}{% if e.honors %}, {{ e.honors }}{% endif %}</h3>
             <p class="rail-meta">{{ e.institution[lang] }}, {{ e.place[lang] }}</p>
             {% if e.thesis %}<p class="rail-thesis">{{ t.bio.thesis }}: {{ e.thesis }}.</p>{% endif %}
@@ -53,10 +54,10 @@
 
 <section class="bio-section" aria-labelledby="teaching-title">
     <h2 id="teaching-title">{{ t.bio.teaching }}</h2>
-    <ul class="course-list">
+    <ul class="course-list" role="list">
         {% for c in site.data.teaching.courses %}
-        <li class="course glass reveal" style="--reveal-delay: {{ forloop.index0 | times: 50 }}ms">
-            <span class="mono">{{ c.years }}, {{ c.hours }} {{ t.bio.hours }}</span>
+        <li class="course plate reveal" style="--reveal-delay: {{ forloop.index0 | times: 50 }}ms">
+            <span class="fine">{{ c.years }}, {{ c.hours }} {{ t.bio.hours }}</span>
             <h3{% if lang != 'en' and c.course[lang] == c.course.en %} lang="en"{% endif %}>{{ c.course[lang] }}</h3>
             <p>{{ c.program[lang] }}</p>
         </li>
